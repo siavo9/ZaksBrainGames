@@ -309,6 +309,102 @@
       border-radius: 2px;
     }
 
+    /* ---------- Modals ---------- */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(45, 45, 95, 0.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+      animation: overlayFade 0.2s ease;
+    }
+    .modal-overlay[hidden] { display: none; }
+    @keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+      background: white;
+      border-radius: 24px;
+      padding: 32px 28px 26px;
+      max-width: 520px;
+      width: 100%;
+      max-height: 92vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      position: relative;
+      animation: modalIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes modalIn {
+      from { transform: translateY(20px) scale(0.97); opacity: 0; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .modal h2 {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 1.8rem;
+      color: var(--purple);
+      margin-bottom: 6px;
+    }
+    .modal-sub { color: #555; margin-bottom: 18px; font-size: 0.98rem; line-height: 1.4; }
+    .modal-close {
+      position: absolute; top: 10px; right: 14px;
+      background: none; border: none;
+      font-size: 1.8rem; line-height: 1;
+      color: var(--dark); cursor: pointer;
+      padding: 4px 12px; border-radius: 50%;
+      transition: background 0.15s;
+    }
+    .modal-close:hover { background: #f3f3f3; }
+    .modal form { display: flex; flex-direction: column; gap: 12px; }
+    .modal label {
+      display: flex; flex-direction: column; gap: 4px;
+      font-size: 0.92rem; font-weight: 500; color: var(--dark);
+    }
+    .modal .req { color: var(--pink); font-weight: 700; }
+    .modal input,
+    .modal textarea {
+      padding: 10px 14px;
+      border: 2px solid #E0E0EE;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 1rem;
+      color: var(--dark);
+      background: #FAFAFC;
+      transition: border-color 0.15s, background 0.15s;
+      width: 100%;
+    }
+    .modal input:focus,
+    .modal textarea:focus {
+      outline: none;
+      border-color: var(--purple);
+      background: white;
+    }
+    .modal textarea { resize: vertical; min-height: 90px; }
+    .modal-submit {
+      padding: 12px 24px;
+      background: var(--purple);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 1.05rem;
+      cursor: pointer;
+      margin-top: 6px;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.18);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .modal-submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(0,0,0,0.18); }
+    .modal-submit:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.18); }
+    .modal-submit:disabled { opacity: 0.6; cursor: wait; }
+    .form-status {
+      margin-top: 8px;
+      font-size: 0.95rem;
+      text-align: center;
+      min-height: 1.2em;
+    }
+    .form-status.success { color: #1FB97A; font-weight: 600; }
+    .form-status.error   { color: #E53935; font-weight: 600; }
+
+    .footer-links a { margin: 0 6px; }
+
     /* Reduced motion */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -352,10 +448,71 @@
 
   <footer>
     <p>Made with <span class="heart">❤️</span> for curious minds</p>
-    <p style="margin-top:8px;">
-      <a href="/privacy">Privacy Policy</a> · &copy; <span id="year"></span> Zak's Brain Games
+    <p class="footer-links" style="margin-top:8px;">
+      <a href="#" id="submitGameLink">🎮 Submit a Game</a> ·
+      <a href="#" id="contactLink">💌 Contact Us</a> ·
+      <a href="/privacy">Privacy Policy</a> ·
+      &copy; <span id="year"></span> Zak's Brain Games
     </p>
   </footer>
+
+  <!-- Submit a Game Modal -->
+  <div class="modal-overlay" id="submitGameModal" role="dialog" aria-modal="true" aria-labelledby="submitGameTitle" hidden>
+    <div class="modal">
+      <button class="modal-close" type="button" aria-label="Close" data-close>×</button>
+      <h2 id="submitGameTitle">🎮 Submit a Game</h2>
+      <p class="modal-sub">Got a fun, brain-boosting game to share? Send us the link and a short description!</p>
+      <form id="submitGameForm" novalidate>
+        <label>
+          Game Name
+          <input type="text" name="name" maxlength="120" placeholder="My Awesome Brain Game" />
+        </label>
+        <label>
+          Game URL <span class="req">*</span>
+          <input type="url" name="url" required maxlength="500" placeholder="https://yourgame.com" />
+        </label>
+        <label>
+          Short Description <span class="req">*</span>
+          <textarea name="description" required maxlength="800" rows="4" placeholder="Tell us what makes this game fun and brainy."></textarea>
+        </label>
+        <label>
+          Your Name (optional)
+          <input type="text" name="submitterName" maxlength="120" />
+        </label>
+        <label>
+          Your Email (optional, in case we need to follow up)
+          <input type="email" name="submitterEmail" maxlength="200" />
+        </label>
+        <button type="submit" class="modal-submit">Send Submission ▶</button>
+        <p class="form-status" id="submitGameStatus" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Contact Modal -->
+  <div class="modal-overlay" id="contactModal" role="dialog" aria-modal="true" aria-labelledby="contactTitle" hidden>
+    <div class="modal">
+      <button class="modal-close" type="button" aria-label="Close" data-close>×</button>
+      <h2 id="contactTitle">💌 Contact Us</h2>
+      <p class="modal-sub">Have a question or some feedback? We'd love to hear from you!</p>
+      <form id="contactForm" novalidate>
+        <label>
+          Your Name (optional)
+          <input type="text" name="name" maxlength="120" />
+        </label>
+        <label>
+          Your Email (optional, so we can reply)
+          <input type="email" name="email" maxlength="200" />
+        </label>
+        <label>
+          Message <span class="req">*</span>
+          <textarea name="message" required maxlength="2000" rows="5" placeholder="Type your question or message…"></textarea>
+        </label>
+        <button type="submit" class="modal-submit">Send Message ▶</button>
+        <p class="form-status" id="contactStatus" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
 
   <script>
     // ---------- Game data ----------
@@ -514,6 +671,75 @@
 
     // Year in footer
     document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ---------- Modals ----------
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      modal.removeAttribute('hidden');
+      document.body.style.overflow = 'hidden';
+      const firstField = modal.querySelector('input, textarea');
+      if (firstField) setTimeout(() => firstField.focus(), 60);
+    }
+    function closeModal(modal) {
+      modal.setAttribute('hidden', '');
+      document.body.style.overflow = '';
+    }
+    document.getElementById('submitGameLink').addEventListener('click', (e) => {
+      e.preventDefault(); openModal('submitGameModal');
+    });
+    document.getElementById('contactLink').addEventListener('click', (e) => {
+      e.preventDefault(); openModal('contactModal');
+    });
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay || e.target.matches('[data-close]')) {
+          closeModal(overlay);
+        }
+      });
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay:not([hidden])').forEach(closeModal);
+      }
+    });
+
+    async function handleFormSubmit(form, endpoint, statusEl) {
+      const submitBtn = form.querySelector('button[type=submit]');
+      const data = Object.fromEntries(new FormData(form).entries());
+      statusEl.className = 'form-status';
+      statusEl.textContent = 'Sending…';
+      submitBtn.disabled = true;
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const json = await res.json().catch(() => ({}));
+        if (res.ok && json.ok) {
+          statusEl.className = 'form-status success';
+          statusEl.textContent = 'Thanks! Your message was sent. 🎉';
+          form.reset();
+          burstConfetti(window.innerWidth / 2, window.innerHeight / 2);
+        } else {
+          throw new Error(json.error || 'Something went wrong. Please try again.');
+        }
+      } catch (err) {
+        statusEl.className = 'form-status error';
+        statusEl.textContent = err.message || 'Could not send. Please try again later.';
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
+    document.getElementById('submitGameForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleFormSubmit(e.target, '/api/submit-game', document.getElementById('submitGameStatus'));
+    });
+    document.getElementById('contactForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleFormSubmit(e.target, '/api/contact', document.getElementById('contactStatus'));
+    });
   </script>
 </body>
 </html>
