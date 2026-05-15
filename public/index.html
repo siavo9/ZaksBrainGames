@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zak's Brain Games — Fun Games That Make You Smarter</title>
+  <meta name="description" content="Zak's Brain Games is a friendly home for fun, brain-boosting games for kids. Play free puzzle, logic, color, and reflex games that help you grow smarter." />
+  <meta name="keywords" content="brain games, kids games, educational games, puzzle games, logic games, free online games, smart games, learning games" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#FFD93D" />
+  <link rel="canonical" href="https://zaksbraingames.app/" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Zak's Brain Games — Fun Games That Make You Smarter" />
+  <meta property="og:description" content="A friendly home for fun, brain-boosting games for kids. Play free puzzle, logic, color, and reflex games." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://zaksbraingames.app/" />
+  <meta property="og:image" content="https://zaksbraingames.app/og-image.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Zak's Brain Games" />
+  <meta name="twitter:description" content="Fun brain-boosting games for kids." />
+
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Zak's Brain Games",
+    "url": "https://zaksbraingames.app/",
+    "description": "A friendly home for fun, brain-boosting games for kids.",
+    "hasPart": [
+      { "@type": "Game", "name": "Four Circles", "url": "https://fourcircles.app" },
+      { "@type": "Game", "name": "Stop the Fire", "url": "https://stopthefire.app" },
+      { "@type": "Game", "name": "Play Hue", "url": "https://playhue.app" },
+      { "@type": "Game", "name": "Demo Derby", "url": "https://demoderby.app" }
+    ]
+  }
+  </script>
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bubblegum+Sans&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ---------- Base ---------- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow: #FFD93D;
+      --pink: #FF6FB5;
+      --blue: #4FC3F7;
+      --mint: #6BE6A8;
+      --purple: #B073FF;
+      --orange: #FF9F45;
+      --dark: #2D2D5F;
+      --cream: #FFF8E7;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Fredoka', system-ui, sans-serif;
+      color: var(--dark);
+      background: linear-gradient(135deg, #FFF8E7 0%, #FFE5F1 50%, #E5F4FF 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Floating shapes */
+    .shape {
+      position: fixed; border-radius: 50%; opacity: 0.4; z-index: 0;
+      animation: float 8s ease-in-out infinite;
+      pointer-events: none;
+    }
+    .shape.s1 { width: 120px; height: 120px; background: var(--yellow); top: 10%; left: 5%; animation-delay: 0s; }
+    .shape.s2 { width: 80px; height: 80px; background: var(--pink); top: 60%; left: 90%; animation-delay: 2s; }
+    .shape.s3 { width: 100px; height: 100px; background: var(--blue); top: 80%; left: 8%; animation-delay: 4s; }
+    .shape.s4 { width: 60px; height: 60px; background: var(--mint); top: 25%; left: 88%; animation-delay: 1s; }
+    .shape.s5 { width: 90px; height: 90px; background: var(--purple); top: 45%; left: 3%; animation-delay: 3s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-30px) rotate(15deg); }
+    }
+
+    /* ---------- Layout ---------- */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+    /* ---------- Header ---------- */
+    header { text-align: center; padding: 50px 20px 30px; position: relative; }
+    .mascot {
+      font-size: 90px; display: inline-block;
+      animation: wave 3s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.1));
+      cursor: pointer;
+      user-select: none;
+    }
+    @keyframes wave {
+      0%, 100% { transform: rotate(-8deg) translateY(0); }
+      25% { transform: rotate(8deg) translateY(-10px); }
+      75% { transform: rotate(-12deg) translateY(-5px); }
+    }
+    h1 {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      margin: 10px 0 5px;
+      background: linear-gradient(135deg, var(--pink), var(--purple), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 4px 4px 0 rgba(255, 217, 61, 0.3);
+      letter-spacing: 1px;
+    }
+    .tagline {
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      color: var(--dark);
+      font-weight: 500;
+      margin-top: 8px;
+    }
+    .tagline span { color: var(--pink); font-weight: 700; }
+
+    /* ---------- Brain Fact Banner ---------- */
+    .fact-banner {
+      background: linear-gradient(135deg, var(--yellow), var(--orange));
+      border-radius: 30px;
+      padding: 18px 30px;
+      margin: 30px auto;
+      max-width: 800px;
+      text-align: center;
+      box-shadow: 6px 8px 0 rgba(45, 45, 95, 0.15);
+      transform: rotate(-1deg);
+      transition: transform 0.3s;
+      cursor: pointer;
+    }
+    .fact-banner:hover { transform: rotate(0deg) scale(1.02); }
+    .fact-banner .label {
+      display: inline-block;
+      background: white;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      color: var(--dark);
+    }
+    .fact-banner .fact {
+      font-size: clamp(1rem, 2.2vw, 1.25rem);
+      font-weight: 500;
+      color: var(--dark);
+    }
+
+    /* ---------- Game Grid ---------- */
+    .games-section { padding: 30px 0 60px; }
+    .section-title {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: clamp(1.8rem, 4vw, 2.5rem);
+      text-align: center;
+      margin-bottom: 30px;
+      color: var(--dark);
+    }
+    .section-title::before { content: '🎮 '; }
+    .section-title::after { content: ' 🎮'; }
+
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 28px;
+      padding: 10px;
+    }
+
+    .game-card {
+      background: white;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 8px 0 rgba(45, 45, 95, 0.12), 0 12px 30px rgba(45, 45, 95, 0.1);
+      cursor: pointer;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .game-card:hover {
+      transform: translateY(-8px) rotate(-1deg);
+      box-shadow: 0 16px 0 rgba(45, 45, 95, 0.12), 0 20px 40px rgba(45, 45, 95, 0.2);
+    }
+    .game-card:nth-child(even):hover { transform: translateY(-8px) rotate(1deg); }
+
+    .preview-wrap {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      overflow: hidden;
+      background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+    }
+    .preview-wrap img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.4s;
+    }
+    .game-card:hover .preview-wrap img { transform: scale(1.05); }
+    .preview-loader {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+      animation: spin 2s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .card-body { padding: 20px 22px 24px; flex: 1; display: flex; flex-direction: column; }
+    .game-name {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 1.6rem;
+      margin-bottom: 6px;
+    }
+    .game-desc {
+      font-size: 0.95rem;
+      line-height: 1.4;
+      color: #555;
+      margin-bottom: 14px;
+      flex: 1;
+    }
+    .badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      align-self: flex-start;
+    }
+    .play-btn {
+      display: inline-block;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 600;
+      font-size: 1.05rem;
+      text-decoration: none;
+      color: white;
+      text-align: center;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+    }
+    .play-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(0,0,0,0.15); }
+    .play-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+
+    /* Per-card color themes */
+    .card-pink .game-name { color: var(--pink); }
+    .card-pink .badge { background: #FFE0EE; color: var(--pink); }
+    .card-pink .play-btn { background: var(--pink); }
+
+    .card-orange .game-name { color: var(--orange); }
+    .card-orange .badge { background: #FFE8D1; color: var(--orange); }
+    .card-orange .play-btn { background: var(--orange); }
+
+    .card-blue .game-name { color: var(--blue); }
+    .card-blue .badge { background: #D6F0FB; color: #0288D1; }
+    .card-blue .play-btn { background: var(--blue); }
+
+    .card-purple .game-name { color: var(--purple); }
+    .card-purple .badge { background: #EBDCFF; color: var(--purple); }
+    .card-purple .play-btn { background: var(--purple); }
+
+    /* ---------- About ---------- */
+    .about {
+      background: white;
+      border-radius: 30px;
+      padding: 40px;
+      margin: 40px auto;
+      max-width: 800px;
+      text-align: center;
+      box-shadow: 6px 8px 0 rgba(45, 45, 95, 0.12);
+    }
+    .about h2 {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 2rem;
+      margin-bottom: 16px;
+      color: var(--purple);
+    }
+    .about p { font-size: 1.1rem; line-height: 1.6; color: #444; margin-bottom: 10px; }
+
+    /* ---------- Footer ---------- */
+    footer {
+      text-align: center;
+      padding: 30px 20px 40px;
+      color: var(--dark);
+      font-size: 0.95rem;
+    }
+    footer a { color: var(--purple); text-decoration: none; font-weight: 600; }
+    footer a:hover { text-decoration: underline; }
+    footer .heart { color: var(--pink); }
+
+    /* ---------- Confetti ---------- */
+    .confetti {
+      position: fixed;
+      width: 10px; height: 10px;
+      pointer-events: none;
+      z-index: 9999;
+      border-radius: 2px;
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Decorative floating shapes -->
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
+  <div class="shape s3"></div>
+  <div class="shape s4"></div>
+  <div class="shape s5"></div>
+
+  <div class="container">
+    <header>
+      <div class="mascot" id="mascot" title="Click me!" role="img" aria-label="Brain mascot">🧠</div>
+      <h1>Zak's Brain Games</h1>
+      <p class="tagline">Fun games that make you <span>smarter!</span> 🚀</p>
+    </header>
+
+    <!-- Brain Fact of the Day -->
+    <div class="fact-banner" id="factBanner" role="region" aria-label="Brain fact of the day">
+      <span class="label">🧠 Brain Fact of the Day</span>
+      <p class="fact" id="factText">Loading a cool brain fact…</p>
+    </div>
+
+    <!-- Games -->
+    <section class="games-section">
+      <h2 class="section-title">Pick a Game!</h2>
+      <div class="games-grid" id="gamesGrid"></div>
+    </section>
+
+    <!-- About -->
+    <section class="about">
+      <h2>About Zak's Brain Games</h2>
+      <p>Welcome! This is a cozy corner of the internet packed with fun games that help your brain grow stronger every day.</p>
+      <p>Every game here is designed to be playful <em>and</em> brain-boosting — building skills like logic, focus, creativity, and quick thinking. Pick a game, have fun, and feel your brain power up! ⚡</p>
+    </section>
+  </div>
+
+  <footer>
+    <p>Made with <span class="heart">❤️</span> for curious minds</p>
+    <p style="margin-top:8px;">
+      <a href="/privacy">Privacy Policy</a> · &copy; <span id="year"></span> Zak's Brain Games
+    </p>
+  </footer>
+
+  <script>
+    // ---------- Game data ----------
+    const GAMES = [
+      {
+        name: 'Four Circles',
+        url: 'https://fourcircles.app',
+        emoji: '🔵',
+        desc: 'A colorful puzzle where you connect circles and crack clever patterns. Your logic skills will love it!',
+        badge: '🧩 Logic & Patterns',
+        theme: 'card-blue'
+      },
+      {
+        name: 'Stop the Fire',
+        url: 'https://stopthefire.app',
+        emoji: '🔥',
+        desc: 'Quick! Tap fast and think faster to put out the flames. A heart-pumping test of reflexes and focus.',
+        badge: '⚡ Reflexes & Focus',
+        theme: 'card-orange'
+      },
+      {
+        name: 'Play Hue',
+        url: 'https://playhue.app',
+        emoji: '🎨',
+        desc: 'A dreamy color game where you mix and match hues. Train your eye and unlock your inner artist.',
+        badge: '🎨 Color & Creativity',
+        theme: 'card-pink'
+      },
+      {
+        name: 'Demo Derby',
+        url: 'https://demoderby.app',
+        emoji: '🚗',
+        desc: 'Buckle up! Smash, dodge, and out-drive the competition in this wild derby. Sharpens your spatial smarts.',
+        badge: '🏎️ Spatial & Strategy',
+        theme: 'card-purple'
+      }
+    ];
+
+    // ---------- Brain Facts ----------
+    const FACTS = [
+      "Your brain has about 86 billion neurons — that's more than the stars you can see at night!",
+      "Your brain uses about 20% of your body's energy, even though it's only 2% of your weight.",
+      "Playing games can actually grow your brain! Learning new things makes new connections.",
+      "Your brain works faster than the fastest computer for many tasks.",
+      "Laughing is great for your brain — it boosts memory and learning.",
+      "When you sleep, your brain cleans itself up like a tiny janitor at night.",
+      "Reading and puzzles help build a stronger, smarter brain.",
+      "Your brain keeps learning your whole life — it never gets too old!",
+      "Drinking water helps your brain think more clearly.",
+      "Music makes lots of brain areas light up at the same time.",
+      "Daydreaming helps your brain solve tricky problems.",
+      "Exercise makes your brain release happy chemicals.",
+      "Every time you learn something new, your brain literally rewires itself.",
+      "Your brain can store about 2.5 million gigabytes of information!",
+      "Curiosity is your brain's superpower — it makes you remember things better."
+    ];
+
+    // ---------- Render fact ----------
+    const factEl = document.getElementById('factText');
+    function showRandomFact() {
+      factEl.textContent = FACTS[Math.floor(Math.random() * FACTS.length)];
+    }
+    showRandomFact();
+    document.getElementById('factBanner').addEventListener('click', showRandomFact);
+
+    // ---------- Render game cards ----------
+    const grid = document.getElementById('gamesGrid');
+    GAMES.forEach((g, i) => {
+      const card = document.createElement('div');
+      card.className = 'game-card ' + g.theme;
+      card.setAttribute('role', 'link');
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-label', 'Play ' + g.name);
+
+      // Use thum.io screenshot service (free, no API key required) for live previews
+      const domain = g.url.replace(/^https?:\/\//, '');
+      const screenshot = `https://image.thum.io/get/width/600/crop/600/maxAge/24/${g.url}`;
+
+      card.innerHTML = `
+        <div class="preview-wrap">
+          <div class="preview-loader" aria-hidden="true">${g.emoji}</div>
+          <img src="${screenshot}" alt="Preview of ${g.name}" loading="lazy" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'" />
+        </div>
+        <div class="card-body">
+          <h3 class="game-name">${g.emoji} ${g.name}</h3>
+          <span class="badge">${g.badge}</span>
+          <p class="game-desc">${g.desc}</p>
+          <a class="play-btn" href="${g.url}" target="_blank" rel="noopener noreferrer">Play Now ▶</a>
+        </div>
+      `;
+
+      // Click anywhere on card -> open game (with confetti!)
+      card.addEventListener('click', (e) => {
+        if (e.target.classList.contains('play-btn')) return; // let link handle it
+        burstConfetti(e.clientX || window.innerWidth / 2, e.clientY || window.innerHeight / 2);
+        setTimeout(() => window.open(g.url, '_blank', 'noopener,noreferrer'), 200);
+      });
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          window.open(g.url, '_blank', 'noopener,noreferrer');
+        }
+      });
+
+      // Confetti on the play button too
+      card.querySelector('.play-btn').addEventListener('click', (e) => {
+        burstConfetti(e.clientX, e.clientY);
+      });
+
+      grid.appendChild(card);
+    });
+
+    // ---------- Confetti ----------
+    const CONFETTI_COLORS = ['#FFD93D', '#FF6FB5', '#4FC3F7', '#6BE6A8', '#B073FF', '#FF9F45'];
+    function burstConfetti(x, y) {
+      for (let i = 0; i < 24; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = x + 'px';
+        c.style.top = y + 'px';
+        c.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+        document.body.appendChild(c);
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 80 + Math.random() * 120;
+        const dx = Math.cos(angle) * velocity;
+        const dy = Math.sin(angle) * velocity - 60;
+        c.animate([
+          { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+          { transform: `translate(${dx}px, ${dy + 300}px) rotate(${Math.random()*720}deg)`, opacity: 0 }
+        ], { duration: 1200 + Math.random() * 400, easing: 'cubic-bezier(.2,.6,.4,1)' });
+        setTimeout(() => c.remove(), 1600);
+      }
+    }
+
+    // Mascot clicks = celebration!
+    document.getElementById('mascot').addEventListener('click', (e) => {
+      burstConfetti(e.clientX, e.clientY);
+      showRandomFact();
+    });
+
+    // Year in footer
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

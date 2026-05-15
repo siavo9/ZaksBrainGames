@@ -1,0 +1,24 @@
+{
+  "name": "zaks-brain-games",
+  "version": "1.0.0",
+  "description": "Zak's Brain Games — fun games that make kids smarter. A friendly home for brain-boosting games.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "keywords": [
+    "brain games",
+    "kids games",
+    "educational games",
+    "puzzle games",
+    "logic games"
+  ],
+  "author": "Zak's Brain Games",
+  "license": "MIT"
+}
