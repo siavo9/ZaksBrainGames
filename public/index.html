@@ -31,12 +31,13 @@
     "url": "https://zaksbraingames.app/",
     "description": "A friendly home for fun, brain-boosting games for kids.",
     "hasPart": [
-      { "@type": "Game", "name": "Four Circles", "url": "https://fourcircles.app" },
-      { "@type": "Game", "name": "Stop the Fire", "url": "https://stopthefire.app" },
-      { "@type": "Game", "name": "Play Hue", "url": "https://playhue.app" },
-      { "@type": "Game", "name": "Demo Derby", "url": "https://demoderby.app" },
-      { "@type": "Game", "name": "Memory Safari", "url": "https://memorysafari.app" },
-      { "@type": "Game", "name": "Car Math", "url": "https://carmath.app" }
+      { "@type": "Game", "name": "Learn The Words", "url": "https://learnthewords.dev", "typicalAgeRange": "3-" },
+      { "@type": "Game", "name": "Car Math", "url": "https://carmath.app", "typicalAgeRange": "4-" },
+      { "@type": "Game", "name": "Stop the Fire", "url": "https://stopthefire.app", "typicalAgeRange": "4-" },
+      { "@type": "Game", "name": "Memory Match Safari", "url": "https://memorysafari.app", "typicalAgeRange": "6-" },
+      { "@type": "Game", "name": "Play Hue", "url": "https://playhue.app", "typicalAgeRange": "6-" },
+      { "@type": "Game", "name": "Four Circles", "url": "https://fourcircles.app", "typicalAgeRange": "10-" },
+      { "@type": "Game", "name": "Demo Derby", "url": "https://demoderby.app", "typicalAgeRange": "10-" }
     ]
   }
   </script>
@@ -57,6 +58,7 @@
       --mint: #6BE6A8;
       --purple: #B073FF;
       --orange: #FF9F45;
+      --coral: #FF6B6B;
       --dark: #2D2D5F;
       --cream: #FFF8E7;
     }
@@ -219,15 +221,30 @@
       margin-bottom: 14px;
       flex: 1;
     }
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
     .badge {
       display: inline-block;
       padding: 5px 12px;
       border-radius: 20px;
       font-size: 0.8rem;
       font-weight: 600;
-      margin-bottom: 14px;
-      align-self: flex-start;
     }
+    .age-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: #2D2D5F;
+      color: white;
+      letter-spacing: 0.3px;
+    }
+    .age-badge::before { content: '👶 '; }
     .play-btn {
       display: inline-block;
       padding: 12px 24px;
@@ -271,6 +288,10 @@
     .card-yellow .badge { background: #FFF4C2; color: #C99700; }
     .card-yellow .play-btn { background: var(--yellow); color: var(--dark); }
 
+    .card-coral .game-name { color: var(--coral); }
+    .card-coral .badge { background: #FFD9D9; color: #D14848; }
+    .card-coral .play-btn { background: var(--coral); }
+
     /* ---------- About ---------- */
     .about {
       background: white;
@@ -288,6 +309,33 @@
       color: var(--purple);
     }
     .about p { font-size: 1.1rem; line-height: 1.6; color: #444; margin-bottom: 10px; }
+
+    /* ---------- Disclaimer ---------- */
+    .disclaimer {
+      background: #FFF8E7;
+      border: 2px dashed #C99700;
+      border-radius: 24px;
+      padding: 28px 32px;
+      margin: 40px auto;
+      max-width: 900px;
+      color: #4A3A1A;
+      box-shadow: 4px 6px 0 rgba(45, 45, 95, 0.08);
+    }
+    .disclaimer h2 {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 1.6rem;
+      color: #B07700;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .disclaimer h2::before { content: '⚠️ '; }
+    .disclaimer p {
+      font-size: 0.98rem;
+      line-height: 1.55;
+      margin-bottom: 10px;
+    }
+    .disclaimer p:last-child { margin-bottom: 0; }
+    .disclaimer strong { color: #2D2D5F; }
 
     /* ---------- Footer ---------- */
     footer {
@@ -444,6 +492,16 @@
       <p>Welcome! This is a cozy corner of the internet packed with fun games that help your brain grow stronger every day.</p>
       <p>Every game here is designed to be playful <em>and</em> brain-boosting — building skills like logic, focus, creativity, and quick thinking. Pick a game, have fun, and feel your brain power up! ⚡</p>
     </section>
+
+    <!-- Parental Discretion Disclaimer -->
+    <section class="disclaimer" aria-labelledby="disclaimerTitle">
+      <h2 id="disclaimerTitle">Parental Discretion &amp; Safety Notice</h2>
+      <p><strong>Parental discretion is always advised for anyone under the age of 18 playing any game listed on this site.</strong> The suggested age ranges shown on each game card (such as "Ages 3+", "Ages 6+", or "Ages 10+") are general guidelines only. They are not professional, medical, developmental, or educational recommendations, and every child is different. A parent, legal guardian, or other responsible adult should review each game and decide whether it is appropriate for the child in their care before play, and should supervise younger children at all times.</p>
+      <p>Zak's Brain Games is a directory that <strong>links to third-party games hosted on external websites</strong> that we do not own, operate, host, or control. We do not create, review, moderate, endorse, certify, or guarantee any third-party game, website, advertisement, comment, user-generated content, in-app purchase, or other material reachable through the links on this site. Linked games may contain advertising, tracking technologies, sign-up forms, social features, microtransactions, links to other sites, or content that may not be suitable for every child or every age. Content on those external sites can change at any time without our knowledge.</p>
+      <p>To the fullest extent permitted by applicable law, Zak's Brain Games, its owner, operators, contributors, and affiliates (collectively, the "Site") make <strong>no warranties or representations of any kind</strong>, express or implied, regarding the accuracy, safety, suitability, availability, reliability, educational value, quality, performance, or completeness of any game, link, description, age suggestion, brain fact, or other content on or accessible from this Site, and expressly disclaim all such warranties, including any implied warranties of merchantability, fitness for a particular purpose, non-infringement, and any warranties arising from course of dealing or usage of trade.</p>
+      <p>By using this Site or clicking any link, you acknowledge and agree that you do so <strong>entirely at your own risk</strong>, and that the Site, its owner, operators, contributors, and affiliates shall not be liable for any direct, indirect, incidental, consequential, special, exemplary, punitive, or other damages (including without limitation damages for loss of data, loss of use, emotional distress, personal injury, property damage, exposure to inappropriate content, unauthorized purchases, or any other harm) arising out of or in connection with your access to, use of, reliance on, or inability to use this Site or any third-party game, website, or content linked from this Site, even if advised of the possibility of such damages.</p>
+      <p>Parents and guardians are solely responsible for monitoring their child's internet use, configuring appropriate parental controls and content filters, reviewing the privacy practices and terms of any third-party game before allowing their child to play, and ensuring all play is age-appropriate and safe. If you do not agree with these terms, please do not use this Site.</p>
+    </section>
   </div>
 
   <footer>
@@ -516,46 +574,16 @@
 
   <script>
     // ---------- Game data ----------
+    // Games are listed in order of minimum suggested age (youngest first).
     const GAMES = [
       {
-        name: 'Four Circles',
-        url: 'https://fourcircles.app',
-        emoji: '🔵',
-        desc: 'A colorful puzzle where you connect circles and crack clever patterns. Your logic skills will love it!',
-        badge: '🧩 Logic & Patterns',
-        theme: 'card-blue'
-      },
-      {
-        name: 'Stop the Fire',
-        url: 'https://stopthefire.app',
-        emoji: '🔥',
-        desc: 'Quick! Tap fast and think faster to put out the flames. A heart-pumping test of reflexes and focus.',
-        badge: '⚡ Reflexes & Focus',
-        theme: 'card-orange'
-      },
-      {
-        name: 'Play Hue',
-        url: 'https://playhue.app',
-        emoji: '🎨',
-        desc: 'A dreamy color game where you mix and match hues. Train your eye and unlock your inner artist.',
-        badge: '🎨 Color & Creativity',
-        theme: 'card-pink'
-      },
-      {
-        name: 'Demo Derby',
-        url: 'https://demoderby.app',
-        emoji: '🚗',
-        desc: 'Buckle up! Smash, dodge, and out-drive the competition in this wild derby. Sharpens your spatial smarts.',
-        badge: '🏎️ Spatial & Strategy',
-        theme: 'card-purple'
-      },
-      {
-        name: 'Memory Safari',
-        url: 'https://memorysafari.app',
-        emoji: '🦁',
-        desc: 'Go on a wild safari and match pairs of animals from memory. A super fun way to power up your memory and focus!',
-        badge: '🧠 Memory & Focus',
-        theme: 'card-mint'
+        name: 'Learn The Words',
+        url: 'https://learnthewords.dev',
+        emoji: '📚',
+        desc: 'Discover new words with playful pictures and friendly sounds. A gentle, fun first step into reading!',
+        badge: '📖 Words & Reading',
+        age: 'Ages 3+',
+        theme: 'card-coral'
       },
       {
         name: 'Car Math',
@@ -563,7 +591,53 @@
         emoji: '🚙',
         desc: 'Race through math problems and zoom past numbers! Sharpen your mental math skills while cruising the open road.',
         badge: '🔢 Math & Speed',
+        age: 'Ages 4+',
         theme: 'card-yellow'
+      },
+      {
+        name: 'Stop the Fire',
+        url: 'https://stopthefire.app',
+        emoji: '🔥',
+        desc: 'Quick! Tap fast and think faster to put out the flames. A heart-pumping test of reflexes and focus.',
+        badge: '⚡ Reflexes & Focus',
+        age: 'Ages 4+',
+        theme: 'card-orange'
+      },
+      {
+        name: 'Memory Match Safari',
+        url: 'https://memorysafari.app',
+        emoji: '🦁',
+        desc: 'Go on a wild safari and match pairs of animals from memory. A super fun way to power up your memory and focus!',
+        badge: '🧠 Memory & Focus',
+        age: 'Ages 6+',
+        theme: 'card-mint'
+      },
+      {
+        name: 'Play Hue',
+        url: 'https://playhue.app',
+        emoji: '🎨',
+        desc: 'A dreamy color game where you mix and match hues. Train your eye and unlock your inner artist.',
+        badge: '🎨 Color & Creativity',
+        age: 'Ages 6+',
+        theme: 'card-pink'
+      },
+      {
+        name: 'Four Circles',
+        url: 'https://fourcircles.app',
+        emoji: '🔵',
+        desc: 'A colorful puzzle where you connect circles and crack clever patterns. Your logic skills will love it!',
+        badge: '🧩 Logic & Patterns',
+        age: 'Ages 10+',
+        theme: 'card-blue'
+      },
+      {
+        name: 'Demo Derby',
+        url: 'https://demoderby.app',
+        emoji: '🚗',
+        desc: 'Buckle up! Smash, dodge, and out-drive the competition in this wild derby. Sharpens your spatial smarts.',
+        badge: '🏎️ Spatial & Strategy',
+        age: 'Ages 10+',
+        theme: 'card-purple'
       }
     ];
 
@@ -614,7 +688,10 @@
         </div>
         <div class="card-body">
           <h3 class="game-name">${g.emoji} ${g.name}</h3>
-          <span class="badge">${g.badge}</span>
+          <div class="badge-row">
+            <span class="badge">${g.badge}</span>
+            <span class="age-badge" aria-label="Suggested age ${g.age}">${g.age}</span>
+          </div>
           <p class="game-desc">${g.desc}</p>
           <a class="play-btn" href="${g.url}" target="_blank" rel="noopener noreferrer">Play Now ▶</a>
         </div>
