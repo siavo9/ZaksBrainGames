@@ -693,7 +693,7 @@
             <span class="age-badge" aria-label="Suggested age ${g.age}">${g.age}</span>
           </div>
           <p class="game-desc">${g.desc}</p>
-          <a class="play-btn" href="${g.url}" target="_blank" rel="noopener noreferrer">Play Now ▶</a>
+          <a class="play-btn" href="${g.url}">Play Now ▶</a>
         </div>
       `;
 
@@ -701,12 +701,12 @@
       card.addEventListener('click', (e) => {
         if (e.target.classList.contains('play-btn')) return; // let link handle it
         burstConfetti(e.clientX || window.innerWidth / 2, e.clientY || window.innerHeight / 2);
-        setTimeout(() => window.open(g.url, '_blank', 'noopener,noreferrer'), 200);
+        setTimeout(() => { window.location.href = g.url; }, 200);
       });
       card.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          window.open(g.url, '_blank', 'noopener,noreferrer');
+          window.location.href = g.url;
         }
       });
 
