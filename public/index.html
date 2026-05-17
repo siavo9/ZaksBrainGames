@@ -193,20 +193,62 @@
       position: relative;
       aspect-ratio: 16 / 10;
       overflow: hidden;
-      background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
-    }
-    .preview-wrap img {
-      width: 100%; height: 100%; object-fit: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: transform 0.4s;
     }
-    .game-card:hover .preview-wrap img { transform: scale(1.05); }
-    .preview-loader {
-      position: absolute; inset: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 3rem;
-      animation: spin 2s linear infinite;
+    .game-card:hover .preview-wrap { transform: scale(1.04); }
+    .preview-wrap::before,
+    .preview-wrap::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.35);
+      pointer-events: none;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .preview-wrap::before {
+      width: 80px; height: 80px;
+      top: -20px; left: -20px;
+    }
+    .preview-wrap::after {
+      width: 110px; height: 110px;
+      bottom: -30px; right: -30px;
+      background: rgba(255, 255, 255, 0.25);
+    }
+    .preview-emoji {
+      font-size: clamp(3.4rem, 9vw, 5rem);
+      filter: drop-shadow(3px 4px 0 rgba(0,0,0,0.15));
+      z-index: 1;
+      animation: previewBounce 4s ease-in-out infinite;
+    }
+    .preview-title {
+      position: absolute;
+      bottom: 10px;
+      left: 0; right: 0;
+      text-align: center;
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 1.05rem;
+      color: white;
+      letter-spacing: 0.5px;
+      text-shadow: 2px 2px 0 rgba(0,0,0,0.25);
+      z-index: 1;
+      padding: 0 12px;
+    }
+    @keyframes previewBounce {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-6px) rotate(3deg); }
+    }
+
+    /* Per-theme preview backgrounds */
+    .card-pink .preview-wrap   { background: linear-gradient(135deg, #FF6FB5, #FFA8D2); }
+    .card-orange .preview-wrap { background: linear-gradient(135deg, #FF9F45, #FFC79A); }
+    .card-blue .preview-wrap   { background: linear-gradient(135deg, #4FC3F7, #A4DFFB); }
+    .card-purple .preview-wrap { background: linear-gradient(135deg, #B073FF, #D2B0FF); }
+    .card-mint .preview-wrap   { background: linear-gradient(135deg, #6BE6A8, #B2F2D0); }
+    .card-yellow .preview-wrap { background: linear-gradient(135deg, #FFD93D, #FFE894); }
+    .card-coral .preview-wrap  { background: linear-gradient(135deg, #FF6B6B, #FFB0B0); }
+    .card-yellow .preview-title { color: var(--dark); text-shadow: 2px 2px 0 rgba(255,255,255,0.4); }
 
     .card-body { padding: 20px 22px 24px; flex: 1; display: flex; flex-direction: column; }
     .game-name {
@@ -677,14 +719,10 @@
       card.setAttribute('tabindex', '0');
       card.setAttribute('aria-label', 'Play ' + g.name);
 
-      // Use thum.io screenshot service (free, no API key required) for live previews
-      const domain = g.url.replace(/^https?:\/\//, '');
-      const screenshot = `https://image.thum.io/get/width/600/crop/600/maxAge/24/${g.url}`;
-
       card.innerHTML = `
-        <div class="preview-wrap">
-          <div class="preview-loader" aria-hidden="true">${g.emoji}</div>
-          <img src="${screenshot}" alt="Preview of ${g.name}" loading="lazy" onload="this.previousElementSibling.style.display='none'" onerror="this.style.display='none'" />
+        <div class="preview-wrap" aria-hidden="true">
+          <span class="preview-emoji">${g.emoji}</span>
+          <span class="preview-title">${g.name}</span>
         </div>
         <div class="card-body">
           <h3 class="game-name">${g.emoji} ${g.name}</h3>
