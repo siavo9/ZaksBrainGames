@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Word Trio — Zak's Brain Games</title>
+  <meta name="description" content="Play Word Trio — a fun three-word puzzle for kids! Read the clues, guess letters one at a time, and solve all three themed words." />
+  <meta name="theme-color" content="#6BE6A8" />
+  <link rel="canonical" href="https://zaksbraingames.app/wordtrio" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%A9%3C/text%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bubblegum+Sans&display=swap" rel="stylesheet" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow: #FFD93D;
+      --pink: #FF6FB5;
+      --blue: #4FC3F7;
+      --mint: #6BE6A8;
+      --mint-dark: #1FB97A;
+      --purple: #B073FF;
+      --orange: #FF9F45;
+      --coral: #FF6B6B;
+      --dark: #2D2D5F;
+      --cream: #FFF8E7;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Fredoka', system-ui, sans-serif;
+      color: var(--dark);
+      background: linear-gradient(135deg, #FFF8E7 0%, #E5FFF1 50%, #E5F4FF 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .shape {
+      position: fixed; border-radius: 50%; opacity: 0.32; z-index: 0;
+      animation: float 8s ease-in-out infinite; pointer-events: none;
+    }
+    .shape.s1 { width: 120px; height: 120px; background: var(--mint); top: 10%; left: 5%; animation-delay: 0s; }
+    .shape.s2 { width: 80px; height: 80px; background: var(--pink); top: 65%; left: 92%; animation-delay: 2s; }
+    .shape.s3 { width: 100px; height: 100px; background: var(--yellow); top: 84%; left: 8%; animation-delay: 4s; }
+    .shape.s4 { width: 60px; height: 60px; background: var(--purple); top: 22%; left: 88%; animation-delay: 1s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-25px) rotate(12deg); }
+    }
+
+    .container { max-width: 880px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+    header { text-align: center; padding: 28px 20px 12px; }
+    .back-link {
+      display: inline-block;
+      color: var(--mint-dark);
+      font-weight: 600;
+      text-decoration: none;
+      margin-bottom: 14px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: white;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.1);
+      transition: transform 0.2s;
+    }
+    .back-link:hover { transform: translateY(-2px); }
+    h1 {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      background: linear-gradient(135deg, var(--mint-dark), var(--blue), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 3px 3px 0 rgba(107, 230, 168, 0.3);
+      letter-spacing: 1px;
+    }
+    .tagline {
+      font-size: clamp(0.95rem, 2vw, 1.15rem);
+      color: var(--dark);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    main { padding: 10px 0 60px; }
+
+    .panel {
+      background: white;
+      border-radius: 26px;
+      padding: 22px 22px 26px;
+      box-shadow: 0 8px 0 rgba(45, 45, 95, 0.1), 0 14px 30px rgba(45, 45, 95, 0.08);
+      margin-bottom: 18px;
+    }
+
+    .theme-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--mint), #B2F2D0);
+      color: var(--dark);
+      padding: 12px 22px;
+      border-radius: 18px;
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+      margin-bottom: 16px;
+      box-shadow: 0 4px 0 rgba(45, 45, 95, 0.08);
+    }
+    .theme-banner .theme-emoji { font-size: 1.4em; }
+
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .stat {
+      background: var(--cream);
+      padding: 8px 16px;
+      border-radius: 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--dark);
+    }
+    .stat .num { font-weight: 700; }
+    .stat.wrong .num { color: var(--coral); }
+    .stat.guesses .num { color: var(--mint-dark); }
+
+    .words-list {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-bottom: 20px;
+    }
+    .word-row {
+      background: #FAFBFE;
+      border: 2px dashed #E5E5F2;
+      border-radius: 18px;
+      padding: 14px 16px 16px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .word-row.solved {
+      background: #E8FBF1;
+      border-color: var(--mint);
+      border-style: solid;
+    }
+    .word-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .word-number {
+      flex-shrink: 0;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--purple);
+      color: white;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+    }
+    .word-row.solved .word-number { background: var(--mint-dark); }
+    .word-row.solved .word-number::after { content: ' ✓'; }
+    .word-clue {
+      font-size: clamp(0.95rem, 2.4vw, 1.1rem);
+      color: var(--dark);
+      font-weight: 500;
+      line-height: 1.35;
+    }
+    .word-slots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      padding-top: 2px;
+    }
+    .letter-slot {
+      width: 38px;
+      height: 48px;
+      border-bottom: 4px solid var(--dark);
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 1.9rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      color: var(--purple);
+      padding-bottom: 2px;
+      background: white;
+      border-radius: 8px 8px 4px 4px;
+      box-shadow: 0 2px 0 rgba(45, 45, 95, 0.06);
+    }
+    .letter-slot.just-revealed { animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .word-row.solved .letter-slot {
+      color: var(--mint-dark);
+      border-bottom-color: var(--mint-dark);
+    }
+    @keyframes pop {
+      0% { transform: scale(0.3); opacity: 0; }
+      60% { transform: scale(1.2); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .guess-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .guess-input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .guess-input-row label {
+      font-weight: 600;
+      color: var(--dark);
+    }
+    #letterInput {
+      width: 70px;
+      height: 60px;
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 2.2rem;
+      text-align: center;
+      border: 3px solid var(--purple);
+      border-radius: 14px;
+      background: white;
+      color: var(--purple);
+      text-transform: uppercase;
+      box-shadow: 0 4px 0 rgba(176, 115, 255, 0.3);
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    #letterInput:focus {
+      outline: none;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 rgba(176, 115, 255, 0.4);
+    }
+    .guess-btn {
+      padding: 14px 26px;
+      border-radius: 50px;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border: none;
+      cursor: pointer;
+      color: white;
+      background: var(--mint-dark);
+      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .guess-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15); }
+    .guess-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0, 0, 0, 0.15); }
+    .guess-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .feedback {
+      min-height: 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+      transition: opacity 0.3s;
+    }
+    .feedback.good { color: var(--mint-dark); }
+    .feedback.bad { color: var(--coral); }
+    .feedback.dup { color: #888; }
+
+    .keyboard {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: center;
+      width: 100%;
+    }
+    .key-row { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
+    .key {
+      width: 38px;
+      height: 46px;
+      border-radius: 10px;
+      border: none;
+      background: var(--cream);
+      color: var(--dark);
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      cursor: pointer;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.18);
+      transition: transform 0.1s, background 0.15s, color 0.15s;
+    }
+    .key:hover:not(:disabled) { transform: translateY(-2px); background: #FFEDA0; }
+    .key:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 rgba(45, 45, 95, 0.18); }
+    .key.correct { background: var(--mint); color: white; box-shadow: 0 3px 0 var(--mint-dark); }
+    .key.wrong { background: var(--coral); color: white; box-shadow: 0 3px 0 #C84545; }
+    .key:disabled { cursor: not-allowed; opacity: 0.9; }
+
+    .hint {
+      margin-top: 6px;
+      font-size: 0.85rem;
+      color: #888;
+      text-align: center;
+    }
+
+    /* ---------- Win Modal ---------- */
+    .win-overlay {
+      position: fixed; inset: 0;
+      background: rgba(45, 45, 95, 0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 10000; padding: 20px;
+      animation: overlayFade 0.25s ease;
+    }
+    .win-overlay[hidden] { display: none; }
+    @keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
+    .win-card {
+      background: white;
+      border-radius: 28px;
+      padding: 36px 30px 28px;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      animation: modalIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes modalIn {
+      from { transform: translateY(20px) scale(0.92); opacity: 0; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .win-card .trophy {
+      font-size: 4.5rem;
+      display: inline-block;
+      animation: bounce 1.5s ease-in-out infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0) rotate(-5deg); }
+      50% { transform: translateY(-12px) rotate(5deg); }
+    }
+    .win-card h2 {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 2rem;
+      color: var(--mint-dark);
+      margin: 6px 0 4px;
+      line-height: 1.1;
+    }
+    .win-card .praise {
+      font-size: 1.05rem;
+      color: var(--dark);
+      margin-bottom: 18px;
+      line-height: 1.4;
+      font-weight: 500;
+    }
+    .win-stats {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin: 18px 0 22px;
+      flex-wrap: wrap;
+    }
+    .win-stat {
+      background: var(--cream);
+      border-radius: 18px;
+      padding: 14px 18px;
+      min-width: 110px;
+    }
+    .win-stat .big {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 2.4rem;
+      color: var(--purple);
+      line-height: 1;
+    }
+    .win-stat.wrong .big { color: var(--coral); }
+    .win-stat.guesses .big { color: var(--mint-dark); }
+    .win-stat .label {
+      font-size: 0.82rem;
+      color: #666;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .win-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      border: none;
+      cursor: pointer;
+      color: white;
+      text-decoration: none;
+      display: inline-block;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(0,0,0,0.15); }
+    .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+    .btn-primary { background: var(--mint-dark); }
+    .btn-secondary { background: var(--blue); }
+    .btn-ghost { background: white; color: var(--dark); box-shadow: 0 4px 0 rgba(45, 45, 95, 0.18); }
+
+    .confetti {
+      position: fixed; width: 10px; height: 10px;
+      pointer-events: none; z-index: 9999; border-radius: 2px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+
+    @media (max-width: 480px) {
+      .key { width: 30px; height: 40px; font-size: 0.95rem; }
+      .letter-slot { width: 30px; height: 42px; font-size: 1.55rem; }
+      #letterInput { width: 60px; height: 54px; font-size: 1.9rem; }
+      .word-number { width: 26px; height: 26px; font-size: 0.85rem; }
+      .panel { padding: 18px 14px 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
+  <div class="shape s3"></div>
+  <div class="shape s4"></div>
+
+  <div class="container">
+    <header>
+      <a class="back-link" href="/">← Back to all games</a>
+      <h1>🧩 Word Trio</h1>
+      <p class="tagline">Three themed words, one fun puzzle! Guess letters to solve them all.</p>
+    </header>
+
+    <main>
+      <section class="panel">
+        <div class="theme-banner">
+          <span class="theme-emoji" id="themeEmoji">🌟</span>
+          <span id="themeName">Loading…</span>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat guesses">Guesses: <span class="num" id="guessCount">0</span></div>
+          <div class="stat wrong">Wrong: <span class="num" id="wrongCount">0</span></div>
+        </div>
+
+        <div class="words-list" id="wordsList" aria-live="polite"></div>
+
+        <div class="guess-section">
+          <div class="guess-input-row">
+            <label for="letterInput">Type a letter:</label>
+            <input id="letterInput" type="text" maxlength="1" autocomplete="off" autocapitalize="characters" inputmode="text" aria-label="Type a letter to guess" />
+            <button class="guess-btn" id="guessBtn">Guess ▶</button>
+          </div>
+          <p class="feedback" id="feedback" aria-live="polite"></p>
+          <div class="keyboard" id="keyboard" role="group" aria-label="Letter keyboard"></div>
+          <p class="hint">Tip: you can tap a letter, type one in the box, or use your keyboard.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Win modal -->
+  <div class="win-overlay" id="winOverlay" role="dialog" aria-modal="true" aria-labelledby="winTitle" hidden>
+    <div class="win-card">
+      <div class="trophy" id="winEmoji">🏆</div>
+      <h2 id="winTitle">You did it!</h2>
+      <p class="praise" id="winPraise"></p>
+      <div class="win-stats">
+        <div class="win-stat guesses">
+          <div class="big" id="finalGuesses">0</div>
+          <div class="label">Total Guesses</div>
+        </div>
+        <div class="win-stat wrong">
+          <div class="big" id="finalWrong">0</div>
+          <div class="label">Wrong Guesses</div>
+        </div>
+      </div>
+      <div class="win-buttons">
+        <button class="btn btn-primary" id="playAgainBtn">🔄 Play Again</button>
+        <a class="btn btn-ghost" href="/">🏠 Home</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Themes & words (each word 4-7 letters, kid-friendly) ----------
+    const THEMES = [
+      {
+        name: "Farm Animals",
+        emoji: "🐮",
+        words: [
+          { word: "HORSE",   clue: "A big animal you can ride and that says \"neigh\"" },
+          { word: "GOAT",    clue: "A farm animal with horns and a beard" },
+          { word: "SHEEP",   clue: "A fluffy white animal that gives us wool" },
+          { word: "DUCK",    clue: "A bird that swims in ponds and says \"quack\"" },
+          { word: "GOOSE",   clue: "A big bird with a long neck that honks" },
+          { word: "CHICK",   clue: "A fluffy yellow baby chicken" },
+          { word: "CALF",    clue: "A baby cow" },
+          { word: "LAMB",    clue: "A baby sheep" },
+          { word: "DONKEY",  clue: "A grey animal with big long ears that says \"hee-haw\"" },
+          { word: "TURKEY",  clue: "A big bird with a fan-shaped tail" },
+          { word: "ROOSTER", clue: "A male chicken that crows in the morning" },
+          { word: "PONY",    clue: "A small, cute kind of horse" }
+        ]
+      },
+      {
+        name: "Fruits",
+        emoji: "🍎",
+        words: [
+          { word: "APPLE",   clue: "A round red or green crunchy fruit" },
+          { word: "GRAPE",   clue: "A small round fruit that grows on a vine" },
+          { word: "LEMON",   clue: "A sour yellow fruit you can squeeze" },
+          { word: "PEACH",   clue: "A sweet fuzzy orange fruit" },
+          { word: "MELON",   clue: "A big juicy round fruit" },
+          { word: "MANGO",   clue: "A sweet tropical fruit with orange inside" },
+          { word: "CHERRY",  clue: "A small round red fruit with a stem" },
+          { word: "ORANGE",  clue: "A round juicy fruit you peel" },
+          { word: "BANANA",  clue: "A long yellow fruit you peel before eating" },
+          { word: "PAPAYA",  clue: "A tropical fruit with sweet orange flesh and black seeds" },
+          { word: "KIWI",    clue: "A small fuzzy brown fruit that is green inside" },
+          { word: "PEAR",    clue: "A green fruit shaped like a teardrop" },
+          { word: "PLUM",    clue: "A small purple fruit with a pit inside" },
+          { word: "APRICOT", clue: "A small fuzzy orange fruit like a tiny peach" }
+        ]
+      },
+      {
+        name: "Ocean",
+        emoji: "🌊",
+        words: [
+          { word: "FISH",    clue: "A water animal with fins and gills" },
+          { word: "CRAB",    clue: "A sea animal with two big claws that walks sideways" },
+          { word: "SEAL",    clue: "A water animal that loves to clap its flippers" },
+          { word: "WHALE",   clue: "A giant gentle animal that lives in the ocean" },
+          { word: "SHARK",   clue: "A big fish with many sharp teeth" },
+          { word: "SQUID",   clue: "A sea animal with ten arms that can squirt ink" },
+          { word: "CORAL",   clue: "Colorful rocky shapes that live in the warm sea" },
+          { word: "TURTLE",  clue: "A slow swimmer with a hard shell" },
+          { word: "SHRIMP",  clue: "A tiny pink sea creature with a curly tail" },
+          { word: "DOLPHIN", clue: "A friendly, smart sea swimmer that loves to jump" },
+          { word: "OCTOPUS", clue: "A sea animal with eight bendy arms" },
+          { word: "LOBSTER", clue: "A red sea animal with big claws like a giant crab" }
+        ]
+      },
+      {
+        name: "Colors",
+        emoji: "🎨",
+        words: [
+          { word: "BLUE",    clue: "The color of the sky and the sea" },
+          { word: "PINK",    clue: "The color of bubble gum and piggies" },
+          { word: "GOLD",    clue: "A shiny color like a treasure coin" },
+          { word: "GREEN",   clue: "The color of grass and leaves" },
+          { word: "BROWN",   clue: "The color of mud and tree bark" },
+          { word: "BLACK",   clue: "The darkest color, like the deep night sky" },
+          { word: "WHITE",   clue: "The color of snow and clean milk" },
+          { word: "YELLOW",  clue: "The color of the sun and bananas" },
+          { word: "ORANGE",  clue: "A bright color that is both a fruit and a hue" },
+          { word: "PURPLE",  clue: "A royal color that mixes red and blue" },
+          { word: "VIOLET",  clue: "A purple-blue color, like the flower it's named after" },
+          { word: "SILVER",  clue: "A shiny grey color, like a coin or the moon" }
+        ]
+      },
+      {
+        name: "Space",
+        emoji: "🚀",
+        words: [
+          { word: "STAR",    clue: "A twinkly light far away in the night sky" },
+          { word: "MOON",    clue: "It glows white in the sky at night" },
+          { word: "MARS",    clue: "The red planet next to Earth" },
+          { word: "COMET",   clue: "A space rock with a long sparkly tail" },
+          { word: "VENUS",   clue: "The bright planet between Earth and the Sun" },
+          { word: "EARTH",   clue: "The planet we live on" },
+          { word: "PLUTO",   clue: "A tiny faraway dwarf planet" },
+          { word: "PLANET",  clue: "A big ball of rock or gas that goes around a star" },
+          { word: "GALAXY",  clue: "A huge spinning group of stars" },
+          { word: "SATURN",  clue: "The famous planet with beautiful rings" },
+          { word: "ROCKET",  clue: "A tall machine that blasts off into space" },
+          { word: "JUPITER", clue: "The biggest planet in our solar system" }
+        ]
+      },
+      {
+        name: "Weather",
+        emoji: "🌤️",
+        words: [
+          { word: "RAIN",    clue: "Drops of water that fall from clouds" },
+          { word: "SNOW",    clue: "Soft white flakes that fall on cold days" },
+          { word: "WIND",    clue: "Moving air that you can feel but not see" },
+          { word: "HAIL",    clue: "Hard little balls of ice that fall from the sky" },
+          { word: "CLOUD",   clue: "A fluffy white shape floating in the sky" },
+          { word: "STORM",   clue: "Bad weather with thunder and lots of rain" },
+          { word: "SUNNY",   clue: "A bright day with no clouds" },
+          { word: "RAINY",   clue: "When water keeps falling from the sky" },
+          { word: "WINDY",   clue: "When the air is moving really fast" },
+          { word: "CLOUDY",  clue: "When the sky is full of grey fluffy shapes" },
+          { word: "BREEZE",  clue: "A soft, gentle wind" },
+          { word: "THUNDER", clue: "The loud rumbling boom in the sky" },
+          { word: "TORNADO", clue: "A spinning funnel-shaped storm" },
+          { word: "RAINBOW", clue: "A colorful arc in the sky after it rains" }
+        ]
+      },
+      {
+        name: "Food",
+        emoji: "🍕",
+        words: [
+          { word: "PIZZA",   clue: "A round cheesy dinner with toppings on top" },
+          { word: "BREAD",   clue: "What you use to make a sandwich" },
+          { word: "PASTA",   clue: "Long noodles you eat with sauce" },
+          { word: "SALAD",   clue: "A bowl of crunchy mixed veggies" },
+          { word: "DONUT",   clue: "A round sweet treat with a hole in the middle" },
+          { word: "WAFFLE",  clue: "A square breakfast with little dents to hold syrup" },
+          { word: "MUFFIN",  clue: "A small cake-like breakfast treat" },
+          { word: "CHEESE",  clue: "A yellow food made from milk that's great on pizza" },
+          { word: "COOKIE",  clue: "A sweet round baked treat, often with chocolate chips" },
+          { word: "POPCORN", clue: "A fluffy white snack made from corn that pops" },
+          { word: "PRETZEL", clue: "A salty twisted knot-shaped snack" },
+          { word: "CRACKER", clue: "A flat crunchy snack that often goes with cheese" }
+        ]
+      },
+      {
+        name: "School",
+        emoji: "🏫",
+        words: [
+          { word: "BOOK",    clue: "It has pages full of stories or facts to read" },
+          { word: "DESK",    clue: "The table you sit at in your classroom" },
+          { word: "GLUE",    clue: "Sticky stuff that holds things together" },
+          { word: "BELL",    clue: "It rings when it's time for class or recess" },
+          { word: "RULER",   clue: "A flat tool you use to measure things and draw straight lines" },
+          { word: "PAPER",   clue: "What you write or draw on" },
+          { word: "CHALK",   clue: "A soft stick used to write on a blackboard" },
+          { word: "PENCIL",  clue: "A wooden tool with a pointy tip for writing" },
+          { word: "CRAYON",  clue: "A colorful waxy stick for coloring pictures" },
+          { word: "ERASER",  clue: "It rubs away pencil marks" },
+          { word: "MARKER",  clue: "A pen with bright, bold ink" },
+          { word: "TEACHER", clue: "The grown-up who helps you learn at school" },
+          { word: "STUDENT", clue: "A person who goes to school to learn" }
+        ]
+      },
+      {
+        name: "Toys",
+        emoji: "🧸",
+        words: [
+          { word: "BALL",    clue: "A round toy you bounce, kick, or throw" },
+          { word: "KITE",    clue: "A toy that flies in the wind on a string" },
+          { word: "DOLL",    clue: "A small toy that looks like a person" },
+          { word: "YOYO",    clue: "A toy that rolls up and down on a string" },
+          { word: "DRUM",    clue: "A toy you bang on to make a beat" },
+          { word: "TEDDY",   clue: "A soft cuddly stuffed bear" },
+          { word: "TRAIN",   clue: "A toy with cars that runs on a track" },
+          { word: "ROBOT",   clue: "A toy that looks like a friendly little machine" },
+          { word: "BLOCKS",  clue: "Wooden cubes you stack into towers" },
+          { word: "PUZZLE",  clue: "A picture made of small pieces that fit together" },
+          { word: "MARBLES", clue: "Small glass balls you roll across the floor" }
+        ]
+      },
+      {
+        name: "Music",
+        emoji: "🎵",
+        words: [
+          { word: "DRUM",    clue: "You hit it with sticks to make beats" },
+          { word: "HARP",    clue: "A tall instrument with strings you pluck" },
+          { word: "FLUTE",   clue: "A long thin instrument you blow into" },
+          { word: "PIANO",   clue: "An instrument with black and white keys" },
+          { word: "CELLO",   clue: "A big stringed instrument you play sitting down" },
+          { word: "BANJO",   clue: "A round stringed instrument used in country music" },
+          { word: "VIOLIN",  clue: "A small stringed instrument played with a bow" },
+          { word: "GUITAR",  clue: "A six-string instrument you strum" },
+          { word: "TRUMPET", clue: "A loud shiny brass instrument" }
+        ]
+      },
+      {
+        name: "Bugs",
+        emoji: "🐛",
+        words: [
+          { word: "WASP",    clue: "A buzzy yellow-and-black bug that can sting" },
+          { word: "MOTH",    clue: "A bug that flies at night near porch lights" },
+          { word: "WORM",    clue: "A long wiggly creature that lives in the dirt" },
+          { word: "ANTS",    clue: "Tiny bugs that march in a line to find food" },
+          { word: "BEES",    clue: "Buzzy striped bugs that make honey" },
+          { word: "SNAIL",   clue: "A slow bug-like creature with a shell on its back" },
+          { word: "SPIDER",  clue: "It has eight legs and spins sticky webs" },
+          { word: "BEETLE",  clue: "A bug with a hard shiny shell on its back" },
+          { word: "HORNET",  clue: "A big bug that can sting and lives in a paper nest" },
+          { word: "CRICKET", clue: "A green hopping bug that chirps at night" },
+          { word: "LADYBUG", clue: "A little red bug with black dots" },
+          { word: "FIREFLY", clue: "A bug that glows in the dark on summer nights" }
+        ]
+      },
+      {
+        name: "Vehicles",
+        emoji: "🚗",
+        words: [
+          { word: "BIKE",    clue: "Two wheels you pedal to ride" },
+          { word: "BOAT",    clue: "It floats and carries you across water" },
+          { word: "TAXI",    clue: "A yellow car you pay to ride in" },
+          { word: "TRAIN",   clue: "A long line of cars that runs on tracks" },
+          { word: "TRUCK",   clue: "A big vehicle that carries heavy things" },
+          { word: "PLANE",   clue: "It flies through the sky with two big wings" },
+          { word: "WAGON",   clue: "A little cart with four wheels you can pull" },
+          { word: "ROCKET",  clue: "It blasts off and flies into space" },
+          { word: "SUBWAY",  clue: "A train that runs underground in a city" },
+          { word: "SCOOTER", clue: "Two wheels you push with one foot to go" },
+          { word: "TRACTOR", clue: "A big farm machine with huge back wheels" },
+          { word: "TROLLEY", clue: "A street-car that runs on rails in a city" }
+        ]
+      }
+    ];
+
+    // ---------- Praise messages (chosen by performance) ----------
+    const PRAISE = {
+      perfect: [
+        { title: "AMAZING!", praise: "You solved every word with NO wrong guesses! You are a true word wizard! 🌟", emoji: "🌟" },
+        { title: "INCREDIBLE!", praise: "A perfect puzzle! Your brain is glowing with smartness! ✨", emoji: "🏆" },
+        { title: "WOW! PERFECT!", praise: "Not a single wrong guess. You're a puzzle genius! 🧠", emoji: "🥇" }
+      ],
+      great: [
+        { title: "Fantastic Job!", praise: "You solved it like a real pro! Your brain is working great! 🎉", emoji: "🎉" },
+        { title: "Super Solver!", praise: "Way to go! You read the clues, thought hard, and won! 💪", emoji: "💫" },
+        { title: "You're Brilliant!", praise: "Awesome work! Every word is filled in. High five! 🖐️", emoji: "🌟" }
+      ],
+      good: [
+        { title: "Great Work!", praise: "You stuck with it and finished all three words! That's what champions do! 💪", emoji: "🎊" },
+        { title: "Awesome!", praise: "You never gave up — and you solved every word! Your brain just got stronger! 🧠✨", emoji: "🏅" },
+        { title: "You Did It!", praise: "Three words solved! You should be very proud of yourself! 🥳", emoji: "🎈" }
+      ],
+      tough: [
+        { title: "Hooray!", praise: "Tough puzzles make your brain super strong — and you finished it! Way to go! 🧠⚡", emoji: "💪" },
+        { title: "Persistence Pays!", praise: "You kept trying and never gave up. That's the spirit of a real winner! 🌈", emoji: "🌈" },
+        { title: "Brain Power!", praise: "You worked really hard and solved every single word. AMAZING effort! ✨", emoji: "🎯" }
+      ]
+    };
+
+    // ---------- State ----------
+    let currentTheme = null;
+    let currentWords = []; // array of { word, clue, solved }
+    let guessedLetters = new Set();
+    let totalGuesses = 0;
+    let wrongGuesses = 0;
+    let gameOver = false;
+
+    const themeEmojiEl = document.getElementById('themeEmoji');
+    const themeNameEl  = document.getElementById('themeName');
+    const wordsListEl  = document.getElementById('wordsList');
+    const guessCountEl = document.getElementById('guessCount');
+    const wrongCountEl = document.getElementById('wrongCount');
+    const letterInput  = document.getElementById('letterInput');
+    const guessBtn     = document.getElementById('guessBtn');
+    const feedbackEl   = document.getElementById('feedback');
+    const keyboardEl   = document.getElementById('keyboard');
+    const winOverlay   = document.getElementById('winOverlay');
+    const winEmoji     = document.getElementById('winEmoji');
+    const winTitle     = document.getElementById('winTitle');
+    const winPraise    = document.getElementById('winPraise');
+    const finalGuesses = document.getElementById('finalGuesses');
+    const finalWrong   = document.getElementById('finalWrong');
+    const playAgainBtn = document.getElementById('playAgainBtn');
+
+    // ---------- Helpers ----------
+    function pickRandom(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function buildKeyboard() {
+      keyboardEl.innerHTML = '';
+      const rows = ['ABCDEFGHIJ', 'KLMNOPQRS', 'TUVWXYZ'];
+      rows.forEach(row => {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'key-row';
+        for (const ch of row) {
+          const btn = document.createElement('button');
+          btn.className = 'key';
+          btn.type = 'button';
+          btn.textContent = ch;
+          btn.dataset.letter = ch;
+          btn.setAttribute('aria-label', 'Guess letter ' + ch);
+          btn.addEventListener('click', () => handleGuess(ch));
+          rowEl.appendChild(btn);
+        }
+        keyboardEl.appendChild(rowEl);
+      });
+    }
+
+    function renderWords() {
+      wordsListEl.innerHTML = '';
+      currentWords.forEach((entry, idx) => {
+        const row = document.createElement('div');
+        row.className = 'word-row' + (entry.solved ? ' solved' : '');
+
+        const header = document.createElement('div');
+        header.className = 'word-header';
+        header.innerHTML = `
+          <div class="word-number">${idx + 1}</div>
+          <div class="word-clue">${entry.clue}</div>
+        `;
+        row.appendChild(header);
+
+        const slots = document.createElement('div');
+        slots.className = 'word-slots';
+        for (const ch of entry.word) {
+          const slot = document.createElement('span');
+          slot.className = 'letter-slot';
+          if (guessedLetters.has(ch)) {
+            slot.textContent = ch;
+            if (ch === entry._lastRevealed) {
+              slot.classList.add('just-revealed');
+            }
+          }
+          slots.appendChild(slot);
+        }
+        row.appendChild(slots);
+
+        wordsListEl.appendChild(row);
+      });
+    }
+
+    function isWordSolved(entry) {
+      return [...entry.word].every(c => guessedLetters.has(c));
+    }
+    function allSolved() {
+      return currentWords.every(e => e.solved);
+    }
+
+    function setFeedback(text, type) {
+      feedbackEl.textContent = text;
+      feedbackEl.className = 'feedback' + (type ? ' ' + type : '');
+    }
+
+    function handleGuess(rawLetter) {
+      if (gameOver) return;
+      const letter = String(rawLetter || '').toUpperCase().trim();
+      if (!/^[A-Z]$/.test(letter)) {
+        setFeedback('Please type a single letter A–Z.', 'bad');
+        return;
+      }
+      if (guessedLetters.has(letter)) {
+        setFeedback(`You already tried "${letter}". Try another!`, 'dup');
+        letterInput.value = '';
+        return;
+      }
+
+      guessedLetters.add(letter);
+      totalGuesses++;
+      guessCountEl.textContent = totalGuesses;
+
+      // Mark which letter was just revealed so we can animate it
+      currentWords.forEach(e => { e._lastRevealed = letter; });
+
+      // Count appearances across all words
+      let appearances = 0;
+      currentWords.forEach(e => {
+        for (const c of e.word) if (c === letter) appearances++;
+      });
+
+      const keyBtn = keyboardEl.querySelector(`.key[data-letter="${letter}"]`);
+      if (keyBtn) keyBtn.disabled = true;
+
+      if (appearances > 0) {
+        if (keyBtn) keyBtn.classList.add('correct');
+        const newlySolved = [];
+        currentWords.forEach((e, i) => {
+          const wasSolved = e.solved;
+          e.solved = isWordSolved(e);
+          if (!wasSolved && e.solved) newlySolved.push(i + 1);
+        });
+        renderWords();
+        if (newlySolved.length > 0) {
+          burstConfetti(window.innerWidth / 2, 200);
+          setFeedback(`✨ Word #${newlySolved.join(' & ')} solved!`, 'good');
+        } else {
+          setFeedback(`✓ Found "${letter}" ${appearances} time${appearances > 1 ? 's' : ''}!`, 'good');
+        }
+      } else {
+        wrongGuesses++;
+        wrongCountEl.textContent = wrongGuesses;
+        if (keyBtn) keyBtn.classList.add('wrong');
+        setFeedback(`No "${letter}" in any word. Keep trying!`, 'bad');
+      }
+
+      letterInput.value = '';
+      letterInput.focus();
+
+      // Clear the just-revealed marker on next paint so animation only fires once
+      setTimeout(() => {
+        currentWords.forEach(e => { delete e._lastRevealed; });
+      }, 500);
+
+      if (allSolved()) {
+        finishGame();
+      }
+    }
+
+    function finishGame() {
+      gameOver = true;
+      // disable keyboard
+      keyboardEl.querySelectorAll('.key').forEach(k => k.disabled = true);
+      guessBtn.disabled = true;
+      letterInput.disabled = true;
+
+      finalGuesses.textContent = totalGuesses;
+      finalWrong.textContent = wrongGuesses;
+
+      // Pick praise level
+      let bucket;
+      if (wrongGuesses === 0) bucket = 'perfect';
+      else if (wrongGuesses <= 3) bucket = 'great';
+      else if (wrongGuesses <= 6) bucket = 'good';
+      else bucket = 'tough';
+      const praise = pickRandom(PRAISE[bucket]);
+      winEmoji.textContent = praise.emoji;
+      winTitle.textContent = praise.title;
+      winPraise.textContent = praise.praise;
+
+      winOverlay.removeAttribute('hidden');
+      // big celebration
+      celebrate();
+    }
+
+    function newGame() {
+      // Reset UI / state
+      gameOver = false;
+      guessedLetters = new Set();
+      totalGuesses = 0;
+      wrongGuesses = 0;
+      guessCountEl.textContent = '0';
+      wrongCountEl.textContent = '0';
+      letterInput.value = '';
+      letterInput.disabled = false;
+      guessBtn.disabled = false;
+      setFeedback('', '');
+      winOverlay.setAttribute('hidden', '');
+
+      // Pick a theme and 3 distinct words from it (try to avoid duplicates of last theme)
+      let theme;
+      do {
+        theme = pickRandom(THEMES);
+      } while (currentTheme && THEMES.length > 1 && theme.name === currentTheme.name);
+      currentTheme = theme;
+
+      themeEmojiEl.textContent = theme.emoji;
+      themeNameEl.textContent  = theme.name;
+
+      const picks = shuffle(theme.words).slice(0, 3).map(w => ({
+        word: w.word,
+        clue: w.clue,
+        solved: false
+      }));
+      // Sort shortest-to-longest so the puzzle feels nicely stepped
+      picks.sort((a, b) => a.word.length - b.word.length);
+      currentWords = picks;
+
+      buildKeyboard();
+      renderWords();
+      letterInput.focus();
+    }
+
+    // ---------- Input handlers ----------
+    guessBtn.addEventListener('click', () => {
+      const v = letterInput.value;
+      if (v) handleGuess(v);
+    });
+    letterInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const v = letterInput.value;
+        if (v) handleGuess(v);
+      }
+    });
+    letterInput.addEventListener('input', () => {
+      // Force uppercase, single char
+      const v = letterInput.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 1);
+      letterInput.value = v;
+    });
+
+    // Listen to physical keyboard even when input isn't focused
+    document.addEventListener('keydown', (e) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (document.activeElement === letterInput) return; // already handled
+      const ch = (e.key || '').toUpperCase();
+      if (/^[A-Z]$/.test(ch) && ch.length === 1) {
+        handleGuess(ch);
+      } else if (e.key === 'Enter' && gameOver) {
+        newGame();
+      }
+    });
+
+    playAgainBtn.addEventListener('click', newGame);
+
+    // ---------- Confetti ----------
+    const CONFETTI_COLORS = ['#FFD93D','#FF6FB5','#4FC3F7','#6BE6A8','#B073FF','#FF9F45'];
+    function burstConfetti(x, y) {
+      for (let i = 0; i < 28; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = x + 'px';
+        c.style.top = y + 'px';
+        c.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+        document.body.appendChild(c);
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 80 + Math.random() * 140;
+        const dx = Math.cos(angle) * velocity;
+        const dy = Math.sin(angle) * velocity - 60;
+        c.animate([
+          { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+          { transform: `translate(${dx}px, ${dy + 320}px) rotate(${Math.random()*720}deg)`, opacity: 0 }
+        ], { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(.2,.6,.4,1)' });
+        setTimeout(() => c.remove(), 1700);
+      }
+    }
+    function celebrate() {
+      burstConfetti(window.innerWidth / 2, window.innerHeight / 2);
+      setTimeout(() => burstConfetti(window.innerWidth * 0.28, window.innerHeight * 0.42), 200);
+      setTimeout(() => burstConfetti(window.innerWidth * 0.72, window.innerHeight * 0.42), 400);
+      setTimeout(() => burstConfetti(window.innerWidth / 2, window.innerHeight * 0.35), 600);
+    }
+
+    newGame();
+  </script>
+</body>
+</html>

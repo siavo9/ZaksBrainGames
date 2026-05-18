@@ -107,6 +107,11 @@ app.get('/hangcar', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'hangcar.html'));
 });
 
+// Word Trio game page
+app.get('/wordtrio', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'wordtrio.html'));
+});
+
 // SEO helpers
 app.get('/robots.txt', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
