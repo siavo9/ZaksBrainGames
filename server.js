@@ -102,6 +102,11 @@ app.get('/privacy', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
 });
 
+// HangCar game page
+app.get('/hangcar', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'hangcar.html'));
+});
+
 // SEO helpers
 app.get('/robots.txt', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
