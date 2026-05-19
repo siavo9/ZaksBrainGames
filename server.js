@@ -117,6 +117,11 @@ app.get(['/storyspark', '/storyspark/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'storyspark', 'index.html'));
 });
 
+// Planet Pop Quiz game page (folder-based: /planetpopquiz/index.html)
+app.get(['/planetpopquiz', '/planetpopquiz/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'planetpopquiz', 'index.html'));
+});
+
 // SEO helpers
 app.get('/robots.txt', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
