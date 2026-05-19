@@ -636,6 +636,41 @@
       border-radius: 2px;
     }
 
+    /* ---------- Real planet images (replace flat emoji where available) ---------- */
+    .body-img {
+      display: inline-block;
+      object-fit: contain;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.18), rgba(0,0,0,0.25) 70%);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 0 14px rgba(255,255,255,0.05);
+      vertical-align: middle;
+    }
+    .body-img.size-prompt {
+      width: 5.2rem; height: 5.2rem;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.45), 0 0 24px rgba(255,217,61,0.18);
+    }
+    .body-img.size-option {
+      width: 2.4rem; height: 2.4rem;
+    }
+    .body-img.size-slot {
+      width: 38px; height: 38px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+    .body-img.size-celebration {
+      width: 3.2rem; height: 3.2rem;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.4), 0 0 16px rgba(255,217,61,0.2);
+    }
+    .question-prompt .body-img {
+      animation: bobble 3s ease-in-out infinite;
+    }
+    .celebration-collection .body-img {
+      animation: bobble 3s ease-in-out infinite;
+    }
+    @media (max-width: 480px) {
+      .body-img.size-prompt { width: 4.2rem; height: 4.2rem; }
+      .body-img.size-slot { width: 32px; height: 32px; }
+    }
+
     /* Reduced motion */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -759,6 +794,48 @@
   </div>
 
   <script>
+  // ====================================================================
+  // Real planet/body images (public-domain NASA imagery via Wikimedia)
+  // ====================================================================
+  const PLANET_IMAGES = {
+    Mercury: 'images/mercury.jpg',
+    Venus:   'images/venus.jpg',
+    Earth:   'images/earth.jpg',
+    Mars:    'images/mars.jpg',
+    Jupiter: 'images/jupiter.jpg',
+    Saturn:  'images/saturn.jpg',
+    Uranus:  'images/uranus.jpg',
+    Neptune: 'images/neptune.jpg',
+    Pluto:   'images/pluto.jpg',
+    Sun:     'images/sun.jpg',
+    Moon:    'images/moon.jpg'
+  };
+  // Map decorative emojis used in prompts/options to a planet so we can show
+  // its real photo when one exists. Anything not in here keeps its emoji.
+  const EMOJI_TO_BODY = {
+    '🔴': 'Mars',
+    '🪐': 'Saturn',
+    '🌍': 'Earth',
+    '🌎': 'Earth',
+    '🌏': 'Earth',
+    '🟠': 'Jupiter',
+    '🪨': 'Mercury',
+    '☀️': 'Sun',
+    '🌙': 'Moon',
+    '🟡': 'Venus',
+    '🔵': 'Neptune',
+    '🟦': 'Uranus',
+    '🤍': 'Pluto'
+  };
+  function bodyVisual(emoji, name, sizeClass) {
+    const body = name && PLANET_IMAGES[name] ? name : EMOJI_TO_BODY[emoji];
+    if (body && PLANET_IMAGES[body]) {
+      return '<img class="body-img ' + sizeClass + '" src="' + PLANET_IMAGES[body]
+        + '" alt="' + body + '" loading="lazy" decoding="async" />';
+    }
+    return emoji || '';
+  }
+
   // ====================================================================
   // Question bank
   //
@@ -1612,7 +1689,7 @@
     state.triedThisQuestion = false;
     const q = state.questionList[state.questionIndex];
 
-    $('questionPrompt').textContent = q.prompt || '🪐';
+    $('questionPrompt').innerHTML = bodyVisual(q.prompt, null, 'size-prompt') || '🪐';
     $('questionText').textContent = q.text;
     $('feedback').textContent = '';
     $('feedback').className = 'feedback';
@@ -1624,7 +1701,11 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'option-btn';
-      b.innerHTML = (opt.emoji ? '<span class="opt-emoji" aria-hidden="true">' + opt.emoji + '</span>' : '')
+      const visual = bodyVisual(opt.emoji, opt.label, 'size-option');
+      const isImage = visual && visual.indexOf('<img') === 0;
+      b.innerHTML = (visual
+          ? (isImage ? visual : '<span class="opt-emoji" aria-hidden="true">' + visual + '</span>')
+          : '')
         + '<span class="opt-label">' + opt.label + '</span>';
       b.addEventListener('click', (e) => handleAnswer(e, b, opt, q));
       grid.appendChild(b);
@@ -1682,10 +1763,11 @@
       const slot = document.createElement('div');
       slot.className = 'collection-slot';
       if (state.collection[i]) {
+        const item = state.collection[i];
         slot.classList.add('filled');
-        slot.textContent = state.collection[i].emoji;
-        slot.setAttribute('aria-label', state.collection[i].name);
-        slot.setAttribute('title', state.collection[i].name);
+        slot.innerHTML = bodyVisual(item.emoji, item.name, 'size-slot');
+        slot.setAttribute('aria-label', item.name);
+        slot.setAttribute('title', item.name);
       }
       row.appendChild(slot);
     }
@@ -1714,8 +1796,12 @@
     unique.forEach((item, idx) => {
       const cell = document.createElement('div');
       cell.className = 'planet-item';
-      cell.innerHTML = '<span class="planet-emoji" style="animation-delay:' + (idx * 0.12) + 's">' + item.emoji + '</span>'
-        + '<span class="planet-name">' + item.name + '</span>';
+      const visual = bodyVisual(item.emoji, item.name, 'size-celebration');
+      const isImage = visual && visual.indexOf('<img') === 0;
+      const inner = isImage
+        ? visual.replace('<img ', '<img style="animation-delay:' + (idx * 0.12) + 's" ')
+        : '<span class="planet-emoji" style="animation-delay:' + (idx * 0.12) + 's">' + (visual || item.emoji) + '</span>';
+      cell.innerHTML = inner + '<span class="planet-name">' + item.name + '</span>';
       row.appendChild(cell);
     });
 
