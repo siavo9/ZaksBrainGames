@@ -36,6 +36,7 @@
       { "@type": "Game", "name": "Stop the Fire", "url": "https://stopthefire.app", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "HangCar", "url": "https://zaksbraingames.app/hangcar", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Word Trio", "url": "https://zaksbraingames.app/wordtrio", "typicalAgeRange": "6-" },
+      { "@type": "Game", "name": "Story Spark", "url": "https://zaksbraingames.app/storyspark/", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Memory Match Safari", "url": "https://memorysafari.app", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Play Hue", "url": "https://playhue.app", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Four Circles", "url": "https://fourcircles.app", "typicalAgeRange": "10-" },
@@ -941,6 +942,54 @@
           </g>
         </svg>`,
 
+      storySpark: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="ss-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.25"/>
+            </filter>
+          </defs>
+          <!-- Sparkles in background -->
+          <g fill="#fff" opacity="0.85">
+            <path d="M40,32 l3,7 l7,1 l-5,4 l1,7 l-6,-3 l-6,3 l1,-7 l-5,-4 l7,-1 z"/>
+            <path d="M280,40 l2,5 l5,0.5 l-3.5,3 l0.7,5 l-4.2,-2.5 l-4.2,2.5 l0.7,-5 l-3.5,-3 l5,-0.5 z"/>
+            <circle cx="35" cy="160" r="2.5"/>
+            <circle cx="290" cy="150" r="2.5"/>
+            <circle cx="55" cy="180" r="2"/>
+          </g>
+          <!-- Open book -->
+          <g filter="url(#ss-sh)" transform="translate(58,52)">
+            <!-- Left page -->
+            <path d="M0,12 Q0,2 12,2 L98,8 L98,112 L12,118 Q0,118 0,108 Z" fill="#fff" stroke="#2D2D5F" stroke-width="2.5"/>
+            <!-- Right page -->
+            <path d="M204,12 Q204,2 192,2 L106,8 L106,112 L192,118 Q204,118 204,108 Z" fill="#fff" stroke="#2D2D5F" stroke-width="2.5"/>
+            <!-- Spine -->
+            <line x1="102" y1="5" x2="102" y2="115" stroke="#2D2D5F" stroke-width="2.5"/>
+            <!-- Left page: text lines -->
+            <line x1="14" y1="26" x2="92" y2="26" stroke="#B073FF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+            <line x1="14" y1="40" x2="86" y2="40" stroke="#B073FF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+            <line x1="14" y1="54" x2="92" y2="54" stroke="#B073FF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+            <line x1="14" y1="68" x2="78" y2="68" stroke="#B073FF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+            <line x1="14" y1="82" x2="88" y2="82" stroke="#B073FF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+            <line x1="14" y1="96" x2="74" y2="96" stroke="#B073FF" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+            <!-- Right page: choice prompts -->
+            <text x="155" y="40" text-anchor="middle" font-family="Bubblegum Sans, cursive" font-size="22" fill="#FF6FB5">Pick one!</text>
+            <g transform="translate(116,52)">
+              <rect width="78" height="22" rx="11" fill="#FFE5F1" stroke="#FF6FB5" stroke-width="2"/>
+              <text x="39" y="16" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="11" font-weight="700" fill="#FF6FB5">🌳 Forest</text>
+            </g>
+            <g transform="translate(116,80)">
+              <rect width="78" height="22" rx="11" fill="#E5F4FF" stroke="#4FC3F7" stroke-width="2"/>
+              <text x="39" y="16" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="11" font-weight="700" fill="#0288D1">🐈 Cat</text>
+            </g>
+          </g>
+          <!-- Bigger sparkles in the corners -->
+          <g fill="#FFD93D" stroke="#fff" stroke-width="1.5">
+            <path d="M30,98 l3,8 l8,1 l-6,5 l1.5,8 l-6.5,-3.5 l-6.5,3.5 l1.5,-8 l-6,-5 l8,-1 z"/>
+            <path d="M288,108 l2.5,6 l6,0.7 l-4.5,4 l1,6 l-5,-3 l-5,3 l1,-6 l-4.5,-4 l6,-0.7 z"/>
+          </g>
+        </svg>`,
+
       demoDerby: `
         <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
           <ellipse cx="160" cy="105" rx="145" ry="82" fill="#3D2814" opacity="0.35"/>
@@ -1027,6 +1076,16 @@
         badge: '🧩 Words & Clues',
         age: 'Ages 6+',
         theme: 'card-mint'
+      },
+      {
+        name: 'Story Spark',
+        url: '/storyspark/',
+        emoji: '📖',
+        preview: PREVIEWS.storySpark,
+        desc: 'Read magical stories, solve clues, and choose what happens next! Powers up your reading brain.',
+        badge: '📚 Reading & Imagination',
+        age: 'Ages 6+',
+        theme: 'card-yellow'
       },
       {
         name: 'Memory Match Safari',

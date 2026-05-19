@@ -112,6 +112,11 @@ app.get('/wordtrio', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'wordtrio.html'));
 });
 
+// Story Spark game page (folder-based: /storyspark/index.html)
+app.get(['/storyspark', '/storyspark/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'storyspark', 'index.html'));
+});
+
 // SEO helpers
 app.get('/robots.txt', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
