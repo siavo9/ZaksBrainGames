@@ -1697,16 +1697,14 @@
     const grid = $('optionsGrid');
     grid.innerHTML = '';
     const options = shuffle(q.options);
+    // Answers are text-only: the planet picture lives in the question prompt,
+    // never on the options, so kids must read the question instead of just
+    // matching the same image.
     options.forEach((opt) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'option-btn';
-      const visual = bodyVisual(opt.emoji, opt.label, 'size-option');
-      const isImage = visual && visual.indexOf('<img') === 0;
-      b.innerHTML = (visual
-          ? (isImage ? visual : '<span class="opt-emoji" aria-hidden="true">' + visual + '</span>')
-          : '')
-        + '<span class="opt-label">' + opt.label + '</span>';
+      b.innerHTML = '<span class="opt-label">' + opt.label + '</span>';
       b.addEventListener('click', (e) => handleAnswer(e, b, opt, q));
       grid.appendChild(b);
     });
