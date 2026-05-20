@@ -138,7 +138,7 @@
     .puzzle-tip { font-size: 0.92rem; color: #777; margin-top: 2px; }
 
     /* ---------- Stage (board + tray) ---------- */
-    .stage { position: relative; width: min(92vw, 340px); margin: 6px auto 0; touch-action: none; }
+    .stage { position: relative; width: min(92vw, 340px); margin: 6px auto 0; touch-action: pan-y; }
     .board {
       position: absolute; top: 0; left: 0; width: 100%; aspect-ratio: 1 / 1;
       border-radius: 22px;
@@ -534,41 +534,62 @@
   // ====================================================================
   // Geometry helpers
   // ====================================================================
-  function trayRows() { return state.pieces.length <= 4 ? 1 : 2; }
-
   function computeLayout() {
     const stage = $('stage');
     const board = $('board');
     state.boardSide = board.clientWidth || stage.clientWidth;
     const S = state.boardSide;
-    const rows = trayRows();
-    let maxHf = 0;
-    state.pieces.forEach(p => { if (p.def.hf > maxHf) maxHf = p.def.hf; });
-    const rowH = maxHf * S + 26;
-    const trayH = rows * rowH;
+    const n = state.pieces.length;
+
+    const sideMargin = 8;   // keep pieces off the tray's left/right edges
+    const gapX = 10;        // horizontal gap between pieces in a row
+    const labelH = 24;      // room for the "shape tray" label
+    const rowPad = 16;      // vertical breathing room per row
+    const budget = S - sideMargin * 2;
+
+    // Rotation-proof square footprint: any piece can be spun to any 90° angle,
+    // so reserve the larger of its width/height in BOTH directions. This keeps
+    // every piece fully inside the tray no matter how it is rotated.
+    const foot = state.pieces.map(p => Math.max(p.def.wf, p.def.hf) * S);
+
+    // Greedy-pack pieces into rows that fit the tray width; rows wrap downward
+    // and the tray (and page) grow as tall as needed so nothing spills out.
+    const rows = [];
+    let cur = [], curW = 0;
+    for (let i = 0; i < n; i++) {
+      const add = (cur.length ? gapX : 0) + foot[i];
+      if (cur.length && curW + add > budget) { rows.push(cur); cur = []; curW = 0; }
+      curW += (cur.length ? gapX : 0) + foot[i];
+      cur.push(i);
+    }
+    if (cur.length) rows.push(cur);
+
     const trayTop = S + state.gap;
-    // size the stage + tray
+    let y = trayTop + labelH;
+    rows.forEach(row => {
+      const rowFootH = Math.max.apply(null, row.map(i => foot[i]));
+      const rowH = rowFootH + rowPad;
+      const totalW = row.reduce((a, i) => a + foot[i], 0) + gapX * (row.length - 1);
+      let x = (S - totalW) / 2;
+      const cyRow = y + rowH / 2;
+      row.forEach(i => {
+        const p = state.pieces[i];
+        const w = p.def.wf * S, h = p.def.hf * S;
+        const cx = x + foot[i] / 2;
+        const jx = (p.jitterX || 0) * 4;
+        const jy = (p.jitterY || 0) * 4;
+        p.homeLeft = cx + jx - w / 2;
+        p.homeTop = cyRow + jy - h / 2;
+        x += foot[i] + gapX;
+      });
+      y += rowH;
+    });
+
+    const trayH = (y - trayTop) + 12;
     stage.style.height = (trayTop + trayH) + 'px';
     const tray = $('tray');
     tray.style.top = trayTop + 'px';
     tray.style.height = trayH + 'px';
-
-    // assign tray home positions
-    const cols = Math.min(state.pieces.length, 3);
-    state.pieces.forEach((p, i) => {
-      const w = p.def.wf * S, h = p.def.hf * S;
-      const r = Math.floor(i / cols);
-      const c = i % cols;
-      const inThisRow = Math.min(cols, state.pieces.length - r * cols);
-      const cellW = S / inThisRow;
-      const cx = c * cellW + cellW / 2;
-      const cy = trayTop + r * rowH + rowH / 2;
-      // gentle scattered jitter
-      const jx = (p.jitterX || 0) * cellW * 0.18;
-      const jy = (p.jitterY || 0) * rowH * 0.12;
-      p.homeLeft = cx + jx - w / 2;
-      p.homeTop = cy + jy - h / 2;
-    });
   }
 
   function applyPiece(p) {
