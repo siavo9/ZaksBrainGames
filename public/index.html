@@ -35,9 +35,12 @@
       { "@type": "Game", "name": "Car Math", "url": "https://carmath.app", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Stop the Fire", "url": "https://stopthefire.app", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "HangCar", "url": "https://zaksbraingames.app/hangcar", "typicalAgeRange": "4-" },
+      { "@type": "Game", "name": "Rhyme Time Rocket", "url": "https://zaksbraingames.app/rhymetimerocket/", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Word Trio", "url": "https://zaksbraingames.app/wordtrio", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Story Spark", "url": "https://zaksbraingames.app/storyspark/", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Planet Pop Quiz", "url": "https://zaksbraingames.app/planetpopquiz/", "typicalAgeRange": "6-" },
+      { "@type": "Game", "name": "Memory Market", "url": "https://zaksbraingames.app/memorymarket/", "typicalAgeRange": "6-" },
+      { "@type": "Game", "name": "Shape Shifter", "url": "https://zaksbraingames.app/shapeshifter/", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Memory Match Safari", "url": "https://memorysafari.app", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Play Hue", "url": "https://playhue.app", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Four Circles", "url": "https://fourcircles.app", "typicalAgeRange": "10-" },
@@ -1084,6 +1087,105 @@
           <g transform="translate(160,95)" stroke="#2D2D5F" stroke-width="2" stroke-linejoin="round">
             <path d="M0,-22 L6,-8 L20,-10 L10,2 L18,14 L4,10 L0,24 L-4,10 L-18,14 L-10,2 L-20,-10 L-6,-8 Z" fill="#FFD93D"/>
           </g>
+        </svg>`,
+
+      memoryMarket: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="mk-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity="0.22"/>
+            </filter>
+          </defs>
+          <!-- Customer -->
+          <text x="44" y="86" text-anchor="middle" font-size="58">🐻</text>
+          <!-- Speech bubble with the order -->
+          <g filter="url(#mk-sh)">
+            <rect x="88" y="22" width="208" height="60" rx="18" fill="#fff"/>
+            <path d="M90,56 L74,70 L94,74 Z" fill="#fff"/>
+            <text x="192" y="64" text-anchor="middle" font-size="30" letter-spacing="6">🍎🍌🥛</text>
+          </g>
+          <!-- Shelf of food tiles -->
+          <g filter="url(#mk-sh)">
+            <rect x="36" y="118" width="56" height="58" rx="12" fill="#fff"/>
+            <text x="64" y="158" text-anchor="middle" font-size="30">🍞</text>
+            <rect x="104" y="118" width="56" height="58" rx="12" fill="#fff"/>
+            <text x="132" y="158" text-anchor="middle" font-size="30">🧀</text>
+            <rect x="172" y="118" width="56" height="58" rx="12" fill="#fff"/>
+            <text x="200" y="158" text-anchor="middle" font-size="30">🥕</text>
+            <rect x="240" y="118" width="56" height="58" rx="12" fill="#fff"/>
+            <text x="268" y="158" text-anchor="middle" font-size="30">🍪</text>
+          </g>
+        </svg>`,
+
+      shapeShifter: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="sf-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity="0.25"/>
+            </filter>
+          </defs>
+          <!-- faded target slot -->
+          <polygon points="210,150 248,150 229,114" fill="rgba(255,255,255,0.18)" stroke="#fff" stroke-width="2.5" stroke-dasharray="6 5" stroke-linejoin="round"/>
+          <!-- assembled house -->
+          <g stroke="#2D2D5F" stroke-width="3" stroke-linejoin="round" filter="url(#sf-sh)">
+            <rect x="84" y="80" width="84" height="82" rx="8" fill="#FFD93D"/>
+            <polygon points="76,80 176,80 126,38" fill="#FF6B6B"/>
+            <rect x="114" y="120" width="24" height="42" rx="5" fill="#B073FF"/>
+          </g>
+          <!-- loose tray pieces -->
+          <g stroke="#2D2D5F" stroke-width="3" stroke-linejoin="round" filter="url(#sf-sh)">
+            <circle cx="236" cy="60" r="26" fill="#6BE6A8"/>
+            <polygon points="252,150 290,150 271,114" fill="#4FC3F7"/>
+          </g>
+        </svg>`,
+
+      rhymeTimeRocket: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="rr-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity="0.22"/>
+            </filter>
+          </defs>
+          <!-- stars -->
+          <g fill="#fff">
+            <circle cx="36" cy="30" r="2"/>
+            <circle cx="120" cy="22" r="1.6"/>
+            <circle cx="60" cy="70" r="1.6"/>
+            <circle cx="30" cy="120" r="2"/>
+            <circle cx="108" cy="150" r="1.6"/>
+            <circle cx="300" cy="170" r="2"/>
+          </g>
+          <!-- rocket climbing -->
+          <g transform="translate(72,150) rotate(-20)" filter="url(#rr-sh)">
+            <path d="M-14,22 L0,-28 L14,22 L0,14 Z" fill="#FFD93D" stroke="#2D2D5F" stroke-width="2.5" stroke-linejoin="round"/>
+            <circle cx="0" cy="-4" r="6" fill="#A4DFFB" stroke="#2D2D5F" stroke-width="2"/>
+            <path d="M-14,22 L-22,34 L-6,22 Z" fill="#FF6FB5" stroke="#2D2D5F" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M14,22 L22,34 L6,22 Z" fill="#FF6FB5" stroke="#2D2D5F" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M-7,22 Q0,48 7,22 Q3,34 0,36 Q-3,34 -7,22 Z" fill="#FF9F45" stroke="#FF6B6B" stroke-width="1.5" stroke-linejoin="round"/>
+          </g>
+          <!-- rhyming word cards -->
+          <g filter="url(#rr-sh)" font-family="Bubblegum Sans, cursive">
+            <g transform="translate(148,34)">
+              <rect width="70" height="50" rx="12" fill="#fff"/>
+              <text x="35" y="26" text-anchor="middle" font-size="22">🐱</text>
+              <text x="35" y="44" text-anchor="middle" font-size="15" fill="#2D2D5F">CAT</text>
+            </g>
+            <g transform="translate(230,34)">
+              <rect width="70" height="50" rx="12" fill="#fff"/>
+              <text x="35" y="26" text-anchor="middle" font-size="22">🎩</text>
+              <text x="35" y="44" text-anchor="middle" font-size="15" fill="#2D2D5F">HAT</text>
+            </g>
+            <g transform="translate(148,104)">
+              <rect width="70" height="50" rx="12" fill="#fff"/>
+              <text x="35" y="26" text-anchor="middle" font-size="22">🦇</text>
+              <text x="35" y="44" text-anchor="middle" font-size="15" fill="#2D2D5F">BAT</text>
+            </g>
+            <g transform="translate(230,104)">
+              <rect width="70" height="50" rx="12" fill="#fff"/>
+              <text x="35" y="26" text-anchor="middle" font-size="22">⭐</text>
+              <text x="35" y="44" text-anchor="middle" font-size="15" fill="#2D2D5F">STAR</text>
+            </g>
+          </g>
         </svg>`
     };
 
@@ -1131,6 +1233,16 @@
         theme: 'card-purple'
       },
       {
+        name: 'Rhyme Time Rocket',
+        url: 'https://zaksbraingames.app/rhymetimerocket/',
+        emoji: '🚀',
+        preview: PREVIEWS.rhymeTimeRocket,
+        desc: 'Find the rhyming words to fuel your rocket and blast into space! Builds reading and word power.',
+        badge: '📣 Phonics & Words',
+        age: 'Ages 4+',
+        theme: 'card-pink'
+      },
+      {
         name: 'Word Trio',
         url: '/wordtrio',
         emoji: '🧩',
@@ -1159,6 +1271,26 @@
         badge: '🚀 Science & Space',
         age: 'Ages 6+',
         theme: 'card-purple'
+      },
+      {
+        name: 'Memory Market',
+        url: 'https://zaksbraingames.app/memorymarket/',
+        emoji: '🛒',
+        preview: PREVIEWS.memoryMarket,
+        desc: 'Run your own shop and remember every customer\'s order! A fun workout for your memory brain.',
+        badge: '🧠 Memory & Focus',
+        age: 'Ages 6+',
+        theme: 'card-mint'
+      },
+      {
+        name: 'Shape Shifter',
+        url: 'https://zaksbraingames.app/shapeshifter/',
+        emoji: '🔷',
+        preview: PREVIEWS.shapeShifter,
+        desc: 'Drag and rotate shapes to build rockets, cats, and more! Sharpens your spatial smarts.',
+        badge: '📐 Shapes & Spatial',
+        age: 'Ages 6+',
+        theme: 'card-blue'
       },
       {
         name: 'Memory Match Safari',

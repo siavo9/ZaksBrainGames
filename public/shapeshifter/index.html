@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shape Shifter — Zak's Brain Games</title>
+  <meta name="description" content="Shape Shifter is a shape-fitting puzzle for kids! Drag and rotate colorful shapes to build rockets, cats, houses and more. Ages 6+." />
+  <meta name="theme-color" content="#FFD93D" />
+  <link rel="canonical" href="https://zaksbraingames.app/shapeshifter/" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%B7%3C/text%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bubblegum+Sans&display=swap" rel="stylesheet" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow: #FFD93D;
+      --yellow-dark: #C99700;
+      --pink: #FF6FB5;
+      --blue: #4FC3F7;
+      --mint: #6BE6A8;
+      --mint-dark: #1FB97A;
+      --purple: #B073FF;
+      --orange: #FF9F45;
+      --coral: #FF6B6B;
+      --dark: #2D2D5F;
+      --cream: #FFF8E7;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Fredoka', system-ui, sans-serif;
+      color: var(--dark);
+      background: linear-gradient(135deg, #FFF8E7 0%, #E5F4FF 50%, #EFE5FF 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .shape {
+      position: fixed; border-radius: 50%; opacity: 0.3; z-index: 0;
+      animation: float 8s ease-in-out infinite; pointer-events: none;
+    }
+    .shape.s1 { width: 120px; height: 120px; background: var(--yellow); top: 10%; left: 5%; animation-delay: 0s; }
+    .shape.s2 { width: 80px;  height: 80px;  background: var(--pink);   top: 62%; left: 92%; animation-delay: 2s; }
+    .shape.s3 { width: 100px; height: 100px; background: var(--blue);   top: 82%; left: 8%;  animation-delay: 4s; }
+    .shape.s4 { width: 60px;  height: 60px;  background: var(--purple); top: 22%; left: 88%; animation-delay: 1s; }
+    .shape.s5 { width: 90px;  height: 90px;  background: var(--mint);   top: 45%; left: 3%;  animation-delay: 3s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-26px) rotate(12deg); }
+    }
+
+    .container { max-width: 760px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+    .topnav { padding: 20px 0 8px; display: flex; justify-content: flex-start; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--purple); font-weight: 600; text-decoration: none;
+      padding: 10px 16px; border-radius: 24px; background: white;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.12);
+      transition: transform 0.18s, box-shadow 0.18s; font-size: 0.98rem; min-height: 44px;
+    }
+    .back-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(45, 45, 95, 0.14); }
+    .back-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(45, 45, 95, 0.14); }
+
+    .screen { display: none; padding: 14px 0 48px; }
+    .screen.active { display: block; animation: screenIn 0.3s ease; }
+    @keyframes screenIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .welcome { text-align: center; padding: 10px 14px 24px; }
+    .mascot {
+      font-size: 92px; display: inline-block; animation: spinWiggle 4s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.12)); user-select: none; cursor: pointer;
+    }
+    @keyframes spinWiggle {
+      0%, 100% { transform: rotate(0deg) translateY(0); }
+      25% { transform: rotate(20deg) translateY(-8px); }
+      75% { transform: rotate(-20deg) translateY(-8px); }
+    }
+    h1.title {
+      font-family: 'Bubblegum Sans', cursive; font-size: clamp(2.6rem, 7vw, 4.2rem);
+      margin: 8px 0 4px;
+      background: linear-gradient(135deg, var(--blue), var(--purple), var(--pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      text-shadow: 4px 4px 0 rgba(255, 217, 61, 0.35); letter-spacing: 1px;
+    }
+    .tagline {
+      font-size: clamp(1rem, 2.5vw, 1.25rem); color: var(--dark); font-weight: 500;
+      margin: 4px auto 18px; max-width: 520px; line-height: 1.45;
+    }
+    .tagline span { color: var(--pink); font-weight: 700; }
+
+    .btn {
+      display: inline-block; padding: 16px 32px; border-radius: 50px;
+      font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.2rem;
+      border: none; cursor: pointer; color: white; text-decoration: none; text-align: center;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, box-shadow 0.15s; min-height: 54px; line-height: 1.2;
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 9px 0 rgba(0, 0, 0, 0.15); }
+    .btn:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15); }
+    .btn-primary { background: var(--blue); }
+    .btn-yellow  { background: var(--yellow); color: var(--dark); }
+    .btn-purple  { background: var(--purple); }
+    .btn-pink    { background: var(--pink); }
+    .big-cta { font-size: 1.35rem; padding: 18px 42px; animation: pulseGlow 2.2s ease-in-out infinite; }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 0 rgba(79, 195, 247, 0.4); }
+      50% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 18px rgba(79, 195, 247, 0); }
+    }
+
+    .panel {
+      background: white; border-radius: 26px; padding: 20px 20px 22px;
+      box-shadow: 0 8px 0 rgba(45, 45, 95, 0.1), 0 14px 30px rgba(45, 45, 95, 0.08);
+      margin-bottom: 18px;
+    }
+    .panel h2 {
+      font-family: 'Bubblegum Sans', cursive; color: var(--blue);
+      font-size: clamp(1.6rem, 4vw, 2.1rem); text-align: center; margin-bottom: 14px;
+    }
+
+    .rules-list { list-style: none; max-width: 520px; margin: 0 auto; padding: 0; }
+    .rules-list li {
+      background: var(--cream); border-radius: 18px; padding: 14px 18px;
+      margin-bottom: 12px; font-size: 1.08rem; line-height: 1.45; font-weight: 500;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.08);
+    }
+    .rules-actions { text-align: center; margin-top: 8px; }
+
+    /* ---------- Puzzle header ---------- */
+    .puzzle-head { text-align: center; margin-bottom: 10px; }
+    .puzzle-progress { font-weight: 700; color: var(--purple); font-size: 1rem; }
+    .puzzle-name {
+      font-family: 'Bubblegum Sans', cursive; color: var(--blue); font-size: 1.5rem; line-height: 1.1;
+    }
+    .puzzle-tip { font-size: 0.92rem; color: #777; margin-top: 2px; }
+
+    /* ---------- Stage (board + tray) ---------- */
+    .stage { position: relative; width: min(92vw, 340px); margin: 6px auto 0; touch-action: none; }
+    .board {
+      position: absolute; top: 0; left: 0; width: 100%; aspect-ratio: 1 / 1;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.6), transparent 60%),
+        linear-gradient(135deg, #F2F7FF, #EAF3FF);
+      border: 3px dashed #C9D6F0;
+      box-shadow: inset 0 4px 12px rgba(45,45,95,0.06);
+      overflow: hidden;
+      transition: box-shadow 0.4s, background 0.4s;
+    }
+    .board.complete {
+      border-style: solid; border-color: var(--mint);
+      box-shadow: inset 0 0 0 4px rgba(107,230,168,0.4), 0 0 26px rgba(107,230,168,0.6);
+      animation: boardGlow 0.7s ease;
+    }
+    @keyframes boardGlow { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+    .tray {
+      position: absolute; left: 0; width: 100%;
+      border-radius: 18px;
+      background: repeating-linear-gradient(45deg, #FBF4E6, #FBF4E6 14px, #F6ECD6 14px, #F6ECD6 28px);
+      border: 3px solid #EBD9B5;
+    }
+    .tray-label {
+      position: absolute; top: 4px; left: 0; right: 0; text-align: center;
+      font-size: 0.78rem; font-weight: 700; color: #B79A5C; pointer-events: none;
+    }
+
+    .ghost {
+      position: absolute; pointer-events: none; transform-origin: 50% 50%;
+    }
+    .ghost svg { width: 100%; height: 100%; display: block; }
+
+    .piece {
+      position: absolute; transform-origin: 50% 50%; cursor: grab;
+      touch-action: none; z-index: 5;
+      filter: drop-shadow(2px 3px 2px rgba(45,45,95,0.22));
+    }
+    .piece svg { width: 100%; height: 100%; display: block; pointer-events: none; }
+    .piece.snapback { transition: left 0.32s cubic-bezier(0.34,1.4,0.64,1), top 0.32s cubic-bezier(0.34,1.4,0.64,1); }
+    .piece.dragging { cursor: grabbing; z-index: 50; filter: drop-shadow(3px 6px 5px rgba(45,45,95,0.35)); }
+    .piece.placed {
+      cursor: default; pointer-events: none; z-index: 4;
+      filter: drop-shadow(1px 2px 1px rgba(45,45,95,0.18));
+      animation: snapPop 0.4s cubic-bezier(0.34, 1.7, 0.64, 1);
+    }
+    @keyframes snapPop { 0% { transform: scale(1.18) rotate(var(--rot)); } 60% { transform: scale(0.94) rotate(var(--rot)); } 100% { transform: scale(1) rotate(var(--rot)); } }
+
+    .spark {
+      position: absolute; font-size: 1.1rem; pointer-events: none; z-index: 80;
+    }
+
+    .feedback {
+      min-height: 28px; text-align: center; font-weight: 700;
+      font-size: 1.05rem; margin-top: 14px; line-height: 1.3;
+    }
+    .feedback.good { color: var(--mint-dark); animation: bouncePraise 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .feedback.gentle { color: var(--purple); }
+    @keyframes bouncePraise { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+
+    .celebrate { text-align: center; }
+    .celebrate .trophy {
+      font-size: 5.4rem; display: inline-block; animation: trophyBounce 1.4s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.15));
+    }
+    @keyframes trophyBounce { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-14px) rotate(6deg); } }
+    .celebrate h2 {
+      font-family: 'Bubblegum Sans', cursive; font-size: clamp(2rem, 5vw, 2.6rem);
+      background: linear-gradient(135deg, var(--blue), var(--purple), var(--pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 8px 0;
+    }
+    .celebrate .msg {
+      font-size: 1.25rem; line-height: 1.5; color: var(--dark);
+      background: var(--cream); padding: 16px 18px; border-radius: 18px;
+      margin: 14px auto; max-width: 480px; font-weight: 600;
+    }
+    .gallery { font-size: 2rem; letter-spacing: 6px; margin: 10px 0; }
+    .celebrate-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+
+    .confetti { position: fixed; width: 10px; height: 10px; pointer-events: none; z-index: 9999; border-radius: 2px; }
+
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } .piece.snapback { transition: none !important; } }
+    @media (max-width: 480px) {
+      .panel { padding: 16px 12px 20px; }
+      .btn { padding: 14px 26px; font-size: 1.1rem; }
+      .big-cta { font-size: 1.25rem; padding: 16px 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
+  <div class="shape s3"></div>
+  <div class="shape s4"></div>
+  <div class="shape s5"></div>
+
+  <div class="container">
+    <header class="topnav">
+      <a class="back-btn" href="/" aria-label="Back to Zak's Brain Games">← Back to Zak's Brain Games</a>
+    </header>
+
+    <main>
+      <!-- ============== WELCOME / RULES ============== -->
+      <section class="screen active" id="startScreen" aria-label="How to play">
+        <div class="welcome">
+          <div class="mascot" id="mascot" role="img" aria-label="Blue shape mascot">🔷</div>
+          <h1 class="title">Shape Shifter</h1>
+          <p class="tagline">Drag and spin shapes to build a <span>secret picture!</span></p>
+        </div>
+        <div class="panel">
+          <h2>How to Play</h2>
+          <ul class="rules-list">
+            <li>🧩 You'll see a faded picture made of shapes.</li>
+            <li>👆 <strong>Drag</strong> each shape from the tray onto its matching spot.</li>
+            <li>🔄 <strong>Tap a shape</strong> to spin it around until it fits.</li>
+            <li>✨ When a shape fits, it snaps in place with a happy pop!</li>
+            <li>🎉 Fill the whole picture to win — then build the next one!</li>
+          </ul>
+          <div class="rules-actions">
+            <button class="btn btn-primary big-cta" id="startBtn">Start building! ▶</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== GAME ============== -->
+      <section class="screen" id="gameScreen" aria-label="Build the picture">
+        <div class="panel">
+          <div class="puzzle-head">
+            <div class="puzzle-progress" id="puzzleProgress">Puzzle 1 of 6</div>
+            <div class="puzzle-name" id="puzzleName">🏠 House</div>
+            <div class="puzzle-tip">Drag the shapes up. Tap a shape to spin it!</div>
+          </div>
+
+          <div class="stage" id="stage">
+            <div class="board" id="board"></div>
+            <div class="tray" id="tray"><span class="tray-label">⬇ shape tray ⬇</span></div>
+          </div>
+
+          <p class="feedback" id="feedback" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <!-- ============== CELEBRATION ============== -->
+      <section class="screen" id="celebrateScreen" aria-label="All puzzles done">
+        <div class="panel celebrate">
+          <div class="trophy">🏆</div>
+          <h2>Shape Master!</h2>
+          <div class="gallery" aria-hidden="true">🏠 🚀 ⛵ 🐱 🐠 🤖</div>
+          <p class="msg">You built every picture! Your shape and spatial smarts are super strong! 💪✨</p>
+          <div class="celebrate-buttons">
+            <button class="btn btn-yellow" id="playAgainBtn">Play Again ↺</button>
+            <a class="btn btn-purple" href="/">← Back to Zak's Brain Games</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  // ====================================================================
+  // Shape drawing. Each shape is drawn in a 0..100 box and stretched to
+  // fill its piece's bounding box (preserveAspectRatio="none").
+  // ====================================================================
+  const SHAPE_PATHS = {
+    rect:    '<rect x="3" y="3" width="94" height="94" rx="9" ry="9"/>',
+    triUp:   '<polygon points="50,5 96,95 4,95"/>',
+    triRight:'<polygon points="6,95 96,95 6,5"/>',
+    circle:  '<circle cx="50" cy="50" r="47"/>',
+    hull:    '<polygon points="4,6 96,6 80,94 20,94"/>',
+    trap:    '<polygon points="20,6 80,6 96,94 4,94"/>',
+    diamond: '<polygon points="50,4 96,50 50,96 4,50"/>'
+  };
+
+  function shapeSVG(shape, color) {
+    return '<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">' +
+      '<g fill="' + color + '" stroke="rgba(45,45,95,0.28)" stroke-width="3" stroke-linejoin="round">' +
+      (SHAPE_PATHS[shape] || SHAPE_PATHS.rect) + '</g></svg>';
+  }
+  function ghostSVG(shape) {
+    return '<svg viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">' +
+      '<g fill="rgba(45,45,95,0.05)" stroke="rgba(45,45,95,0.30)" stroke-width="3" stroke-linejoin="round" stroke-dasharray="6 5">' +
+      (SHAPE_PATHS[shape] || SHAPE_PATHS.rect) + '</g></svg>';
+  }
+
+  // rotation symmetry (degrees): a piece fits if (rot - targetRot) is a multiple of this
+  const SYM = { rect: 180, triUp: 360, triRight: 360, circle: 90, hull: 360, trap: 360, diamond: 90 };
+
+  // ====================================================================
+  // Puzzles. Geometry as fractions (0..1) of the board side.
+  // piece: { shape, color, wf, hf, xf, yf (top-left of target box), rot (target rotation deg) }
+  // ====================================================================
+  const PUZZLES = [
+    {
+      name: '🏠 House', scramble: false,
+      pieces: [
+        { shape: 'triUp', color: '#FF6B6B', wf: 0.52, hf: 0.26, xf: 0.24, yf: 0.16, rot: 0 },
+        { shape: 'rect',  color: '#FFD93D', wf: 0.42, hf: 0.42, xf: 0.29, yf: 0.42, rot: 0 },
+        { shape: 'rect',  color: '#B073FF', wf: 0.13, hf: 0.21, xf: 0.435, yf: 0.63, rot: 0 }
+      ]
+    },
+    {
+      name: '🚀 Rocket', scramble: true,
+      pieces: [
+        { shape: 'triUp', color: '#FF6B6B', wf: 0.24, hf: 0.2,  xf: 0.38, yf: 0.1,  rot: 0 },
+        { shape: 'rect',  color: '#4FC3F7', wf: 0.24, hf: 0.42, xf: 0.38, yf: 0.28, rot: 0 },
+        { shape: 'triUp', color: '#B073FF', wf: 0.16, hf: 0.22, xf: 0.2,  yf: 0.48, rot: 0 },
+        { shape: 'triUp', color: '#B073FF', wf: 0.16, hf: 0.22, xf: 0.64, yf: 0.48, rot: 0 }
+      ]
+    },
+    {
+      name: '⛵ Sailboat', scramble: true,
+      pieces: [
+        { shape: 'circle', color: '#FFD93D', wf: 0.17, hf: 0.17, xf: 0.06, yf: 0.07, rot: 0 },
+        { shape: 'triUp',  color: '#FF6FB5', wf: 0.32, hf: 0.4,  xf: 0.34, yf: 0.2,  rot: 0 },
+        { shape: 'hull',   color: '#FF9F45', wf: 0.54, hf: 0.18, xf: 0.23, yf: 0.62, rot: 0 },
+        { shape: 'rect',   color: '#4FC3F7', wf: 0.72, hf: 0.07, xf: 0.14, yf: 0.84, rot: 0 }
+      ]
+    },
+    {
+      name: '🐱 Cat', scramble: true,
+      pieces: [
+        { shape: 'triUp',  color: '#FF9F45', wf: 0.16, hf: 0.17, xf: 0.3,  yf: 0.2,  rot: 0 },
+        { shape: 'triUp',  color: '#FF9F45', wf: 0.16, hf: 0.17, xf: 0.54, yf: 0.2,  rot: 0 },
+        { shape: 'circle', color: '#B073FF', wf: 0.4,  hf: 0.4,  xf: 0.3,  yf: 0.3,  rot: 0 },
+        { shape: 'trap',   color: '#4FC3F7', wf: 0.34, hf: 0.22, xf: 0.33, yf: 0.66, rot: 0 },
+        { shape: 'rect',   color: '#6BE6A8', wf: 0.09, hf: 0.24, xf: 0.66, yf: 0.6,  rot: 0 }
+      ]
+    },
+    {
+      name: '🐠 Fish', scramble: true,
+      pieces: [
+        { shape: 'circle', color: '#4FC3F7', wf: 0.38, hf: 0.38, xf: 0.18, yf: 0.31, rot: 0 },
+        { shape: 'triUp',  color: '#6BE6A8', wf: 0.24, hf: 0.26, xf: 0.56, yf: 0.37, rot: 90 },
+        { shape: 'triUp',  color: '#FF6FB5', wf: 0.18, hf: 0.16, xf: 0.27, yf: 0.18, rot: 0 },
+        { shape: 'triUp',  color: '#FF6FB5', wf: 0.16, hf: 0.14, xf: 0.29, yf: 0.62, rot: 180 },
+        { shape: 'circle', color: '#2D2D5F', wf: 0.1,  hf: 0.1,  xf: 0.27, yf: 0.42, rot: 0 }
+      ]
+    },
+    {
+      name: '🤖 Robot', scramble: true,
+      pieces: [
+        { shape: 'rect', color: '#6BE6A8', wf: 0.26, hf: 0.24, xf: 0.37, yf: 0.12, rot: 0 },
+        { shape: 'rect', color: '#4FC3F7', wf: 0.36, hf: 0.3,  xf: 0.32, yf: 0.4,  rot: 0 },
+        { shape: 'rect', color: '#B073FF', wf: 0.1,  hf: 0.26, xf: 0.19, yf: 0.42, rot: 0 },
+        { shape: 'rect', color: '#B073FF', wf: 0.1,  hf: 0.26, xf: 0.71, yf: 0.42, rot: 0 },
+        { shape: 'rect', color: '#FF9F45', wf: 0.1,  hf: 0.2,  xf: 0.37, yf: 0.72, rot: 0 },
+        { shape: 'rect', color: '#FF9F45', wf: 0.1,  hf: 0.2,  xf: 0.53, yf: 0.72, rot: 0 }
+      ]
+    }
+  ];
+
+  const PRAISE = [
+    "Yes!", "Perfect fit!", "You got it!", "Amazing!", "Brain power!",
+    "Way to go!", "Smart cookie!", "Bullseye!", "Boom!", "Super star!",
+    "Fantastic!", "Nailed it!", "Shape genius!", "Whoa, smart!", "You did it!",
+    "Wonderful!", "Snap! Perfect!"
+  ];
+  const GENTLE = [
+    "Almost! Drag it onto the faded shape 🌟",
+    "So close! Try lining it up again ✨",
+    "Not quite there — give it another go 💫",
+    "Keep trying — you've got this 🌈"
+  ];
+  const SPIN_HINT = [
+    "Give it a spin! Tap the shape to rotate 🔄",
+    "Almost! Tap it to spin it the right way 🔄",
+    "Right spot — now tap to turn it 🔄"
+  ];
+
+  // ====================================================================
+  // State
+  // ====================================================================
+  const state = {
+    puzzleIndex: 0,
+    pieces: [],     // runtime piece objects
+    placedCount: 0,
+    boardSide: 320,
+    gap: 14,
+    busy: false
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ====================================================================
+  // Confetti
+  // ====================================================================
+  const CONFETTI_COLORS = ['#FFD93D', '#FF6FB5', '#4FC3F7', '#6BE6A8', '#B073FF', '#FF9F45'];
+  function burstConfetti(x, y, count) {
+    const n = count || 30;
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = x + 'px';
+      c.style.top = y + 'px';
+      c.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      document.body.appendChild(c);
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = 80 + Math.random() * 140;
+      const dx = Math.cos(angle) * velocity;
+      const dy = Math.sin(angle) * velocity - 80;
+      c.animate([
+        { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+        { transform: 'translate(' + dx + 'px, ' + (dy + 320) + 'px) rotate(' + (Math.random() * 720) + 'deg)', opacity: 0 }
+      ], { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(.2,.6,.4,1)' });
+      setTimeout(() => c.remove(), 1700);
+    }
+  }
+  function bigConfetti() {
+    const w = window.innerWidth, h = window.innerHeight;
+    burstConfetti(w * 0.25, h * 0.35, 40);
+    setTimeout(() => burstConfetti(w * 0.75, h * 0.35, 40), 180);
+    setTimeout(() => burstConfetti(w * 0.5, h * 0.25, 50), 360);
+  }
+  function sparkle(x, y) {
+    const marks = ['✨', '⭐', '🌟'];
+    for (let i = 0; i < 5; i++) {
+      const s = document.createElement('div');
+      s.className = 'spark';
+      s.textContent = marks[Math.floor(Math.random() * marks.length)];
+      s.style.left = x + 'px';
+      s.style.top = y + 'px';
+      document.body.appendChild(s);
+      const dx = (Math.random() - 0.5) * 90;
+      const dy = -30 - Math.random() * 70;
+      s.animate([
+        { transform: 'translate(0,0) scale(0.4)', opacity: 1 },
+        { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(1.2)', opacity: 0 }
+      ], { duration: 700 + Math.random() * 300, easing: 'ease-out' });
+      setTimeout(() => s.remove(), 1050);
+    }
+  }
+
+  // ====================================================================
+  // Sound (Web Audio API)
+  // ====================================================================
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { audioCtx = null; }
+    }
+    return audioCtx;
+  }
+  function tone(freq, start, dur, vol, type) {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type || 'sine';
+    o.frequency.value = freq;
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime + start;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + dur);
+    o.start(t0);
+    o.stop(t0 + dur + 0.05);
+  }
+  function playPop() {
+    tone(523.25, 0, 0.1, 0.16, 'triangle');
+    tone(880, 0.05, 0.16, 0.18, 'triangle');
+  }
+  function playClick() { tone(660, 0, 0.06, 0.1, 'square'); }
+  function playGentle() {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime;
+    o.frequency.setValueAtTime(392, t0);
+    o.frequency.linearRampToValueAtTime(330, t0 + 0.28);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.1, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + 0.34);
+    o.start(t0);
+    o.stop(t0 + 0.38);
+  }
+  function playFanfare() {
+    tone(523.25, 0,    0.18, 0.2);
+    tone(659.25, 0.12, 0.18, 0.2);
+    tone(783.99, 0.24, 0.18, 0.2);
+    tone(1046.5, 0.36, 0.4, 0.22);
+  }
+
+  // ====================================================================
+  // Geometry helpers
+  // ====================================================================
+  function trayRows() { return state.pieces.length <= 4 ? 1 : 2; }
+
+  function computeLayout() {
+    const stage = $('stage');
+    const board = $('board');
+    state.boardSide = board.clientWidth || stage.clientWidth;
+    const S = state.boardSide;
+    const rows = trayRows();
+    let maxHf = 0;
+    state.pieces.forEach(p => { if (p.def.hf > maxHf) maxHf = p.def.hf; });
+    const rowH = maxHf * S + 26;
+    const trayH = rows * rowH;
+    const trayTop = S + state.gap;
+    // size the stage + tray
+    stage.style.height = (trayTop + trayH) + 'px';
+    const tray = $('tray');
+    tray.style.top = trayTop + 'px';
+    tray.style.height = trayH + 'px';
+
+    // assign tray home positions
+    const cols = Math.min(state.pieces.length, 3);
+    state.pieces.forEach((p, i) => {
+      const w = p.def.wf * S, h = p.def.hf * S;
+      const r = Math.floor(i / cols);
+      const c = i % cols;
+      const inThisRow = Math.min(cols, state.pieces.length - r * cols);
+      const cellW = S / inThisRow;
+      const cx = c * cellW + cellW / 2;
+      const cy = trayTop + r * rowH + rowH / 2;
+      // gentle scattered jitter
+      const jx = (p.jitterX || 0) * cellW * 0.18;
+      const jy = (p.jitterY || 0) * rowH * 0.12;
+      p.homeLeft = cx + jx - w / 2;
+      p.homeTop = cy + jy - h / 2;
+    });
+  }
+
+  function applyPiece(p) {
+    const S = state.boardSide;
+    const w = p.def.wf * S, h = p.def.hf * S;
+    p.el.style.width = w + 'px';
+    p.el.style.height = h + 'px';
+    if (p.placed) {
+      const tx = p.def.xf * S, ty = p.def.yf * S;
+      p.el.style.left = tx + 'px';
+      p.el.style.top = ty + 'px';
+      p.el.style.setProperty('--rot', p.def.rot + 'deg');
+      p.el.style.transform = 'rotate(' + p.def.rot + 'deg)';
+    } else {
+      p.el.style.left = p.homeLeft + 'px';
+      p.el.style.top = p.homeTop + 'px';
+      p.el.style.transform = 'rotate(' + p.rot + 'deg)';
+    }
+  }
+
+  function relayout() {
+    if (!state.pieces.length) return;
+    computeLayout();
+    // ghosts use percentages, so only pieces need repositioning
+    state.pieces.forEach(applyPiece);
+  }
+
+  // ====================================================================
+  // Build a puzzle
+  // ====================================================================
+  function buildPuzzle(index) {
+    const puzzle = PUZZLES[index];
+    const board = $('board');
+    const tray = $('tray');
+    const stage = $('stage');
+
+    board.classList.remove('complete');
+    board.innerHTML = '';
+    // remove old pieces
+    state.pieces.forEach(p => { if (p.el && p.el.parentNode) p.el.remove(); });
+    state.pieces = [];
+    state.placedCount = 0;
+    state.busy = false;
+
+    $('puzzleProgress').textContent = 'Puzzle ' + (index + 1) + ' of ' + PUZZLES.length;
+    $('puzzleName').textContent = puzzle.name;
+    $('feedback').textContent = '';
+    $('feedback').className = 'feedback';
+
+    // ghosts (target outlines) — percentage-based so they auto-scale
+    puzzle.pieces.forEach(def => {
+      const g = document.createElement('div');
+      g.className = 'ghost';
+      g.style.left = (def.xf * 100) + '%';
+      g.style.top = (def.yf * 100) + '%';
+      g.style.width = (def.wf * 100) + '%';
+      g.style.height = (def.hf * 100) + '%';
+      g.style.transform = 'rotate(' + def.rot + 'deg)';
+      g.innerHTML = ghostSVG(def.shape);
+      board.appendChild(g);
+    });
+
+    // runtime pieces
+    puzzle.pieces.forEach((def, i) => {
+      const el = document.createElement('div');
+      el.className = 'piece';
+      el.innerHTML = shapeSVG(def.shape, def.color);
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', 'Puzzle shape ' + (i + 1));
+      stage.appendChild(el);
+
+      // initial rotation: scrambled (snapped to 90°) or correct
+      let initRot = def.rot;
+      if (puzzle.scramble) {
+        const steps = [0, 90, 180, 270];
+        initRot = steps[Math.floor(Math.random() * steps.length)];
+      }
+      const p = {
+        def, el, placed: false, rot: initRot, index: i,
+        jitterX: (Math.random() * 2 - 1), jitterY: (Math.random() * 2 - 1),
+        homeLeft: 0, homeTop: 0
+      };
+      el.style.zIndex = String(5 + i);
+      attachPointer(p);
+      state.pieces.push(p);
+    });
+
+    computeLayout();
+    state.pieces.forEach(applyPiece);
+  }
+
+  // ====================================================================
+  // Pointer drag + tap-to-rotate
+  // ====================================================================
+  function attachPointer(p) {
+    const el = p.el;
+    let startX = 0, startY = 0, baseLeft = 0, baseTop = 0, moved = false, dragging = false;
+    const THRESH = 7;
+
+    el.addEventListener('pointerdown', (e) => {
+      if (p.placed || state.busy) return;
+      ensureAudio();
+      dragging = true; moved = false;
+      startX = e.clientX; startY = e.clientY;
+      baseLeft = parseFloat(el.style.left) || 0;
+      baseTop = parseFloat(el.style.top) || 0;
+      el.classList.remove('snapback');
+      el.classList.add('dragging');
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    });
+
+    el.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (!moved && (Math.abs(dx) > THRESH || Math.abs(dy) > THRESH)) moved = true;
+      el.style.left = (baseLeft + dx) + 'px';
+      el.style.top = (baseTop + dy) + 'px';
+      e.preventDefault();
+    });
+
+    function endDrag(e) {
+      if (!dragging) return;
+      dragging = false;
+      el.classList.remove('dragging');
+      try { el.releasePointerCapture(e.pointerId); } catch (err) {}
+      if (!moved) {
+        // tap = rotate
+        p.rot = (p.rot + 90) % 360;
+        el.style.transform = 'rotate(' + p.rot + 'deg)';
+        playClick();
+        // if it's resting on its target, a correct spin should snap it
+        trySnap(p, true);
+      } else {
+        trySnap(p, false);
+      }
+    }
+    el.addEventListener('pointerup', endDrag);
+    el.addEventListener('pointercancel', endDrag);
+  }
+
+  function rotationOK(p) {
+    const sym = SYM[p.def.shape] || 360;
+    const diff = (((p.rot - p.def.rot) % sym) + sym) % sym;
+    return diff === 0;
+  }
+
+  function trySnap(p, fromRotate) {
+    if (p.placed) return;
+    const S = state.boardSide;
+    const w = p.def.wf * S, h = p.def.hf * S;
+    const curLeft = parseFloat(p.el.style.left) || 0;
+    const curTop = parseFloat(p.el.style.top) || 0;
+    const cx = curLeft + w / 2, cy = curTop + h / 2;
+    const tcx = (p.def.xf + p.def.wf / 2) * S;
+    const tcy = (p.def.yf + p.def.hf / 2) * S;
+    const dist = Math.hypot(cx - tcx, cy - tcy);
+    const snapR = 0.2 * S;
+
+    if (dist <= snapR && rotationOK(p)) {
+      lockPiece(p, tcx, tcy);
+    } else if (dist <= snapR && !rotationOK(p)) {
+      // right place, wrong spin
+      if (!fromRotate) returnHome(p);
+      hint(SPIN_HINT[Math.floor(Math.random() * SPIN_HINT.length)], 'gentle');
+      if (!fromRotate) playGentle();
+    } else {
+      if (!fromRotate) {
+        returnHome(p);
+        hint(GENTLE[Math.floor(Math.random() * GENTLE.length)], 'gentle');
+        playGentle();
+      }
+    }
+  }
+
+  function lockPiece(p, tcx, tcy) {
+    const S = state.boardSide;
+    const tx = p.def.xf * S, ty = p.def.yf * S;
+    p.placed = true;
+    p.rot = p.def.rot;
+    p.el.classList.remove('snapback');
+    p.el.style.left = tx + 'px';
+    p.el.style.top = ty + 'px';
+    p.el.style.setProperty('--rot', p.def.rot + 'deg');
+    p.el.style.transform = 'rotate(' + p.def.rot + 'deg)';
+    p.el.classList.add('placed');
+
+    playPop();
+    const rect = p.el.getBoundingClientRect();
+    sparkle(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    burstConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2, 10);
+    hint(PRAISE[Math.floor(Math.random() * PRAISE.length)], 'good');
+
+    state.placedCount++;
+    if (state.placedCount >= state.pieces.length) completePuzzle();
+  }
+
+  function returnHome(p) {
+    p.el.classList.add('snapback');
+    p.el.style.left = p.homeLeft + 'px';
+    p.el.style.top = p.homeTop + 'px';
+  }
+
+  function hint(text, kind) {
+    const fb = $('feedback');
+    fb.className = 'feedback ' + (kind || '');
+    fb.textContent = text;
+  }
+
+  function completePuzzle() {
+    state.busy = true;
+    $('board').classList.add('complete');
+    hint('🎉 You built the ' + PUZZLES[state.puzzleIndex].name.replace(/^[^ ]+ /, '') + '! 🎉', 'good');
+    playFanfare();
+    bigConfetti();
+    setTimeout(() => {
+      state.puzzleIndex++;
+      if (state.puzzleIndex >= PUZZLES.length) finishGame();
+      else buildPuzzle(state.puzzleIndex);
+    }, 1900);
+  }
+
+  function finishGame() {
+    showScreen('celebrateScreen');
+    setTimeout(() => { bigConfetti(); playFanfare(); }, 200);
+    setTimeout(() => { bigConfetti(); }, 1000);
+    setTimeout(() => { bigConfetti(); }, 1800);
+  }
+
+  // ====================================================================
+  // Buttons
+  // ====================================================================
+  function startGame() {
+    state.puzzleIndex = 0;
+    showScreen('gameScreen');
+    // build after the screen is visible so the board has a measurable width
+    requestAnimationFrame(() => buildPuzzle(0));
+  }
+
+  $('startBtn').addEventListener('click', (e) => {
+    ensureAudio();
+    burstConfetti(e.clientX, e.clientY, 18);
+    startGame();
+  });
+  $('playAgainBtn').addEventListener('click', (e) => {
+    burstConfetti(e.clientX, e.clientY, 18);
+    startGame();
+  });
+  $('mascot').addEventListener('click', (e) => {
+    burstConfetti(e.clientX, e.clientY, 18);
+    playPop();
+  });
+
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    if (!$('gameScreen').classList.contains('active')) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(relayout, 120);
+  });
+  </script>
+</body>
+</html>

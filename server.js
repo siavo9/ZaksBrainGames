@@ -122,6 +122,21 @@ app.get(['/planetpopquiz', '/planetpopquiz/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'planetpopquiz', 'index.html'));
 });
 
+// Memory Market game page (folder-based: /memorymarket/index.html)
+app.get(['/memorymarket', '/memorymarket/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'memorymarket', 'index.html'));
+});
+
+// Shape Shifter game page (folder-based: /shapeshifter/index.html)
+app.get(['/shapeshifter', '/shapeshifter/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'shapeshifter', 'index.html'));
+});
+
+// Rhyme Time Rocket game page (folder-based: /rhymetimerocket/index.html)
+app.get(['/rhymetimerocket', '/rhymetimerocket/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'rhymetimerocket', 'index.html'));
+});
+
 // SEO helpers
 app.get('/robots.txt', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
