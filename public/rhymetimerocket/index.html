@@ -316,7 +316,7 @@
             <p class="read-fallback" id="readFallback" hidden>Read-aloud isn't available in this browser — but you can still play with the pictures! 🖼️</p>
           </div>
 
-          <div class="pick-prompt">👆 Tap the rhyming words!</div>
+          <div class="pick-prompt" id="pickPrompt">👆 Tap the rhyming words!</div>
           <div class="word-grid" id="wordGrid"></div>
 
           <p class="feedback" id="feedback" aria-live="polite"></p>
@@ -613,6 +613,11 @@
     $('feedback').textContent = '';
     $('feedback').className = 'feedback';
 
+    const need = state.rhymesNeededThisRound;
+    $('pickPrompt').textContent = need === 1
+      ? '👆 Tap the word that rhymes!'
+      : '👆 Tap the ' + need + ' words that rhyme!';
+
     const grid = $('wordGrid');
     grid.innerHTML = '';
     shuffle(round.cards).forEach(card => {
@@ -658,6 +663,11 @@
       if (state.foundThisRound >= state.rhymesNeededThisRound) {
         state.busy = true;
         setTimeout(() => nextRound(), 1500);
+      } else {
+        const remaining = state.rhymesNeededThisRound - state.foundThisRound;
+        fb.textContent += remaining === 1
+          ? ' Find 1 more rhyme! 🚀'
+          : ' Find ' + remaining + ' more rhymes! 🚀';
       }
     } else {
       el.classList.remove('bad');
