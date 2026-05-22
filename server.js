@@ -152,6 +152,11 @@ app.get(['/communityhelpers', '/communityhelpers/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'communityhelpers', 'index.html'));
 });
 
+// Monster Truck Builder game page (folder-based: /monstertruckbuilder/index.html)
+app.get(['/monstertruckbuilder', '/monstertruckbuilder/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'monstertruckbuilder', 'index.html'));
+});
+
 // SEO helpers
 app.get('/robots.txt', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));

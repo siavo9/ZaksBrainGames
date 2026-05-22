@@ -38,6 +38,7 @@
       { "@type": "Game", "name": "Rhyme Time Rocket", "url": "https://zaksbraingames.app/rhymetimerocket/", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Community Helpers", "url": "https://zaksbraingames.app/communityhelpers/", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Animal Kingdom Sort", "url": "https://zaksbraingames.app/animalkingdomsort/", "typicalAgeRange": "5-" },
+      { "@type": "Game", "name": "Monster Truck Builder", "url": "https://zaksbraingames.app/monstertruckbuilder/", "typicalAgeRange": "5-" },
       { "@type": "Game", "name": "World Explorer", "url": "https://zaksbraingames.app/worldexplorer/", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Word Trio", "url": "https://zaksbraingames.app/wordtrio", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Story Spark", "url": "https://zaksbraingames.app/storyspark/", "typicalAgeRange": "6-" },
@@ -617,6 +618,34 @@
   <script>
     // ---------- Game previews (mini illustrations of each game's actual visuals) ----------
     const PREVIEWS = {
+      monsterTruckBuilder: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="152" width="320" height="48" fill="#4a4f5e"/>
+          <g fill="#FFD93D">
+            <rect x="14" y="174" width="34" height="6" rx="2"/>
+            <rect x="84" y="174" width="34" height="6" rx="2"/>
+            <rect x="154" y="174" width="34" height="6" rx="2"/>
+            <rect x="224" y="174" width="34" height="6" rx="2"/>
+            <rect x="294" y="174" width="34" height="6" rx="2"/>
+          </g>
+          <g transform="translate(66,38)">
+            <rect x="20" y="70" width="152" height="11" rx="4" fill="#3a3f4b"/>
+            <path d="M118,6 L140,6 L140,26 L118,26 Z" fill="#6b7280" stroke="#3a3f4b" stroke-width="2.5"/>
+            <rect x="122" y="0" width="14" height="8" rx="2" fill="#cfd4de" stroke="#3a3f4b" stroke-width="2"/>
+            <path d="M30,72 L30,32 Q30,18 44,18 L96,18 L120,46 L150,46 L150,72 Z" fill="#FF9F45" stroke="#2d2d5f" stroke-width="3" stroke-linejoin="round"/>
+            <rect x="150" y="48" width="42" height="24" rx="6" fill="#FF9F45" stroke="#2d2d5f" stroke-width="3"/>
+            <path d="M96,24 L116,46 L80,46 L80,24 Z" fill="#bfe9ff" stroke="#2d2d5f" stroke-width="2.5" stroke-linejoin="round"/>
+            <rect x="44" y="27" width="28" height="16" rx="3" fill="#bfe9ff" stroke="#2d2d5f" stroke-width="2.5"/>
+            <circle cx="188" cy="57" r="6" fill="#FFE57A" stroke="#2d2d5f" stroke-width="2.5"/>
+            <circle cx="56" cy="86" r="31" fill="#1d1f26"/>
+            <circle cx="56" cy="86" r="31" fill="none" stroke="#34373f" stroke-width="5" stroke-dasharray="8 9"/>
+            <circle cx="56" cy="86" r="13" fill="#cfd4de"/><circle cx="56" cy="86" r="4" fill="#6b7280"/>
+            <circle cx="150" cy="86" r="31" fill="#1d1f26"/>
+            <circle cx="150" cy="86" r="31" fill="none" stroke="#34373f" stroke-width="5" stroke-dasharray="8 9"/>
+            <circle cx="150" cy="86" r="13" fill="#cfd4de"/><circle cx="150" cy="86" r="4" fill="#6b7280"/>
+          </g>
+        </svg>`,
+
       learnTheWords: `
         <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -1398,6 +1427,16 @@
         badge: '🦁 Animals & Science',
         age: 'Ages 5+',
         theme: 'card-mint'
+      },
+      {
+        name: 'Monster Truck Builder',
+        url: '/monstertruckbuilder/',
+        emoji: '🚜',
+        preview: PREVIEWS.monsterTruckBuilder,
+        desc: 'Build your own monster truck piece by piece! Solve math, science, and engineering challenges to unlock every part, then crush some cars.',
+        badge: '🔧 Building & STEM',
+        age: 'Ages 5+',
+        theme: 'card-orange'
       },
       {
         name: 'World Explorer',
