@@ -157,6 +157,26 @@ app.get(['/monstertruckbuilder', '/monstertruckbuilder/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'monstertruckbuilder', 'index.html'));
 });
 
+// Coin Counter Cafe game page (folder-based: /coincountercafe/index.html)
+app.get(['/coincountercafe', '/coincountercafe/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'coincountercafe', 'index.html'));
+});
+
+// Tick-Tock Clock Quest game page (folder-based: /ticktockclockquest/index.html)
+app.get(['/ticktockclockquest', '/ticktockclockquest/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'ticktockclockquest', 'index.html'));
+});
+
+// Feelings Friends game page (folder-based: /feelingsfriends/index.html)
+app.get(['/feelingsfriends', '/feelingsfriends/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'feelingsfriends', 'index.html'));
+});
+
+// Spell-a-Bee game page (folder-based: /spellabee/index.html)
+app.get(['/spellabee', '/spellabee/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'spellabee', 'index.html'));
+});
+
 // SEO helpers
 app.get('/robots.txt', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
