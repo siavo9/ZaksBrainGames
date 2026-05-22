@@ -61,6 +61,26 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://zaksbraingames.app/coincountercafe/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zaksbraingames.app/ticktockclockquest/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zaksbraingames.app/feelingsfriends/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://zaksbraingames.app/spellabee/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://zaksbraingames.app/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tick-Tock Clock Quest — Zak's Brain Games</title>
+  <meta name="description" content="Tick-Tock Clock Quest is a friendly time-telling game! Read the analog clock or drag the hands to set the time, and help your friend get everywhere on time. Ages 6+." />
+  <meta name="theme-color" content="#4FC3F7" />
+  <link rel="canonical" href="https://zaksbraingames.app/ticktockclockquest/" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%95%90%3C/text%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bubblegum+Sans&display=swap" rel="stylesheet" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow: #FFD93D;
+      --yellow-dark: #C99700;
+      --pink: #FF6FB5;
+      --blue: #4FC3F7;
+      --blue-dark: #0288D1;
+      --mint: #6BE6A8;
+      --mint-dark: #1FB97A;
+      --purple: #B073FF;
+      --orange: #FF9F45;
+      --orange-dark: #E07B1E;
+      --coral: #FF6B6B;
+      --dark: #2D2D5F;
+      --cream: #FFF8E7;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Fredoka', system-ui, sans-serif;
+      color: var(--dark);
+      background: linear-gradient(135deg, #E5F4FF 0%, #FFF8E7 50%, #FFE5F1 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .shape {
+      position: fixed; border-radius: 50%; opacity: 0.3; z-index: 0;
+      animation: float 8s ease-in-out infinite; pointer-events: none;
+    }
+    .shape.s1 { width: 120px; height: 120px; background: var(--blue);   top: 10%; left: 5%;  animation-delay: 0s; }
+    .shape.s2 { width: 80px;  height: 80px;  background: var(--pink);   top: 62%; left: 92%; animation-delay: 2s; }
+    .shape.s3 { width: 100px; height: 100px; background: var(--yellow); top: 82%; left: 8%;  animation-delay: 4s; }
+    .shape.s4 { width: 60px;  height: 60px;  background: var(--mint);   top: 22%; left: 88%; animation-delay: 1s; }
+    .shape.s5 { width: 90px;  height: 90px;  background: var(--purple); top: 45%; left: 3%;  animation-delay: 3s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-26px) rotate(12deg); }
+    }
+
+    .container { max-width: 760px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+    .topnav { padding: 18px 0 6px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--blue-dark); font-weight: 700; text-decoration: none;
+      padding: 12px 18px; border-radius: 24px; background: white;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.18);
+      transition: transform 0.18s, box-shadow 0.18s; font-size: 1rem; min-height: 48px;
+    }
+    .back-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(45, 45, 95, 0.22); }
+    .back-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(45, 45, 95, 0.22); }
+
+    .sound-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--dark); font-weight: 700; text-decoration: none; cursor: pointer;
+      padding: 12px 16px; border-radius: 24px; background: white; border: none;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.18); font-family: inherit;
+      transition: transform 0.18s, box-shadow 0.18s; font-size: 1rem; min-height: 48px;
+    }
+    .sound-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(45, 45, 95, 0.22); }
+    .sound-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(45, 45, 95, 0.22); }
+
+    .screen { display: none; padding: 14px 0 48px; }
+    .screen.active { display: block; animation: screenIn 0.3s ease; }
+    @keyframes screenIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .welcome { text-align: center; padding: 6px 14px 18px; }
+    .mascot {
+      font-size: 92px; display: inline-block; animation: wave 3s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.12)); user-select: none; cursor: pointer;
+    }
+    @keyframes wave {
+      0%, 100% { transform: rotate(-8deg) translateY(0); }
+      25% { transform: rotate(8deg) translateY(-8px); }
+      75% { transform: rotate(-12deg) translateY(-4px); }
+    }
+    h1.title {
+      font-family: 'Bubblegum Sans', cursive; font-size: clamp(2.2rem, 6.5vw, 4rem);
+      margin: 6px 0 4px;
+      background: linear-gradient(135deg, var(--blue-dark), var(--purple), var(--pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      text-shadow: 4px 4px 0 rgba(79, 195, 247, 0.32); letter-spacing: 1px;
+    }
+    .tagline {
+      font-size: clamp(1.05rem, 2.6vw, 1.3rem); color: var(--dark); font-weight: 500;
+      margin: 4px auto 14px; max-width: 540px; line-height: 1.45;
+    }
+    .tagline span { color: var(--pink); font-weight: 700; }
+
+    .btn {
+      display: inline-block; padding: 18px 36px; border-radius: 50px;
+      font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.3rem;
+      border: none; cursor: pointer; color: white; text-decoration: none; text-align: center;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, box-shadow 0.15s; min-height: 58px; line-height: 1.2;
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 9px 0 rgba(0, 0, 0, 0.15); }
+    .btn:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15); }
+    .btn-primary { background: var(--blue); }
+    .btn-yellow  { background: var(--yellow); color: var(--dark); }
+    .btn-purple  { background: var(--purple); }
+    .btn-mint    { background: var(--mint-dark); }
+    .big-cta { font-size: 1.5rem; padding: 20px 48px; animation: pulseGlow 2.2s ease-in-out infinite; }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 0 rgba(79, 195, 247, 0.5); }
+      50% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 18px rgba(79, 195, 247, 0); }
+    }
+
+    .panel {
+      background: white; border-radius: 26px; padding: 22px 20px 24px;
+      box-shadow: 0 8px 0 rgba(45, 45, 95, 0.1), 0 14px 30px rgba(45, 45, 95, 0.08);
+      margin-bottom: 18px;
+    }
+    .panel h2 {
+      font-family: 'Bubblegum Sans', cursive; color: var(--blue-dark);
+      font-size: clamp(1.6rem, 4vw, 2.1rem); text-align: center; margin-bottom: 14px;
+    }
+
+    .rules-list { list-style: none; max-width: 540px; margin: 0 auto; padding: 0; }
+    .rules-list li {
+      background: var(--cream); border-radius: 18px; padding: 16px 20px; margin-bottom: 12px;
+      font-size: 1.18rem; line-height: 1.45; font-weight: 500;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.08);
+    }
+    .rules-actions { text-align: center; margin-top: 8px; }
+
+    .q-head { text-align: center; margin-bottom: 6px; }
+    .q-progress { font-weight: 700; color: var(--blue-dark); font-size: 1.05rem; }
+    .event-line {
+      font-family: 'Bubblegum Sans', cursive; font-size: clamp(1.4rem, 4.5vw, 1.9rem);
+      margin: 8px 0 2px; color: var(--dark);
+    }
+    .event-line .ev-emoji { display: inline-block; font-size: 1.5em; vertical-align: middle; }
+    .event-line.arrive .ev-emoji { animation: arriveBounce 0.8s ease; }
+    @keyframes arriveBounce { 0% { transform: translateY(0) scale(1); } 30% { transform: translateY(-16px) scale(1.2); } 60% { transform: translateY(0) scale(1.2) rotate(-8deg); } 100% { transform: translateY(0) scale(1) rotate(0); } }
+    .prompt {
+      font-size: clamp(1.2rem, 4vw, 1.6rem); font-weight: 600; color: var(--dark);
+      text-align: center; margin: 4px auto 8px; line-height: 1.3;
+    }
+    .prompt .big-time { font-family: 'Bubblegum Sans', cursive; color: var(--blue-dark); font-size: 1.3em; }
+
+    .clock-wrap { display: flex; justify-content: center; margin: 8px 0; }
+    svg#clock { width: min(78vw, 320px); height: min(78vw, 320px); touch-action: none; user-select: none; }
+    .knob { opacity: 0; transition: opacity 0.2s; }
+    svg#clock.set-mode .knob { opacity: 1; cursor: grab; }
+    svg#clock.set-mode .hand-hit { cursor: grab; }
+    .drag-tip { text-align: center; color: var(--blue-dark); font-weight: 600; font-size: 0.98rem; min-height: 1.2em; }
+
+    .options {
+      display: grid; gap: 14px; grid-template-columns: 1fr 1fr; margin: 16px 0 6px;
+      max-width: 460px; margin-left: auto; margin-right: auto;
+    }
+    .option-btn {
+      background: linear-gradient(180deg, #fff 0%, #E5F4FF 100%);
+      border: 4px solid var(--blue); border-radius: 22px; padding: 18px 10px;
+      font-family: 'Bubblegum Sans', cursive; font-size: 1.8rem; font-weight: 700; color: var(--dark);
+      cursor: pointer; box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18);
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s, border-color 0.15s;
+      min-height: 78px; line-height: 1.1;
+    }
+    .option-btn:hover:not(:disabled) {
+      transform: translateY(-4px); border-color: var(--pink);
+      background: linear-gradient(180deg, #fff 0%, #FFE5F1 100%); box-shadow: 0 10px 0 rgba(0, 0, 0, 0.18);
+    }
+    .option-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18); }
+    .option-btn.correct {
+      background: linear-gradient(180deg, #DFFBEB 0%, #B0F0CF 100%);
+      border-color: var(--mint-dark); color: var(--mint-dark);
+      animation: popCorrect 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .option-btn.wrong { animation: shake 0.45s ease-in-out; }
+    .option-btn:disabled { cursor: default; }
+    @keyframes popCorrect { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-9px); } 40% { transform: translateX(9px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+
+    .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+
+    .feedback { min-height: 30px; text-align: center; font-weight: 700; font-size: 1.2rem; margin-top: 10px; line-height: 1.3; }
+    .feedback.good { color: var(--mint-dark); animation: bouncePraise 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .feedback.gentle { color: var(--purple); }
+    @keyframes bouncePraise { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+
+    .progress-dots { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+    .progress-dots .dot { width: 16px; height: 16px; border-radius: 50%; background: #E7DEC8; transition: background 0.2s, transform 0.2s; }
+    .progress-dots .dot.done { background: var(--mint-dark); transform: scale(1.1); }
+
+    .celebrate { text-align: center; }
+    .celebrate .trophy { font-size: 5rem; display: inline-block; animation: trophyBounce 1.4s ease-in-out infinite; filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.15)); }
+    @keyframes trophyBounce { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-14px) rotate(6deg); } }
+    .celebrate h2 {
+      font-family: 'Bubblegum Sans', cursive; font-size: clamp(2rem, 5vw, 2.6rem);
+      background: linear-gradient(135deg, var(--blue-dark), var(--purple), var(--pink));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 8px 0;
+    }
+    .celebrate .msg {
+      font-size: 1.25rem; line-height: 1.5; color: var(--dark);
+      background: var(--cream); padding: 16px 18px; border-radius: 18px; margin: 14px auto; max-width: 520px; font-weight: 600;
+    }
+    .celebrate-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+
+    .confetti { position: fixed; width: 10px; height: 10px; pointer-events: none; z-index: 9999; border-radius: 2px; }
+
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+    @media (max-width: 480px) {
+      .panel { padding: 18px 12px 22px; }
+      .btn { padding: 16px 30px; font-size: 1.2rem; }
+      .big-cta { font-size: 1.35rem; padding: 18px 38px; }
+      .option-btn { font-size: 1.6rem; min-height: 70px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
+  <div class="shape s3"></div>
+  <div class="shape s4"></div>
+  <div class="shape s5"></div>
+
+  <div class="container">
+    <header class="topnav">
+      <a class="back-btn" href="/" aria-label="Back to Zak's Brain Games">← Back to Zak's Brain Games</a>
+      <button class="sound-btn" id="soundBtn" type="button" aria-pressed="true" aria-label="Toggle sound">🔊 Sound: On</button>
+    </header>
+
+    <main>
+      <!-- ============== WELCOME / RULES ============== -->
+      <section class="screen active" id="startScreen" aria-label="How to play">
+        <div class="welcome">
+          <div class="mascot" id="mascot" role="img" aria-label="Clock mascot">🕐</div>
+          <h1 class="title">Tick-Tock Clock Quest</h1>
+          <p class="tagline">Read the clock and set the time to help your friend get <span>everywhere on time!</span> ⏰</p>
+        </div>
+        <div class="panel">
+          <h2>How to Play</h2>
+          <ul class="rules-list">
+            <li>🕐 Sometimes you'll <strong>read the clock</strong> and tap the right time.</li>
+            <li>👆 Sometimes you'll <strong>drag the clock hands</strong> to set the time, then tap <strong>Check</strong>.</li>
+            <li>⚽ Each round helps your friend reach a fun event on time!</li>
+            <li>🎉 Get it right and your friend happily arrives — confetti time!</li>
+            <li>🌟 Not quite? No worries — try again, you've got this!</li>
+          </ul>
+          <div class="rules-actions">
+            <button class="btn btn-primary big-cta" id="startBtn">Play! ▶</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== GAME ============== -->
+      <section class="screen" id="gameScreen" aria-label="Tell the time">
+        <div class="panel">
+          <div class="q-head">
+            <div class="q-progress" id="qProgress">1 of 8</div>
+            <div class="event-line" id="eventLine"><span class="ev-emoji">⚽</span> Time for soccer!</div>
+            <p class="prompt" id="prompt">What time is it?</p>
+          </div>
+
+          <div class="clock-wrap">
+            <svg id="clock" viewBox="0 0 240 240" role="img" aria-label="Analog clock"></svg>
+          </div>
+          <p class="drag-tip" id="dragTip"></p>
+
+          <div class="options" id="optionsGrid" role="group" aria-label="Time choices"></div>
+
+          <div class="actions" id="setActions" hidden>
+            <button class="btn btn-primary" id="checkBtn">Check ✓</button>
+          </div>
+
+          <p class="feedback" id="feedback" aria-live="polite"></p>
+          <div class="progress-dots" id="progressDots" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <!-- ============== CELEBRATION ============== -->
+      <section class="screen" id="celebrateScreen" aria-label="All done">
+        <div class="panel celebrate">
+          <div class="trophy">🏆</div>
+          <h2>Time Champion!</h2>
+          <p class="msg" id="celebrateMsg">You helped your friend get everywhere right on time! ⏰💖</p>
+          <div class="celebrate-buttons">
+            <button class="btn btn-yellow" id="playAgainBtn">Play Again ↺</button>
+            <a class="btn btn-purple" href="/">← Back to Zak's Brain Games</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  // ====================================================================
+  // Tick-Tock Clock Quest — read clocks & drag hands to set the time. Ages 6+.
+  // ====================================================================
+  const EVENTS = [
+    { e: '⚽', t: 'Time for soccer!' }, { e: '🥪', t: 'Lunch time!' }, { e: '🌙', t: 'Bedtime!' },
+    { e: '🏫', t: 'School starts!' }, { e: '🛁', t: 'Bath time!' }, { e: '📚', t: 'Story time!' },
+    { e: '🎂', t: 'Party time!' }, { e: '🦷', t: 'Brush your teeth!' }, { e: '🐶', t: 'Walk the dog!' },
+    { e: '🥞', t: 'Breakfast!' }, { e: '🎨', t: 'Art class!' }, { e: '🏊', t: 'Swim time!' },
+    { e: '🍿', t: 'Movie time!' }, { e: '🚌', t: 'Catch the bus!' }, { e: '🌳', t: 'Park time!' }
+  ];
+  const CHARACTERS = ['🦊','🐰','🐻','🐱','🐶','🐼','🐨','🦁','🐸','🐵'];
+
+  const PRAISE = [
+    "Awesome! 🎉", "You got it! 🌟", "Brain power! 💪", "Right on time! ⏰",
+    "Perfect timing! ✨", "Way to go! 🎈", "Amazing! ⭐", "Superstar! 🌈",
+    "Yes! Spot on! 🙌", "Brilliant! 💖", "High five! ✋", "Fantastic! 🎊",
+    "Nailed it! 🏆", "So smart! 🧠", "Wonderful! 🌟", "Tick-tock star! 🕐", "Hooray! 🎉"
+  ];
+  const GENTLE = [
+    "So close! Try again. 🌟", "Almost! Give it another go. ✨", "Oops — try once more! 💫",
+    "Nearly there — you can do it! 🌈", "Not quite, try again! 🌟"
+  ];
+
+  const TARGET = 8;
+  const NS = 'http://www.w3.org/2000/svg';
+  const state = { round: 0, mode: 'read', target: { hour: 12, minute: 0 }, setHour: 12, setMinute: 0, sound: true, busy: false, active: null };
+  const $ = (id) => document.getElementById(id);
+  const svg = $('clock');
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function shuffle(arr) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function fmtTime(h, m) { return h + ':' + (m < 10 ? '0' + m : m); }
+
+  // ---------- Confetti ----------
+  const CONFETTI_COLORS = ['#FFD93D', '#FF6FB5', '#4FC3F7', '#6BE6A8', '#B073FF', '#FF9F45'];
+  function burstConfetti(x, y, count) {
+    const n = count || 28;
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = x + 'px'; c.style.top = y + 'px';
+      c.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      document.body.appendChild(c);
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = 80 + Math.random() * 140;
+      const dx = Math.cos(angle) * velocity, dy = Math.sin(angle) * velocity - 80;
+      c.animate([
+        { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+        { transform: 'translate(' + dx + 'px, ' + (dy + 320) + 'px) rotate(' + (Math.random() * 720) + 'deg)', opacity: 0 }
+      ], { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(.2,.6,.4,1)' });
+      setTimeout(() => c.remove(), 1700);
+    }
+  }
+  function bigConfetti() {
+    const w = window.innerWidth, h = window.innerHeight;
+    burstConfetti(w * 0.25, h * 0.35, 32);
+    setTimeout(() => burstConfetti(w * 0.75, h * 0.35, 32), 160);
+    setTimeout(() => burstConfetti(w * 0.5, h * 0.28, 40), 320);
+  }
+
+  // ---------- Sound ----------
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audioCtx = null; } }
+    if (audioCtx && audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch (e) {} }
+    return audioCtx;
+  }
+  function tone(freq, start, dur, vol, type) {
+    if (!state.sound) return;
+    const ctx = ensureAudio(); if (!ctx) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime + start;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + dur);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+  function playChime() {
+    tone(659.25, 0, 0.12, 0.18, 'triangle');
+    tone(783.99, 0.1, 0.12, 0.18, 'triangle');
+    tone(987.77, 0.2, 0.16, 0.2, 'triangle');
+    tone(1318.5, 0.32, 0.24, 0.18, 'triangle');
+  }
+  function playTick() { tone(1200, 0, 0.03, 0.06, 'square'); }
+  function playGentle() {
+    if (!state.sound) return;
+    const ctx = ensureAudio(); if (!ctx) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime;
+    o.frequency.setValueAtTime(392, t0);
+    o.frequency.linearRampToValueAtTime(330, t0 + 0.26);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.09, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + 0.32);
+    o.start(t0); o.stop(t0 + 0.36);
+  }
+  function playFanfare() {
+    tone(523.25, 0, 0.18, 0.2); tone(659.25, 0.12, 0.18, 0.2);
+    tone(783.99, 0.24, 0.18, 0.2); tone(1046.5, 0.36, 0.4, 0.22);
+  }
+
+  // ---------- Build clock ----------
+  function el(tag, attrs) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  let hourGroup, minuteGroup;
+  function buildClock() {
+    svg.innerHTML = '';
+    svg.appendChild(el('circle', { cx: 120, cy: 120, r: 116, fill: '#fff', stroke: '#2D2D5F', 'stroke-width': 6 }));
+    svg.appendChild(el('circle', { cx: 120, cy: 120, r: 106, fill: '#E5F4FF', stroke: '#4FC3F7', 'stroke-width': 3 }));
+    // ticks + numbers
+    for (let i = 1; i <= 12; i++) {
+      const ang = i * 30 * Math.PI / 180;
+      const tx1 = 120 + Math.sin(ang) * 100, ty1 = 120 - Math.cos(ang) * 100;
+      const tx2 = 120 + Math.sin(ang) * 90, ty2 = 120 - Math.cos(ang) * 90;
+      svg.appendChild(el('line', { x1: tx1, y1: ty1, x2: tx2, y2: ty2, stroke: '#2D2D5F', 'stroke-width': 3, 'stroke-linecap': 'round' }));
+      const nx = 120 + Math.sin(ang) * 80, ny = 120 - Math.cos(ang) * 80;
+      const txt = el('text', { x: nx, y: ny + 8, 'text-anchor': 'middle', 'font-family': 'Bubblegum Sans, cursive', 'font-size': 22, fill: '#2D2D5F' });
+      txt.textContent = i;
+      svg.appendChild(txt);
+    }
+    // minute hand group (drawn first, under hour hand)
+    minuteGroup = el('g', { id: 'minuteHand' });
+    minuteGroup.appendChild(el('line', { class: 'hand-hit', x1: 120, y1: 120, x2: 120, y2: 38, stroke: 'transparent', 'stroke-width': 34, 'stroke-linecap': 'round' }));
+    minuteGroup.appendChild(el('line', { x1: 120, y1: 120, x2: 120, y2: 38, stroke: '#0288D1', 'stroke-width': 6, 'stroke-linecap': 'round' }));
+    minuteGroup.appendChild(el('circle', { class: 'knob', cx: 120, cy: 38, r: 13, fill: '#4FC3F7', stroke: '#0288D1', 'stroke-width': 3 }));
+    svg.appendChild(minuteGroup);
+    // hour hand group
+    hourGroup = el('g', { id: 'hourHand' });
+    hourGroup.appendChild(el('line', { class: 'hand-hit', x1: 120, y1: 120, x2: 120, y2: 66, stroke: 'transparent', 'stroke-width': 40, 'stroke-linecap': 'round' }));
+    hourGroup.appendChild(el('line', { x1: 120, y1: 120, x2: 120, y2: 66, stroke: '#B073FF', 'stroke-width': 10, 'stroke-linecap': 'round' }));
+    hourGroup.appendChild(el('circle', { class: 'knob', cx: 120, cy: 66, r: 15, fill: '#C99CFF', stroke: '#B073FF', 'stroke-width': 3 }));
+    svg.appendChild(hourGroup);
+    // center pin
+    svg.appendChild(el('circle', { cx: 120, cy: 120, r: 9, fill: '#2D2D5F' }));
+
+    minuteGroup.addEventListener('pointerdown', (e) => startDrag(e, 'minute'));
+    hourGroup.addEventListener('pointerdown', (e) => startDrag(e, 'hour'));
+  }
+
+  function renderHands() {
+    hourGroup.setAttribute('transform', 'rotate(' + ((state.setHour % 12) * 30 + state.setMinute * 0.5) + ' 120 120)');
+    minuteGroup.setAttribute('transform', 'rotate(' + (state.setMinute * 6) + ' 120 120)');
+  }
+  function renderHandsExact(h, m) {
+    hourGroup.setAttribute('transform', 'rotate(' + ((h % 12) * 30 + m * 0.5) + ' 120 120)');
+    minuteGroup.setAttribute('transform', 'rotate(' + (m * 6) + ' 120 120)');
+  }
+
+  // ---------- Drag ----------
+  function allowedMinutes() {
+    if (state.round < 3) return [0, 30];
+    return [0, 15, 30, 45];
+  }
+  function angleFromEvent(ev) {
+    const rect = svg.getBoundingClientRect();
+    const px = (ev.clientX - rect.left) / rect.width * 240;
+    const py = (ev.clientY - rect.top) / rect.height * 240;
+    let deg = Math.atan2(px - 120, -(py - 120)) * 180 / Math.PI;
+    if (deg < 0) deg += 360;
+    return deg;
+  }
+  function circDist(a, b) { let d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; }
+  function startDrag(ev, hand) {
+    if (state.mode !== 'set' || state.busy) return;
+    ev.preventDefault();
+    state.active = hand;
+    try { svg.setPointerCapture(ev.pointerId); } catch (e) {}
+    moveDrag(ev);
+  }
+  function moveDrag(ev) {
+    if (state.mode !== 'set' || !state.active) return;
+    ev.preventDefault();
+    const deg = angleFromEvent(ev);
+    if (state.active === 'minute') {
+      const mins = allowedMinutes();
+      let best = mins[0], bd = 999;
+      mins.forEach(m => { const d = circDist(deg, m * 6); if (d < bd) { bd = d; best = m; } });
+      if (best !== state.setMinute) playTick();
+      state.setMinute = best;
+    } else {
+      let hr = Math.round(deg / 30) % 12; if (hr === 0) hr = 12;
+      if (hr !== state.setHour) playTick();
+      state.setHour = hr;
+    }
+    renderHands();
+  }
+  function endDrag(ev) { if (state.active) { state.active = null; try { svg.releasePointerCapture(ev.pointerId); } catch (e) {} } }
+  svg.addEventListener('pointermove', moveDrag);
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', endDrag);
+
+  // ---------- Rounds ----------
+  function randomTime() {
+    const mins = allowedMinutes();
+    return { hour: 1 + Math.floor(Math.random() * 12), minute: pick(mins) };
+  }
+  function buildDots() {
+    const dots = $('progressDots'); dots.innerHTML = '';
+    for (let i = 0; i < TARGET; i++) { const d = document.createElement('div'); d.className = 'dot'; dots.appendChild(d); }
+  }
+  function updateDots() {
+    const dots = $('progressDots').children;
+    for (let i = 0; i < dots.length; i++) dots[i].classList.toggle('done', i < state.round);
+  }
+
+  function nextRound() {
+    state.busy = false;
+    state.active = null;
+    if (state.round >= TARGET) { goToCelebration(); return; }
+    state.mode = (state.round % 2 === 0) ? 'read' : 'set';
+    state.target = randomTime();
+    const evt = pick(EVENTS);
+    const ch = pick(CHARACTERS);
+    const evLine = $('eventLine');
+    evLine.classList.remove('arrive');
+    evLine.innerHTML = '<span class="ev-emoji">' + ch + evt.e + '</span> ' + evt.t;
+    $('qProgress').textContent = (state.round + 1) + ' of ' + TARGET;
+    $('feedback').textContent = ''; $('feedback').className = 'feedback';
+    updateDots();
+
+    const grid = $('optionsGrid');
+    const setActions = $('setActions');
+    const dragTip = $('dragTip');
+
+    if (state.mode === 'read') {
+      svg.classList.remove('set-mode');
+      renderHandsExact(state.target.hour, state.target.minute);
+      $('prompt').textContent = 'What time is it?';
+      dragTip.textContent = '';
+      setActions.hidden = true;
+      grid.hidden = false;
+      buildReadOptions();
+    } else {
+      svg.classList.add('set-mode');
+      state.setHour = 12; state.setMinute = 0;
+      renderHands();
+      $('prompt').innerHTML = 'Set the clock to <span class="big-time">' + fmtTime(state.target.hour, state.target.minute) + '</span>';
+      dragTip.textContent = '👆 Drag the hands, then tap Check';
+      grid.hidden = true;
+      grid.innerHTML = '';
+      setActions.hidden = false;
+    }
+  }
+
+  function buildReadOptions() {
+    const correct = fmtTime(state.target.hour, state.target.minute);
+    const opts = new Set([correct]);
+    const mins = allowedMinutes();
+    let guard = 0;
+    while (opts.size < 4 && guard < 50) {
+      guard++;
+      const h = 1 + Math.floor(Math.random() * 12);
+      const m = pick(mins);
+      opts.add(fmtTime(h, m));
+    }
+    const grid = $('optionsGrid');
+    grid.innerHTML = '';
+    shuffle([...opts]).forEach(label => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'option-btn';
+      b.textContent = label;
+      b.addEventListener('click', (e) => handleRead(e, b, label === correct));
+      grid.appendChild(b);
+    });
+  }
+
+  function win(e) {
+    state.busy = true;
+    const fb = $('feedback');
+    fb.className = 'feedback good';
+    fb.textContent = pick(PRAISE);
+    const evLine = $('eventLine');
+    void evLine.offsetWidth;
+    evLine.classList.add('arrive');
+    playChime();
+    const cx = (e && e.clientX) ? e.clientX : window.innerWidth / 2;
+    const cy = (e && e.clientY) ? e.clientY : window.innerHeight / 2;
+    burstConfetti(cx, cy, 26);
+    state.round++;
+    setTimeout(nextRound, 1550);
+  }
+
+  function handleRead(e, button, correct) {
+    if (state.busy) return;
+    ensureAudio();
+    if (correct) {
+      $('optionsGrid').querySelectorAll('.option-btn').forEach(b => { b.disabled = true; });
+      button.classList.add('correct');
+      win(e);
+    } else {
+      button.classList.add('wrong');
+      button.disabled = true;
+      const fb = $('feedback');
+      fb.className = 'feedback gentle';
+      fb.textContent = pick(GENTLE);
+      playGentle();
+      setTimeout(() => button.classList.remove('wrong'), 700);
+    }
+  }
+
+  function checkSet(e) {
+    if (state.busy) return;
+    ensureAudio();
+    if (state.setHour === state.target.hour && state.setMinute === state.target.minute) {
+      svg.classList.remove('set-mode');
+      win(e);
+    } else {
+      const fb = $('feedback');
+      fb.className = 'feedback gentle';
+      fb.textContent = pick(GENTLE) + ' Move the hands to ' + fmtTime(state.target.hour, state.target.minute) + '.';
+      playGentle();
+    }
+  }
+
+  function goToCelebration() {
+    updateDots();
+    showScreen('celebrateScreen');
+    setTimeout(() => { bigConfetti(); playFanfare(); }, 200);
+    setTimeout(bigConfetti, 1000);
+  }
+
+  function startGame() {
+    state.round = 0;
+    buildDots();
+    showScreen('gameScreen');
+    nextRound();
+  }
+
+  // ---------- Sound toggle ----------
+  function updateSoundBtn() {
+    const b = $('soundBtn');
+    b.textContent = state.sound ? '🔊 Sound: On' : '🔇 Sound: Off';
+    b.setAttribute('aria-pressed', String(state.sound));
+  }
+  $('soundBtn').addEventListener('click', () => {
+    state.sound = !state.sound;
+    updateSoundBtn();
+    if (state.sound) { ensureAudio(); playTick(); }
+  });
+
+  // ---------- Wire up ----------
+  buildClock();
+  renderHandsExact(10, 10);
+  $('startBtn').addEventListener('click', (e) => { ensureAudio(); burstConfetti(e.clientX, e.clientY, 16); startGame(); });
+  $('checkBtn').addEventListener('click', checkSet);
+  $('playAgainBtn').addEventListener('click', (e) => { burstConfetti(e.clientX, e.clientY, 16); startGame(); });
+  $('mascot').addEventListener('click', (e) => { ensureAudio(); burstConfetti(e.clientX, e.clientY, 16); playChime(); });
+  </script>
+</body>
+</html>
