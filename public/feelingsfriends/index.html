@@ -188,6 +188,7 @@
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
     }
     .option-btn .opt-emoji { font-size: 3rem; line-height: 1; filter: drop-shadow(1px 2px 0 rgba(0,0,0,0.12)); }
+    .option-btn.words-only { font-size: 1.5rem; }
     .option-btn:hover:not(:disabled) {
       transform: translateY(-4px); border-color: var(--pink);
       background: linear-gradient(180deg, #fff 0%, #FFE5F1 100%); box-shadow: 0 10px 0 rgba(0, 0, 0, 0.16);
@@ -474,15 +475,17 @@
     return shuffle([correctKey, ...distractors]);
   }
 
-  function buildOptions(correctKey) {
+  function buildOptions(correctKey, showEmoji) {
     const grid = $('optionsGrid');
     grid.innerHTML = '';
     optionsFor(correctKey).forEach(key => {
       const f = FEELINGS[key];
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'option-btn';
-      b.innerHTML = '<span class="opt-emoji" aria-hidden="true">' + f.emoji + '</span><span>' + f.word + '</span>';
+      b.className = showEmoji ? 'option-btn' : 'option-btn words-only';
+      b.innerHTML = showEmoji
+        ? '<span class="opt-emoji" aria-hidden="true">' + f.emoji + '</span><span>' + f.word + '</span>'
+        : '<span>' + f.word + '</span>';
       b.setAttribute('aria-label', f.word);
       b.addEventListener('click', (e) => handleAnswer(e, b, key === correctKey, correctKey));
       grid.appendChild(b);
@@ -505,7 +508,7 @@
       stage.textContent = FEELINGS[key].emoji;
       $('situation').hidden = true;
       $('prompt').textContent = 'How does this friend feel?';
-      buildOptions(key);
+      buildOptions(key, false);
     } else {
       const sit = pick(SITUATIONS);
       state.current = sit;
@@ -516,7 +519,7 @@
       ch.classList.remove('beam'); ch.textContent = pick(SIT_CHARS);
       $('sitText').textContent = sit.text;
       $('prompt').textContent = 'How do they feel?';
-      buildOptions(sit.feel);
+      buildOptions(sit.feel, true);
       setTimeout(() => speak(sit.text), 350);
     }
   }
