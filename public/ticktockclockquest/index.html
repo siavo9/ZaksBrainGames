@@ -444,9 +444,6 @@
     svg.appendChild(hourGroup);
     // center pin
     svg.appendChild(el('circle', { cx: 120, cy: 120, r: 9, fill: '#2D2D5F' }));
-
-    minuteGroup.addEventListener('pointerdown', (e) => startDrag(e, 'minute'));
-    hourGroup.addEventListener('pointerdown', (e) => startDrag(e, 'hour'));
   }
 
   function renderHands() {
@@ -472,6 +469,31 @@
     return deg;
   }
   function circDist(a, b) { let d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; }
+  function svgPoint(ev) {
+    const rect = svg.getBoundingClientRect();
+    return { x: (ev.clientX - rect.left) / rect.width * 240, y: (ev.clientY - rect.top) / rect.height * 240 };
+  }
+  function distToHand(px, py, angleDeg, len) {
+    // Distance from point to the hand's line segment (center -> tip).
+    const a = angleDeg * Math.PI / 180;
+    const tx = 120 + Math.sin(a) * len, ty = 120 - Math.cos(a) * len;
+    const vx = tx - 120, vy = ty - 120, wx = px - 120, wy = py - 120;
+    const proj = wx * vx + wy * vy;
+    if (proj <= 0) return Math.hypot(wx, wy);
+    const segLen2 = vx * vx + vy * vy;
+    if (proj >= segLen2) return Math.hypot(px - tx, py - ty);
+    const t = proj / segLen2;
+    return Math.hypot(px - (120 + t * vx), py - (120 + t * vy));
+  }
+  // Pick the hand nearest the pointer. The minute hand is longer, so its
+  // exposed outer portion is closest there; ties (the shared inner overlap)
+  // go to the shorter hour hand so it stays grabbable at e.g. 12:00.
+  function pickHand(ev) {
+    const p = svgPoint(ev);
+    const dMin = distToHand(p.x, p.y, state.setMinute * 6, 82);
+    const dHour = distToHand(p.x, p.y, (state.setHour % 12) * 30 + state.setMinute * 0.5, 54);
+    return dMin < dHour ? 'minute' : 'hour';
+  }
   function startDrag(ev, hand) {
     if (state.mode !== 'set' || state.busy) return;
     ev.preventDefault();
@@ -497,6 +519,10 @@
     renderHands();
   }
   function endDrag(ev) { if (state.active) { state.active = null; try { svg.releasePointerCapture(ev.pointerId); } catch (e) {} } }
+  svg.addEventListener('pointerdown', (ev) => {
+    if (state.mode !== 'set' || state.busy) return;
+    startDrag(ev, pickHand(ev));
+  });
   svg.addEventListener('pointermove', moveDrag);
   svg.addEventListener('pointerup', endDrag);
   svg.addEventListener('pointercancel', endDrag);
