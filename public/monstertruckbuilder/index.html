@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monster Truck Builder — Zak's Brain Games</title>
+  <meta name="description" content="Monster Truck Builder lets kids build their own monster truck piece by piece! Solve math, science, and engineering challenges to unlock every part, then crush some cars. Ages 5+." />
+  <meta name="theme-color" content="#FFD93D" />
+  <link rel="canonical" href="https://zaksbraingames.app/monstertruckbuilder/" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%9C%3C/text%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bubblegum+Sans&display=swap" rel="stylesheet" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow: #FFD93D;
+      --yellow-dark: #C99700;
+      --pink: #FF6FB5;
+      --blue: #4FC3F7;
+      --mint: #6BE6A8;
+      --mint-dark: #1FB97A;
+      --purple: #B073FF;
+      --orange: #FF9F45;
+      --orange-dark: #E07B1F;
+      --coral: #FF6B6B;
+      --dark: #2D2D5F;
+      --cream: #FFF8E7;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Fredoka', system-ui, sans-serif;
+      color: var(--dark);
+      background: linear-gradient(135deg, #FFF8E7 0%, #FFE5F1 45%, #E5F4FF 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .shape {
+      position: fixed; border-radius: 50%; opacity: 0.3; z-index: 0;
+      animation: float 8s ease-in-out infinite; pointer-events: none;
+    }
+    .shape.s1 { width: 120px; height: 120px; background: var(--yellow); top: 10%; left: 5%; animation-delay: 0s; }
+    .shape.s2 { width: 80px;  height: 80px;  background: var(--orange); top: 62%; left: 92%; animation-delay: 2s; }
+    .shape.s3 { width: 100px; height: 100px; background: var(--blue);   top: 82%; left: 8%;  animation-delay: 4s; }
+    .shape.s4 { width: 60px;  height: 60px;  background: var(--purple); top: 22%; left: 88%; animation-delay: 1s; }
+    .shape.s5 { width: 90px;  height: 90px;  background: var(--mint);   top: 45%; left: 3%;  animation-delay: 3s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-26px) rotate(12deg); }
+    }
+
+    .container { max-width: 820px; margin: 0 auto; padding: 0 16px; position: relative; z-index: 1; }
+
+    .topnav { padding: 18px 0 6px; display: flex; justify-content: flex-start; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--orange-dark); font-weight: 600; text-decoration: none;
+      padding: 10px 16px; border-radius: 24px; background: white;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.12);
+      transition: transform 0.18s, box-shadow 0.18s; font-size: 0.98rem; min-height: 44px;
+    }
+    .back-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(45, 45, 95, 0.14); }
+    .back-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(45, 45, 95, 0.14); }
+
+    .screen { display: none; padding: 10px 0 48px; }
+    .screen.active { display: block; animation: screenIn 0.3s ease; }
+    @keyframes screenIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .welcome { text-align: center; padding: 6px 12px 18px; }
+    .mascot {
+      font-size: 92px; display: inline-block; animation: truckBounce 2.6s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.12)); user-select: none; cursor: pointer;
+    }
+    @keyframes truckBounce {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-12px) rotate(3deg); }
+    }
+    h1.title {
+      font-family: 'Bubblegum Sans', cursive; font-size: clamp(2.4rem, 7vw, 4rem);
+      margin: 6px 0 4px;
+      background: linear-gradient(135deg, var(--orange), var(--coral), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      text-shadow: 4px 4px 0 rgba(255, 217, 61, 0.35); letter-spacing: 1px;
+    }
+    .tagline {
+      font-size: clamp(1.05rem, 2.6vw, 1.3rem); color: var(--dark); font-weight: 500;
+      margin: 4px auto 14px; max-width: 540px; line-height: 1.45;
+    }
+    .tagline span { color: var(--orange-dark); font-weight: 700; }
+
+    .btn {
+      display: inline-block; padding: 16px 32px; border-radius: 50px;
+      font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.2rem;
+      border: none; cursor: pointer; color: white; text-decoration: none; text-align: center;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, box-shadow 0.15s; min-height: 54px; line-height: 1.2;
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 9px 0 rgba(0, 0, 0, 0.15); }
+    .btn:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15); }
+    .btn:disabled { opacity: 0.5; cursor: default; transform: none; box-shadow: 0 6px 0 rgba(0,0,0,0.15); }
+    .btn-primary { background: var(--orange); }
+    .btn-yellow  { background: var(--yellow); color: var(--dark); }
+    .btn-purple  { background: var(--purple); }
+    .btn-blue    { background: var(--blue); }
+    .btn-mint    { background: var(--mint); color: var(--dark); }
+    .big-cta { font-size: 1.4rem; padding: 18px 42px; animation: pulseGlow 2.2s ease-in-out infinite; }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 0 rgba(255, 159, 69, 0.4); }
+      50% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 18px rgba(255, 159, 69, 0); }
+    }
+
+    .panel {
+      background: white; border-radius: 26px; padding: 22px 22px 24px;
+      box-shadow: 0 8px 0 rgba(45, 45, 95, 0.1), 0 14px 30px rgba(45, 45, 95, 0.08);
+      margin-bottom: 18px;
+    }
+    .panel h2 {
+      font-family: 'Bubblegum Sans', cursive; color: var(--orange-dark);
+      font-size: clamp(1.6rem, 4vw, 2.1rem); text-align: center; margin-bottom: 14px;
+    }
+
+    .rules-list { list-style: none; max-width: 540px; margin: 0 auto; padding: 0; }
+    .rules-list li {
+      background: var(--cream); border-radius: 18px; padding: 15px 18px;
+      margin-bottom: 12px; font-size: 1.12rem; line-height: 1.45; font-weight: 500;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.08);
+    }
+    .rules-actions { text-align: center; margin-top: 8px; }
+
+    /* ---------- Difficulty toggle ---------- */
+    .diff-wrap { text-align: center; margin: 6px auto 18px; }
+    .diff-label { font-weight: 700; color: var(--purple); font-size: 1.1rem; margin-bottom: 10px; }
+    .diff-toggle { display: inline-flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .diff-btn {
+      font-family: 'Fredoka', sans-serif; font-weight: 700; cursor: pointer;
+      border: 3px solid #EFEFF7; background: white; color: var(--dark);
+      border-radius: 20px; padding: 14px 20px; min-height: 56px; min-width: 150px;
+      box-shadow: 0 5px 0 rgba(45, 45, 95, 0.08);
+      transition: transform 0.13s, box-shadow 0.13s, border-color 0.13s, background 0.13s;
+      text-align: center; line-height: 1.25;
+    }
+    .diff-btn small { display: block; font-weight: 500; font-size: 0.85rem; color: #777; margin-top: 2px; }
+    .diff-btn:hover { transform: translateY(-2px); }
+    .diff-btn.selected { border-color: var(--orange); background: #FFF3E6; }
+    .diff-btn.selected small { color: var(--orange-dark); }
+    .diff-btn.pro.selected { border-color: var(--purple); background: #F4ECFF; }
+    .diff-btn.pro.selected small { color: var(--purple); }
+
+    /* ---------- Build / garage screen ---------- */
+    .build-head { text-align: center; margin-bottom: 6px; }
+    .build-head h2 {
+      font-family: 'Bubblegum Sans', cursive; color: var(--orange-dark);
+      font-size: clamp(1.5rem, 4vw, 2rem); margin-bottom: 2px;
+    }
+    .progress-line { font-weight: 600; color: var(--purple); font-size: 1.05rem; }
+    .progress-dots { display: inline-flex; gap: 6px; margin-left: 8px; vertical-align: middle; }
+    .pdot { width: 13px; height: 13px; border-radius: 50%; background: #E3E3EF; display: inline-block; transition: background 0.3s, transform 0.3s; }
+    .pdot.done { background: var(--mint-dark); transform: scale(1.15); }
+
+    .stage {
+      position: relative; border-radius: 22px; margin: 6px 0 14px; overflow: hidden;
+      background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0 28px, rgba(0,0,0,0.04) 28px 56px),
+        linear-gradient(180deg, #4a4f63 0%, #5b6175 55%, #7c8296 100%);
+      box-shadow: inset 0 4px 16px rgba(0,0,0,0.28);
+    }
+    .stage::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 26%;
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(20,20,30,0.45) 100%);
+      pointer-events: none;
+    }
+    .truck-svg { display: block; width: 100%; height: auto; }
+
+    /* Each part snaps in when placed */
+    #truck .part { opacity: 0; transform-box: fill-box; transform-origin: center; pointer-events: none; }
+    #truck .part.placed { opacity: 1; animation: snapIn 0.55s cubic-bezier(0.34, 1.7, 0.5, 1); }
+    @keyframes snapIn {
+      0%   { opacity: 0; transform: scale(0.2) rotate(-12deg); }
+      55%  { opacity: 1; transform: scale(1.12) rotate(4deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+    #truck .wheels-grp { transition: transform 0.5s cubic-bezier(0.34, 1.6, 0.5, 1); transform-box: fill-box; transform-origin: center bottom; }
+    #truck .wheels-grp.giant { transform: scale(1.2); }
+    #truck .headlight.lit { fill: #FFE57A; }
+    #truck .head-glow { opacity: 0; transition: opacity 0.4s; }
+    #truck .head-glow.lit { opacity: 1; }
+    #truck .flame { animation: flameFlick 0.3s ease-in-out infinite; transform-box: fill-box; transform-origin: center bottom; }
+    @keyframes flameFlick { 0%,100% { transform: scaleY(1); opacity: 0.85; } 50% { transform: scaleY(1.35); opacity: 1; } }
+
+    /* ---------- Parts menu ---------- */
+    .parts-menu {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(98px, 1fr));
+      gap: 10px; margin-bottom: 14px;
+    }
+    .part-chip {
+      position: relative; background: white; border: 3px solid #EFEFF7;
+      border-radius: 18px; padding: 12px 6px 10px; cursor: pointer;
+      font-family: 'Fredoka', sans-serif; box-shadow: 0 5px 0 rgba(45, 45, 95, 0.08);
+      transition: transform 0.13s, box-shadow 0.13s, border-color 0.13s, background 0.13s;
+      display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 92px;
+      text-align: center;
+    }
+    .part-chip:hover:not(.done) { transform: translateY(-4px); border-color: var(--orange); box-shadow: 0 9px 0 rgba(45, 45, 95, 0.1); }
+    .part-chip:active:not(.done) { transform: translateY(2px); box-shadow: 0 3px 0 rgba(45, 45, 95, 0.08); }
+    .part-chip .pc-emoji { font-size: 2rem; line-height: 1; }
+    .part-chip .pc-name { font-weight: 700; font-size: 0.92rem; }
+    .part-chip .pc-lock {
+      position: absolute; top: 6px; right: 8px; font-size: 1.05rem; opacity: 0.85;
+    }
+    .part-chip.done {
+      background: #E9FBF1; border-color: var(--mint-dark); cursor: default;
+      animation: popCorrect 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .part-chip.done .pc-name { color: var(--mint-dark); }
+    .part-chip.next { border-color: var(--orange); animation: chipPulse 1.8s ease-in-out infinite; }
+    @keyframes chipPulse {
+      0%,100% { box-shadow: 0 5px 0 rgba(45,45,95,0.08), 0 0 0 0 rgba(255,159,69,0.4); }
+      50% { box-shadow: 0 5px 0 rgba(45,45,95,0.08), 0 0 0 10px rgba(255,159,69,0); }
+    }
+    @keyframes popCorrect { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+    .drive-wrap { text-align: center; margin-top: 6px; }
+    .drive-wrap.hidden { display: none; }
+    .build-hint { text-align: center; color: #6a6a8a; font-weight: 500; margin: 4px 0 12px; font-size: 1.02rem; }
+
+    /* ---------- Challenge modal ---------- */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(45, 45, 95, 0.55);
+      display: flex; align-items: center; justify-content: center; padding: 16px;
+      z-index: 1000; animation: fadeIn 0.2s ease;
+    }
+    .modal-overlay[hidden] { display: none; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-card {
+      background: white; border-radius: 26px; padding: 22px 20px 24px; width: 100%;
+      max-width: 480px; max-height: 92vh; overflow-y: auto; position: relative;
+      box-shadow: 0 16px 40px rgba(45, 45, 95, 0.3); animation: cardPop 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes cardPop { from { transform: scale(0.85) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+    .modal-close {
+      position: absolute; top: 10px; right: 12px; background: #F1F1F8; border: none;
+      width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 1.1rem;
+      color: var(--dark); line-height: 1; transition: background 0.15s, transform 0.15s;
+    }
+    .modal-close:hover { background: #E3E3EF; transform: scale(1.08); }
+    .modal-part-emoji { font-size: 2.6rem; text-align: center; display: block; line-height: 1; margin-bottom: 2px; }
+    .modal-title {
+      font-family: 'Bubblegum Sans', cursive; color: var(--orange-dark); text-align: center;
+      font-size: 1.5rem; margin-bottom: 4px;
+    }
+    .modal-prompt { text-align: center; font-size: 1.18rem; font-weight: 600; line-height: 1.4; margin: 6px auto 14px; max-width: 400px; }
+    .modal-prompt .ref-spring { display: inline-block; vertical-align: middle; margin-left: 6px; }
+
+    /* Generic option grid */
+    .opt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .opt-grid.cols3 { grid-template-columns: repeat(3, 1fr); }
+    .opt-grid.cols1 { grid-template-columns: 1fr; }
+    .opt-btn {
+      background: white; border: 3px solid #EFEFF7; border-radius: 18px; cursor: pointer;
+      font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.4rem; color: var(--dark);
+      padding: 16px 10px; min-height: 64px; box-shadow: 0 5px 0 rgba(45, 45, 95, 0.08);
+      transition: transform 0.13s, box-shadow 0.13s, border-color 0.13s, background 0.13s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .opt-btn:hover:not(.locked) { transform: translateY(-3px); border-color: var(--blue); box-shadow: 0 8px 0 rgba(45, 45, 95, 0.1); }
+    .opt-btn:active:not(.locked) { transform: translateY(2px); box-shadow: 0 3px 0 rgba(45, 45, 95, 0.08); }
+    .opt-btn svg { display: block; }
+    .opt-btn.good { background: #E9FBF1; border-color: var(--mint-dark); animation: popCorrect 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .opt-btn.bad { animation: shake 0.45s ease-in-out; border-color: var(--coral); background: #FFECEC; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-7px); } 40% { transform: translateX(7px); }
+      60% { transform: translateX(-5px); } 80% { transform: translateX(5px); }
+    }
+
+    /* Count interaction */
+    .count-pool { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+    .count-item {
+      font-size: 2.6rem; line-height: 1; cursor: pointer; background: var(--cream);
+      border: 3px solid #EFEFF7; border-radius: 18px; padding: 8px 12px; min-width: 64px; min-height: 64px;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.13s, border-color 0.13s, background 0.13s;
+    }
+    .count-item:hover:not(.picked) { transform: translateY(-3px); border-color: var(--orange); }
+    .count-item.picked { background: #E9FBF1; border-color: var(--mint-dark); transform: scale(1.08); cursor: default; }
+    .count-readout { text-align: center; font-weight: 700; color: var(--purple); margin: 12px 0 0; font-size: 1.2rem; }
+
+    /* Steppers */
+    .steppers { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+    .stepper { background: var(--cream); border-radius: 18px; padding: 14px; text-align: center; min-width: 120px; }
+    .stepper .st-label { font-weight: 700; color: var(--purple); margin-bottom: 8px; }
+    .stepper .st-spring { height: 76px; display: flex; align-items: flex-end; justify-content: center; }
+    .stepper .st-controls { display: flex; align-items: center; gap: 10px; justify-content: center; margin-top: 8px; }
+    .st-btn {
+      width: 46px; height: 46px; border-radius: 50%; border: none; cursor: pointer;
+      font-size: 1.5rem; font-weight: 700; background: var(--blue); color: white; line-height: 1;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.15); transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .st-btn:hover { transform: translateY(-2px); }
+    .st-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+    .st-val { font-family: 'Bubblegum Sans', cursive; font-size: 1.8rem; min-width: 34px; color: var(--dark); }
+    .st-target { text-align: center; font-weight: 700; color: var(--orange-dark); margin-top: 10px; font-size: 1.1rem; }
+    .st-go-wrap { text-align: center; margin-top: 12px; }
+
+    /* Circuit (junior tap) */
+    .circuit-stage { text-align: center; margin: 6px 0; }
+    .circuit-stage svg { max-width: 320px; width: 100%; height: auto; }
+    .wire-tap {
+      stroke: #999; stroke-width: 7; stroke-linecap: round; cursor: pointer; fill: none;
+      stroke-dasharray: 10 12; transition: stroke 0.2s;
+    }
+    .wire-tap:hover { stroke: var(--orange); }
+
+    /* Swatches */
+    .swatch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; max-width: 360px; margin: 0 auto; }
+    .swatch {
+      aspect-ratio: 1 / 1; border-radius: 16px; cursor: pointer; border: 4px solid white;
+      box-shadow: 0 4px 0 rgba(45,45,95,0.15); transition: transform 0.13s;
+      min-height: 56px;
+    }
+    .swatch:hover { transform: translateY(-4px) scale(1.05); }
+    .swatch:active { transform: translateY(2px); }
+
+    .modal-feedback { min-height: 26px; text-align: center; font-weight: 700; font-size: 1.1rem; margin-top: 14px; line-height: 1.3; }
+    .modal-feedback.good { color: var(--mint-dark); animation: bouncePraise 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .modal-feedback.gentle { color: var(--purple); }
+    @keyframes bouncePraise { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+
+    /* ---------- Finale ---------- */
+    .finale-stage {
+      position: relative; height: clamp(190px, 42vw, 260px); border-radius: 22px; overflow: hidden;
+      margin-bottom: 14px;
+      background: linear-gradient(180deg, #8fd3ff 0%, #c9ecff 55%, #d9b98c 55%, #c9a877 100%);
+      box-shadow: inset 0 4px 14px rgba(0,0,0,0.2);
+    }
+    .finale-sun { position: absolute; top: 16px; right: 26px; font-size: 2.4rem; animation: spinSun 14s linear infinite; }
+    @keyframes spinSun { to { transform: rotate(360deg); } }
+    .road {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 45%;
+      background: #4a4f5e;
+      border-top: 5px solid #3a3f4b;
+    }
+    .road::after {
+      content: ''; position: absolute; top: 46%; left: 0; right: 0; height: 6px;
+      background: repeating-linear-gradient(90deg, #FFD93D 0 30px, transparent 30px 60px);
+    }
+    .car {
+      position: absolute; bottom: 14%; font-size: clamp(2.4rem, 9vw, 3.4rem); line-height: 1;
+      transform-origin: center bottom; transition: transform 0.18s ease, filter 0.18s ease;
+      filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.2));
+    }
+    .car.squished { transform: scaleY(0.22) scaleX(1.25) rotate(-4deg); filter: grayscale(0.3) drop-shadow(2px 1px 0 rgba(0,0,0,0.2)); }
+    .finale-truck {
+      position: absolute; bottom: 12%; left: 0; width: clamp(150px, 40vw, 220px);
+      will-change: transform;
+    }
+    .finale-truck-jump { will-change: transform; }
+    .finale-truck svg { display: block; width: 100%; height: auto; }
+    .dust {
+      position: absolute; bottom: 14%; font-size: 1.6rem; opacity: 0; pointer-events: none;
+    }
+
+    .name-panel { text-align: center; }
+    .name-panel h2 { color: var(--orange-dark); }
+    .name-input {
+      font-family: 'Fredoka', sans-serif; font-size: 1.3rem; font-weight: 600; text-align: center;
+      padding: 14px 18px; border-radius: 18px; border: 3px solid #EFEFF7; width: 100%; max-width: 340px;
+      color: var(--dark); margin: 6px auto 14px; display: block;
+    }
+    .name-input:focus { outline: none; border-color: var(--orange); }
+
+    .garage-row { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin: 8px 0 18px; }
+    .garage-truck { text-align: center; width: 120px; animation: popCorrect 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .garage-truck svg { width: 100%; height: auto; }
+    .garage-truck .gt-name {
+      font-weight: 700; font-size: 0.95rem; margin-top: 4px; color: var(--dark);
+      word-break: break-word; line-height: 1.2;
+    }
+
+    .celebrate { text-align: center; }
+    .celebrate h2 {
+      font-family: 'Bubblegum Sans', cursive; font-size: clamp(2rem, 5vw, 2.6rem);
+      background: linear-gradient(135deg, var(--orange), var(--coral), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 8px 0;
+    }
+    .celebrate .msg {
+      font-size: 1.25rem; line-height: 1.5; color: var(--dark);
+      background: var(--cream); padding: 14px 18px; border-radius: 18px;
+      margin: 12px auto; max-width: 460px; font-weight: 600;
+    }
+    .celebrate-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+
+    .confetti { position: fixed; width: 10px; height: 10px; pointer-events: none; z-index: 9999; border-radius: 2px; }
+
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+    @media (max-width: 480px) {
+      .panel { padding: 18px 14px 22px; }
+      .btn { padding: 14px 26px; font-size: 1.1rem; }
+      .big-cta { font-size: 1.25rem; padding: 16px 32px; }
+      .opt-grid.cols3 { grid-template-columns: repeat(3, 1fr); }
+      .parts-menu { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
+  <div class="shape s3"></div>
+  <div class="shape s4"></div>
+  <div class="shape s5"></div>
+
+  <div class="container">
+    <header class="topnav">
+      <a class="back-btn" href="/" aria-label="Back to Zak's Brain Games">← Back to Zak's Brain Games</a>
+    </header>
+
+    <main>
+      <!-- ============== WELCOME / RULES ============== -->
+      <section class="screen active" id="startScreen" aria-label="How to play">
+        <div class="welcome">
+          <div class="mascot" id="mascot" role="img" aria-label="Monster truck mascot">🚜</div>
+          <h1 class="title">Monster Truck Builder</h1>
+          <p class="tagline">Build your <span>own</span> monster truck, one part at a time — solve fun puzzles to unlock each piece!</p>
+        </div>
+        <div class="panel">
+          <h2>How to Play</h2>
+          <ul class="rules-list">
+            <li>🔧 Your truck starts as a bare frame. Tap a <strong>locked part</strong> to build it!</li>
+            <li>🧠 Solve a quick, fun puzzle — counting, science, shapes, or circuits.</li>
+            <li>🎉 Get it right and the part <strong>snaps on</strong> with confetti and a happy sound!</li>
+            <li>🚗 Build every part, then tap <strong>Drive!</strong> to crush some cars. VROOM!</li>
+            <li>🌟 No timers, no losing — if a puzzle is tricky, just try again!</li>
+          </ul>
+
+          <div class="diff-wrap">
+            <div class="diff-label">Pick your builder level:</div>
+            <div class="diff-toggle" role="group" aria-label="Difficulty">
+              <button class="diff-btn junior selected" id="diffJunior" type="button" aria-pressed="true">
+                🐣 Junior Builder
+                <small>Ages 5–7 · counting &amp; colors</small>
+              </button>
+              <button class="diff-btn pro" id="diffPro" type="button" aria-pressed="false">
+                🏆 Pro Builder
+                <small>Ages 8–10+ · word problems &amp; circuits</small>
+              </button>
+            </div>
+          </div>
+
+          <div class="rules-actions">
+            <button class="btn btn-primary big-cta" id="startBtn">Start Building! 🔧</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== BUILD / GARAGE ============== -->
+      <section class="screen" id="buildScreen" aria-label="Build your monster truck">
+        <div class="panel">
+          <div class="build-head">
+            <h2 id="buildTitle">🔧 Build Your Monster Truck!</h2>
+            <div class="progress-line">
+              <span id="progressText">0 of 6 parts built</span>
+              <span class="progress-dots" id="progressDots" aria-hidden="true"></span>
+            </div>
+          </div>
+
+          <div class="stage" id="truckStage">
+            <!-- Side-view monster truck. Parts are hidden until earned. viewBox 0 0 360 240 -->
+            <svg class="truck-svg" id="truck" viewBox="0 0 360 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Your monster truck">
+              <!-- ground shadow -->
+              <ellipse cx="180" cy="218" rx="150" ry="12" fill="rgba(0,0,0,0.25)"/>
+
+              <!-- FRAME (free, shown at start) -->
+              <g class="part placed" id="partFrame">
+                <rect x="64" y="150" width="232" height="13" rx="5" fill="#3a3f4b"/>
+                <rect x="64" y="150" width="232" height="5" rx="2.5" fill="#4d5360"/>
+                <rect x="78" y="162" width="14" height="14" rx="3" fill="#2c313c"/>
+                <rect x="268" y="162" width="14" height="14" rx="3" fill="#2c313c"/>
+                <rect x="296" y="146" width="14" height="22" rx="4" fill="#555b68"/>
+              </g>
+
+              <!-- SUSPENSION / SPRINGS -->
+              <g class="part" id="partSpring">
+                <path d="M101,166 L113,160 L101,154 L113,148" fill="none" stroke="#FF9F45" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M249,166 L261,160 L249,154 L261,148" fill="none" stroke="#FF9F45" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="107" cy="170" r="4" fill="#E07B1F"/>
+                <circle cx="255" cy="170" r="4" fill="#E07B1F"/>
+              </g>
+
+              <!-- WHEELS (big monster tires) -->
+              <g class="part wheels-grp" id="partWheels">
+                <g>
+                  <circle cx="107" cy="172" r="43" fill="#1d1f26"/>
+                  <circle cx="107" cy="172" r="43" fill="none" stroke="#34373f" stroke-width="6" stroke-dasharray="9 11"/>
+                  <circle cx="107" cy="172" r="20" fill="#cfd4de"/>
+                  <circle cx="107" cy="172" r="20" fill="none" stroke="#aeb4c0" stroke-width="3"/>
+                  <circle cx="107" cy="172" r="6" fill="#6b7280"/>
+                  <g fill="#9aa1ad">
+                    <circle cx="107" cy="159" r="2.4"/><circle cx="120" cy="172" r="2.4"/>
+                    <circle cx="107" cy="185" r="2.4"/><circle cx="94" cy="172" r="2.4"/>
+                  </g>
+                </g>
+                <g>
+                  <circle cx="255" cy="172" r="43" fill="#1d1f26"/>
+                  <circle cx="255" cy="172" r="43" fill="none" stroke="#34373f" stroke-width="6" stroke-dasharray="9 11"/>
+                  <circle cx="255" cy="172" r="20" fill="#cfd4de"/>
+                  <circle cx="255" cy="172" r="20" fill="none" stroke="#aeb4c0" stroke-width="3"/>
+                  <circle cx="255" cy="172" r="6" fill="#6b7280"/>
+                  <g fill="#9aa1ad">
+                    <circle cx="255" cy="159" r="2.4"/><circle cx="268" cy="172" r="2.4"/>
+                    <circle cx="255" cy="185" r="2.4"/><circle cx="242" cy="172" r="2.4"/>
+                  </g>
+                </g>
+              </g>
+
+              <!-- BODY (paint color via --truck-paint) -->
+              <g class="part" id="partBody">
+                <!-- cab -->
+                <path d="M86,150 L86,104 Q86,94 96,94 L150,94 L168,118 L210,118 L210,150 Z"
+                      style="fill:var(--truck-paint)" stroke="#2d2d5f" stroke-width="3" stroke-linejoin="round"/>
+                <!-- hood -->
+                <rect x="206" y="120" width="86" height="30" rx="8" style="fill:var(--truck-paint)" stroke="#2d2d5f" stroke-width="3"/>
+                <!-- windshield -->
+                <path d="M150,99 L164,117 L139,117 L139,99 Z" fill="#bfe9ff" stroke="#2d2d5f" stroke-width="2.5" stroke-linejoin="round"/>
+                <!-- side window -->
+                <rect x="96" y="103" width="36" height="20" rx="4" fill="#bfe9ff" stroke="#2d2d5f" stroke-width="2.5"/>
+                <!-- door line -->
+                <line x1="114" y1="124" x2="114" y2="150" stroke="#2d2d5f" stroke-width="2" opacity="0.5"/>
+                <!-- fender flare over wheels -->
+                <path d="M70,150 Q107,120 144,150 Z" style="fill:var(--truck-paint)" stroke="#2d2d5f" stroke-width="3" stroke-linejoin="round"/>
+                <path d="M222,150 Q255,124 288,150 Z" style="fill:var(--truck-paint)" stroke="#2d2d5f" stroke-width="3" stroke-linejoin="round"/>
+              </g>
+
+              <!-- ENGINE (supercharger poking out of hood) -->
+              <g class="part" id="partEngine">
+                <rect x="226" y="96" width="36" height="26" rx="4" fill="#6b7280" stroke="#3a3f4b" stroke-width="2.5"/>
+                <rect x="231" y="86" width="26" height="12" rx="3" fill="#9aa1ad" stroke="#3a3f4b" stroke-width="2.5"/>
+                <rect x="234" y="80" width="20" height="8" rx="2" fill="#cfd4de" stroke="#3a3f4b" stroke-width="2"/>
+                <line x1="226" y1="104" x2="262" y2="104" stroke="#3a3f4b" stroke-width="2"/>
+                <line x1="226" y1="113" x2="262" y2="113" stroke="#3a3f4b" stroke-width="2"/>
+                <circle cx="244" cy="118" r="3" fill="#FFD93D"/>
+              </g>
+
+              <!-- TURBO (pro): twin exhaust stacks behind cab -->
+              <g class="part" id="partTurbo">
+                <rect x="92" y="66" width="8" height="30" rx="3" fill="#cfd4de" stroke="#3a3f4b" stroke-width="2"/>
+                <rect x="104" y="60" width="8" height="36" rx="3" fill="#cfd4de" stroke="#3a3f4b" stroke-width="2"/>
+                <ellipse class="flame" cx="96" cy="64" rx="5" ry="8" fill="#FF9F45"/>
+                <ellipse class="flame" cx="108" cy="58" rx="5" ry="9" fill="#FF6B6B"/>
+              </g>
+
+              <!-- LIGHTS (headlights at front-right) -->
+              <g class="part" id="partLights">
+                <ellipse class="head-glow" cx="298" cy="132" rx="22" ry="14" fill="#FFE57A" opacity="0.55"/>
+                <circle class="headlight" cx="293" cy="128" r="6.5" fill="#fff" stroke="#2d2d5f" stroke-width="2.5"/>
+                <circle class="headlight" cx="293" cy="143" r="6.5" fill="#fff" stroke="#2d2d5f" stroke-width="2.5"/>
+              </g>
+            </svg>
+          </div>
+
+          <p class="build-hint" id="buildHint">👆 Tap a part below to start building!</p>
+
+          <div class="parts-menu" id="partsMenu"></div>
+
+          <div class="drive-wrap hidden" id="driveWrap">
+            <button class="btn btn-primary big-cta" id="driveBtn">🏁 Drive!</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== FINALE / CELEBRATION ============== -->
+      <section class="screen" id="finaleScreen" aria-label="Celebration">
+        <div class="panel">
+          <div class="finale-stage" id="finaleStage">
+            <span class="finale-sun">☀️</span>
+            <div class="road"></div>
+            <div class="car car1" id="car1">🚗</div>
+            <div class="car car2" id="car2">🚙</div>
+            <div class="finale-truck" id="finaleTruck"><div class="finale-truck-jump" id="finaleTruckJump"></div></div>
+          </div>
+
+          <div class="celebrate">
+            <h2 id="finaleHeading">🎉 What a Monster! 🎉</h2>
+            <p class="msg" id="finaleMsg">Your monster truck is ALIVE! Watch it crush those cars! 🚗💥</p>
+          </div>
+
+          <!-- Name your truck -->
+          <div class="name-panel" id="namePanel" hidden>
+            <h2>Name your monster truck! 🏷️</h2>
+            <input class="name-input" id="truckName" type="text" maxlength="18" placeholder="e.g. Mega Crusher" aria-label="Truck name" />
+            <button class="btn btn-primary" id="saveTruckBtn">Add to Garage 🏁</button>
+          </div>
+
+          <!-- Garage -->
+          <div id="garagePanel" hidden>
+            <h2 style="text-align:center;color:var(--purple);font-family:'Bubblegum Sans',cursive;">Your Garage 🏆</h2>
+            <div class="garage-row" id="garageRow"></div>
+            <div class="celebrate-buttons">
+              <button class="btn btn-yellow" id="playAgainBtn">Build Another! ↺</button>
+              <a class="btn btn-purple" href="/">← Back to Zak's Brain Games</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ============== Challenge modal ============== -->
+  <div class="modal-overlay" id="challengeModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modal-close" id="modalClose" aria-label="Close and pick another part">✕</button>
+      <span class="modal-part-emoji" id="modalEmoji" aria-hidden="true">🔧</span>
+      <h3 class="modal-title" id="modalTitle">Build the part!</h3>
+      <p class="modal-prompt" id="modalPrompt"></p>
+      <div id="modalBody"></div>
+      <p class="modal-feedback" id="modalFeedback" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <script>
+  // ====================================================================
+  // Monster Truck Builder
+  // Build a monster truck part by part. Each part unlocks via a short,
+  // forgiving learning challenge. Junior (5-7) and Pro (8-10+) banks.
+  // ====================================================================
+
+  const $ = (id) => document.getElementById(id);
+
+  // ---------- Praise & gentle hints ----------
+  const PRAISE = [
+    "Vroom! Nailed it!", "You're a master builder!", "Awesome engineering!",
+    "That truck is looking HUGE!", "Brain power!", "Boom! Part on!",
+    "Super smart!", "Wheelie good job!", "You rock, builder!", "Mega skills!",
+    "Clunk! Perfect fit!", "Engineering genius!", "Way to go, captain!",
+    "That's how it's done!", "Monster move!", "Snap! Beautiful!",
+    "You're unstoppable!", "Smooth build!"
+  ];
+  const GENTLE = [
+    "Almost! Give it another try 🌟",
+    "So close — have another go ✨",
+    "Hmm, try a different one 💫",
+    "Not quite — you can do it! 🔧",
+    "Keep going, builder! 🌈"
+  ];
+
+  // ---------- State ----------
+  const state = {
+    difficulty: 'junior',
+    parts: [],        // ordered part ids for this build
+    built: {},        // id -> true
+    truckColor: '#9aa3b2',  // primer gray until painted
+    giant: false,
+    activePart: null,
+    garage: []        // {name, color}
+  };
+
+  const PART_META = {
+    wheels:     { name: 'Wheels', emoji: '🛞' },
+    suspension: { name: 'Springs', emoji: '🌀' },
+    engine:     { name: 'Engine', emoji: '🔧' },
+    body:       { name: 'Body', emoji: '🚚' },
+    lights:     { name: 'Lights', emoji: '💡' },
+    turbo:      { name: 'Turbo', emoji: '💨' },
+    giantTires: { name: 'Giant Tires', emoji: '⭕' },
+    paint:      { name: 'Paint', emoji: '🎨' }
+  };
+
+  const PARTS_JUNIOR = ['wheels', 'suspension', 'engine', 'body', 'lights', 'paint'];
+  const PARTS_PRO    = ['wheels', 'suspension', 'engine', 'body', 'lights', 'turbo', 'giantTires', 'paint'];
+
+  const SWATCHES = ['#FF6B6B', '#FF9F45', '#FFD93D', '#6BE6A8', '#4FC3F7', '#B073FF', '#FF6FB5', '#2D2D5F'];
+
+  // ====================================================================
+  // Mini SVG art helpers (for challenge options)
+  // ====================================================================
+  function coilSVG(h) {
+    // h = spring height in px (zigzag). Box 44x76, baseline at y=72.
+    const turns = Math.max(3, Math.round(h / 9));
+    const step = h / turns;
+    let d = 'M10,72';
+    for (let i = 0; i < turns; i++) {
+      const y = 72 - i * step;
+      d += ' L34,' + (y - step * 0.5).toFixed(1) + ' L10,' + (y - step).toFixed(1);
+    }
+    return '<svg viewBox="0 0 44 76" width="40" height="68" aria-hidden="true">' +
+      '<path d="' + d + '" fill="none" stroke="#FF9F45" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<circle cx="10" cy="72" r="3.5" fill="#E07B1F"/></svg>';
+  }
+  function engineSizeSVG(s) {
+    // s = scale factor; bigger = more powerful
+    const w = 30 * s, h = 22 * s;
+    const x = (60 - w) / 2, y = (54 - h) - 2;
+    return '<svg viewBox="0 0 60 54" width="56" height="50" aria-hidden="true">' +
+      '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="4" fill="#6b7280" stroke="#3a3f4b" stroke-width="2"/>' +
+      '<rect x="' + (x + w * 0.2) + '" y="' + (y - 7 * s) + '" width="' + (w * 0.6) + '" height="' + (7 * s) + '" rx="2" fill="#9aa1ad" stroke="#3a3f4b" stroke-width="1.5"/>' +
+      '</svg>';
+  }
+  function engineCylSVG(n) {
+    // engine block with n little intake pipes on top
+    let pipes = '';
+    const startX = 30 - (n * 6) / 2 + 1;
+    for (let i = 0; i < n; i++) {
+      const px = startX + i * 6;
+      pipes += '<rect x="' + px + '" y="14" width="4" height="9" rx="1.5" fill="#cfd4de" stroke="#3a3f4b" stroke-width="1"/>';
+    }
+    return '<svg viewBox="0 0 60 54" width="56" height="50" aria-hidden="true">' +
+      '<rect x="14" y="22" width="32" height="22" rx="4" fill="#6b7280" stroke="#3a3f4b" stroke-width="2"/>' +
+      pipes + '</svg>';
+  }
+  function tireSVG(r) {
+    // tire of radius r (height = diameter). Box 70 tall, baseline 66.
+    const cy = 66 - r;
+    return '<svg viewBox="0 0 70 70" width="62" height="62" aria-hidden="true">' +
+      '<circle cx="35" cy="' + cy + '" r="' + r + '" fill="#1d1f26"/>' +
+      '<circle cx="35" cy="' + cy + '" r="' + r + '" fill="none" stroke="#34373f" stroke-width="4" stroke-dasharray="6 7"/>' +
+      '<circle cx="35" cy="' + cy + '" r="' + (r * 0.45) + '" fill="#cfd4de"/>' +
+      '<circle cx="35" cy="' + cy + '" r="3" fill="#6b7280"/></svg>';
+  }
+  function arrowSVG(rot, flip) {
+    // an L / arrow shape, rotated by rot degrees, optionally mirrored
+    const tf = 'rotate(' + rot + ' 30 30)' + (flip ? ' scale(-1,1) translate(-60,0)' : '');
+    return '<svg viewBox="0 0 60 60" width="54" height="54" aria-hidden="true">' +
+      '<g transform="' + tf + '">' +
+      '<path d="M16,12 L40,12 L40,28 L30,28 L30,48 L16,48 Z" fill="#B073FF" stroke="#2d2d5f" stroke-width="2.5" stroke-linejoin="round"/>' +
+      '</g></svg>';
+  }
+  function circuitSVG(connectBoth) {
+    // pro lights option: battery -> two bulbs. connectBoth=true lights both.
+    const wireTop = '<path d="M14,20 L46,20 L46,30" fill="none" stroke="#FFD93D" stroke-width="3.5" stroke-linecap="round"/>';
+    const wireBottomGood = '<path d="M14,40 L30,40 L30,46 L46,46 L46,38" fill="none" stroke="#FFD93D" stroke-width="3.5" stroke-linecap="round"/>';
+    const wireBottomBad = '<path d="M14,40 L24,40" fill="none" stroke="#FFD93D" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="2 4"/>';
+    return '<svg viewBox="0 0 60 60" width="56" height="56" aria-hidden="true">' +
+      '<rect x="4" y="22" width="10" height="20" rx="2" fill="#6BE6A8" stroke="#2d2d5f" stroke-width="2"/>' +
+      '<text x="9" y="36" font-size="9" text-anchor="middle" fill="#2d2d5f" font-family="Fredoka,sans-serif" font-weight="700">+</text>' +
+      wireTop + (connectBoth ? wireBottomGood : wireBottomBad) +
+      '<circle cx="49" cy="22" r="6" fill="' + '#FFE57A' + '" stroke="#2d2d5f" stroke-width="2"/>' +
+      '<circle cx="49" cy="46" r="6" fill="' + (connectBoth ? '#FFE57A' : '#fff') + '" stroke="#2d2d5f" stroke-width="2"/>' +
+      '</svg>';
+  }
+  function miniTruckSVG(color) {
+    return '<svg viewBox="0 0 120 80" aria-hidden="true">' +
+      '<ellipse cx="60" cy="72" rx="48" ry="5" fill="rgba(0,0,0,0.18)"/>' +
+      '<rect x="24" y="44" width="78" height="6" rx="3" fill="#3a3f4b"/>' +
+      '<path d="M32,44 L32,22 Q32,16 38,16 L60,16 L70,30 L84,30 L84,44 Z" fill="' + color + '" stroke="#2d2d5f" stroke-width="2.2" stroke-linejoin="round"/>' +
+      '<rect x="84" y="32" width="20" height="12" rx="3" fill="' + color + '" stroke="#2d2d5f" stroke-width="2.2"/>' +
+      '<rect x="40" y="21" width="16" height="9" rx="2" fill="#bfe9ff" stroke="#2d2d5f" stroke-width="1.6"/>' +
+      '<circle cx="102" cy="38" r="3" fill="#FFE57A" stroke="#2d2d5f" stroke-width="1.4"/>' +
+      '<circle cx="40" cy="54" r="15" fill="#1d1f26"/><circle cx="40" cy="54" r="6.5" fill="#cfd4de"/>' +
+      '<circle cx="90" cy="54" r="15" fill="#1d1f26"/><circle cx="90" cy="54" r="6.5" fill="#cfd4de"/>' +
+      '</svg>';
+  }
+
+  // ====================================================================
+  // Challenge banks  (per part, per difficulty: array of variations)
+  // type: 'mc' | 'count' | 'steppers' | 'circuit' | 'paint'
+  // ====================================================================
+  const CHALLENGES = {
+    wheels: {
+      junior: [
+        { type: 'count', prompt: 'Your truck needs 4 wheels — tap 4 wheels! 🛞', hint: 'Count them one at a time: 1, 2, 3, 4!', target: 4, pool: 6, item: '🛞' },
+        { type: 'count', prompt: 'Tap 3 round wheels to get rolling! 🛞', hint: 'Count slowly: 1, 2, 3!', target: 3, pool: 5, item: '🛞' },
+        { type: 'count', prompt: 'A monster truck needs 4 BIG wheels. Tap 4! 🛞', hint: 'Point and count: 1, 2, 3, 4!', target: 4, pool: 6, item: '🛞' }
+      ],
+      pro: [
+        { type: 'mc', prompt: 'Each wheel costs 3 coins. You need 4 wheels. How many coins? 🪙', hint: 'Count by 3s: 3, 6, 9, 12!', options: [{ label: '12', correct: true }, { label: '9' }, { label: '15' }, { label: '7' }] },
+        { type: 'mc', prompt: 'Each wheel costs 5 coins. You need 4 wheels. How many coins? 🪙', hint: 'Count by 5s: 5, 10, 15, 20!', options: [{ label: '20', correct: true }, { label: '15' }, { label: '25' }, { label: '10' }] },
+        { type: 'mc', prompt: '2 trucks each need 4 wheels. How many wheels in total? 🛞', hint: '4 and 4 more makes 8!', options: [{ label: '8', correct: true }, { label: '6' }, { label: '10' }, { label: '4' }] }
+      ]
+    },
+    suspension: {
+      junior: [
+        { type: 'mc', prompt: 'Make both springs the SAME size so the truck doesn\'t tip! Match this one:', hint: 'Look for the spring that is the same height.', ref: coilSVG(34), options: [{ html: coilSVG(34), correct: true }, { html: coilSVG(20) }, { html: coilSVG(54) }] },
+        { type: 'mc', prompt: 'Pick the matching spring so both sides are even!', hint: 'Find the one that is the same tallness.', ref: coilSVG(50), options: [{ html: coilSVG(24) }, { html: coilSVG(50), correct: true }, { html: coilSVG(36) }] },
+        { type: 'mc', prompt: 'Which spring matches? Balance the truck!', hint: 'Same height = a match!', ref: coilSVG(22), options: [{ html: coilSVG(48) }, { html: coilSVG(34) }, { html: coilSVG(22), correct: true }] }
+      ],
+      pro: [
+        { type: 'steppers', prompt: 'Set BOTH springs to height 5 so the truck is balanced. ⚖️', hint: 'Use + and − until both springs show 5.', target: 5, max: 8 },
+        { type: 'steppers', prompt: 'Balance the truck — set BOTH springs to height 4. ⚖️', hint: 'Tap − or + until both show 4.', target: 4, max: 8 },
+        { type: 'steppers', prompt: 'Level it out — set BOTH springs to height 6. ⚖️', hint: 'Match both springs to 6.', target: 6, max: 9 }
+      ]
+    },
+    engine: {
+      junior: [
+        { type: 'mc', prompt: 'More power makes the truck GO! Pick the BIGGEST engine 🔧', hint: 'The biggest one takes up the most space!', options: [{ html: engineSizeSVG(1.6), correct: true }, { html: engineSizeSVG(1.0) }, { html: engineSizeSVG(0.7) }] },
+        { type: 'mc', prompt: 'Pick the BIGGEST engine for maximum power! 🔧', hint: 'Look for the largest block.', options: [{ html: engineSizeSVG(0.8) }, { html: engineSizeSVG(1.7), correct: true }, { html: engineSizeSVG(1.2) }] },
+        { type: 'mc', prompt: 'Which engine is the BIGGEST? 🔧', hint: 'Bigger engine = more vroom!', options: [{ html: engineSizeSVG(1.1) }, { html: engineSizeSVG(0.75) }, { html: engineSizeSVG(1.65), correct: true }] }
+      ],
+      pro: [
+        { type: 'mc', prompt: 'More cylinders = more power! Pick the engine with 6 cylinders. 🔧', hint: 'Count the little pipes on top of each engine.', options: [{ html: engineCylSVG(6), correct: true, n: 6 }, { html: engineCylSVG(4), n: 4 }, { html: engineCylSVG(8), n: 8 }] },
+        { type: 'mc', prompt: 'Pick the most powerful engine — the one with 8 cylinders! 🔧', hint: 'Count the pipes: you want 8.', options: [{ html: engineCylSVG(4), n: 4 }, { html: engineCylSVG(8), correct: true, n: 8 }, { html: engineCylSVG(6), n: 6 }] },
+        { type: 'mc', prompt: 'The eco engine has 4 cylinders. Pick the engine with 4 cylinders. 🔧', hint: 'Count the pipes: you want 4.', options: [{ html: engineCylSVG(6), n: 6 }, { html: engineCylSVG(4), correct: true, n: 4 }, { html: engineCylSVG(8), n: 8 }] }
+      ]
+    },
+    body: {
+      junior: [
+        { type: 'mc', prompt: 'Finish the pattern to build the body:  🔺 🟦 🔺 🟦 ❓', hint: 'What comes after 🟦? It goes back to 🔺!', options: [{ label: '🔺', correct: true }, { label: '🟦' }, { label: '🟢' }] },
+        { type: 'mc', prompt: 'Finish the pattern:  🟡 🔵 🟡 🔵 ❓', hint: 'After 🔵 the pattern repeats with 🟡!', options: [{ label: '🔵' }, { label: '🟡', correct: true }, { label: '🔴' }] },
+        { type: 'mc', prompt: 'Finish the pattern:  ⭐ ❤️ ⭐ ❤️ ❓', hint: 'After ❤️ comes ⭐ again!', options: [{ label: '❤️' }, { label: '🔷' }, { label: '⭐', correct: true }] }
+      ],
+      pro: [
+        { type: 'mc', prompt: 'Pick the body panel that is the SAME shape, just ROTATED. 🔄', hint: 'Turn the purple shape in your mind — same shape, not flipped!', ref: arrowSVG(0, false), options: [{ html: arrowSVG(90, false), correct: true }, { html: arrowSVG(0, true) }, { html: arrowSVG(180, true) }] },
+        { type: 'mc', prompt: 'Which panel is the SAME shape, just turned around? 🔄', hint: 'Same shape rotated — a mirror flip does NOT count.', ref: arrowSVG(0, false), options: [{ html: arrowSVG(90, true) }, { html: arrowSVG(180, false), correct: true }, { html: arrowSVG(0, true) }] }
+      ]
+    },
+    lights: {
+      junior: [
+        { type: 'circuit', prompt: 'Tap the wire to connect the headlights and light them up! 💡', hint: 'Tap the dotted wire in the middle!' },
+        { type: 'circuit', prompt: 'The wire is loose! Tap it to power up the headlights. 💡', hint: 'Tap the dotted wire to connect it!' }
+      ],
+      pro: [
+        { type: 'mc', prompt: 'Connect the battery to BOTH headlights so they light up. 🔋', hint: 'Both bulbs need a wire reaching them — pick the complete circuit.', options: [{ html: circuitSVG(true), correct: true }, { html: circuitSVG(false) }, { html: circuitSVG(false) }] },
+        { type: 'mc', prompt: 'Which wiring lights up BOTH headlights? 🔋', hint: 'Look for wires going to BOTH bulbs.', options: [{ html: circuitSVG(false) }, { html: circuitSVG(true), correct: true }, { html: circuitSVG(false) }] }
+      ]
+    },
+    turbo: {
+      pro: [
+        { type: 'mc', prompt: 'Turbo time! You drive 10 mph. Turbo adds 15 mph. How fast now? 💨', hint: '10 plus 15 — count on from 10!', options: [{ label: '25', correct: true }, { label: '20' }, { label: '30' }, { label: '5' }] },
+        { type: 'mc', prompt: 'You go 8 mph. Turbo adds 12 mph. What is your new speed? 💨', hint: '8 plus 12 makes 20!', options: [{ label: '20', correct: true }, { label: '18' }, { label: '22' }, { label: '4' }] },
+        { type: 'mc', prompt: 'Turbo DOUBLES your speed! You go 9 mph. New speed? 💨', hint: 'Double means 9 + 9.', options: [{ label: '18', correct: true }, { label: '12' }, { label: '19' }, { label: '90' }] }
+      ]
+    },
+    giantTires: {
+      pro: [
+        { type: 'mc', prompt: 'Monster trucks need GIANT tires! Pick the TALLEST tire. ⭕', hint: 'The tallest tire reaches the highest.', options: [{ html: tireSVG(30), correct: true }, { html: tireSVG(20) }, { html: tireSVG(14) }] },
+        { type: 'mc', prompt: 'Pick the BIGGEST tire to crush cars! ⭕', hint: 'Biggest = widest and tallest!', options: [{ html: tireSVG(16) }, { html: tireSVG(31), correct: true }, { html: tireSVG(23) }] },
+        { type: 'mc', prompt: 'Which tire is the TALLEST? ⭕', hint: 'Compare how high each one goes.', options: [{ html: tireSVG(22) }, { html: tireSVG(15) }, { html: tireSVG(30), correct: true }] }
+      ]
+    },
+    paint: {
+      junior: [
+        { type: 'paint', prompt: 'Mix red 🔴 + yellow 🟡 — what color do you get?', hint: 'Red and yellow make a warm, juicy color!', options: [{ label: '🟠 Orange', correct: true }, { label: '🟢 Green' }, { label: '🟣 Purple' }] },
+        { type: 'paint', prompt: 'Mix blue 🔵 + yellow 🟡 — what color do you get?', hint: 'Blue and yellow make a leafy color!', options: [{ label: '🟢 Green', correct: true }, { label: '🟠 Orange' }, { label: '🟣 Purple' }] },
+        { type: 'paint', prompt: 'Mix red 🔴 + blue 🔵 — what color do you get?', hint: 'Red and blue make a royal color!', options: [{ label: '🟣 Purple', correct: true }, { label: '🟢 Green' }, { label: '🟠 Orange' }] }
+      ],
+      pro: [
+        { type: 'paint', prompt: 'Finish the color pattern, then pick your paint:  🔴 🔵 🔴 🔵 ❓', hint: 'After 🔵 the pattern goes back to 🔴!', options: [{ label: '🔴', correct: true }, { label: '🔵' }, { label: '🟡' }] },
+        { type: 'paint', prompt: 'Finish the pattern, then pick your paint:  🟡 🟢 🟡 🟢 ❓', hint: 'After 🟢 comes 🟡 again!', options: [{ label: '🟢' }, { label: '🟡', correct: true }, { label: '🔵' }] }
+      ]
+    }
+  };
+
+  // ====================================================================
+  // Confetti
+  // ====================================================================
+  const CONFETTI_COLORS = ['#FFD93D', '#FF6FB5', '#4FC3F7', '#6BE6A8', '#B073FF', '#FF9F45'];
+  function burstConfetti(x, y, count) {
+    const n = count || 28;
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = x + 'px';
+      c.style.top = y + 'px';
+      c.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      document.body.appendChild(c);
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = 80 + Math.random() * 140;
+      const dx = Math.cos(angle) * velocity;
+      const dy = Math.sin(angle) * velocity - 80;
+      c.animate([
+        { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+        { transform: 'translate(' + dx + 'px, ' + (dy + 320) + 'px) rotate(' + (Math.random() * 720) + 'deg)', opacity: 0 }
+      ], { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(.2,.6,.4,1)' });
+      setTimeout(() => c.remove(), 1700);
+    }
+  }
+  function bigConfetti() {
+    const w = window.innerWidth, h = window.innerHeight;
+    burstConfetti(w * 0.25, h * 0.35, 40);
+    setTimeout(() => burstConfetti(w * 0.75, h * 0.35, 40), 180);
+    setTimeout(() => burstConfetti(w * 0.5, h * 0.22, 50), 360);
+  }
+
+  // ====================================================================
+  // Sound (Web Audio API — no external files)
+  // ====================================================================
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { audioCtx = null; }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch (e) {} }
+    return audioCtx;
+  }
+  function tone(freq, start, dur, vol, type) {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type || 'sine';
+    o.frequency.value = freq;
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime + start;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + dur);
+    o.start(t0);
+    o.stop(t0 + dur + 0.05);
+  }
+  function playHappy() {
+    tone(523.25, 0, 0.16, 0.18);
+    tone(659.25, 0.07, 0.16, 0.18);
+    tone(783.99, 0.14, 0.24, 0.2);
+  }
+  function playClunk() {
+    // click-clunk: a sharp tick then a low thud
+    tone(880, 0, 0.05, 0.12, 'square');
+    tone(120, 0.05, 0.16, 0.22, 'square');
+    tone(90, 0.07, 0.18, 0.18, 'triangle');
+  }
+  function playGentle() {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime;
+    o.frequency.setValueAtTime(392, t0);
+    o.frequency.linearRampToValueAtTime(330, t0 + 0.3);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.1, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + 0.36);
+    o.start(t0);
+    o.stop(t0 + 0.4);
+  }
+  function playFanfare() {
+    tone(523.25, 0, 0.18, 0.2);
+    tone(659.25, 0.12, 0.18, 0.2);
+    tone(783.99, 0.24, 0.18, 0.2);
+    tone(1046.5, 0.36, 0.42, 0.22);
+  }
+  function playRev() {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sawtooth';
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime;
+    o.frequency.setValueAtTime(70, t0);
+    o.frequency.linearRampToValueAtTime(180, t0 + 0.25);
+    o.frequency.linearRampToValueAtTime(110, t0 + 0.5);
+    o.frequency.linearRampToValueAtTime(220, t0 + 0.9);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.12, t0 + 0.05);
+    g.gain.linearRampToValueAtTime(0.1, t0 + 0.7);
+    g.gain.linearRampToValueAtTime(0, t0 + 1.0);
+    o.start(t0);
+    o.stop(t0 + 1.05);
+  }
+  function playCrunch() {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const dur = 0.32;
+    const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      const fade = 1 - i / data.length;
+      data[i] = (Math.random() * 2 - 1) * fade * fade;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 1200;
+    const g = ctx.createGain();
+    g.gain.value = 0.5;
+    src.connect(filter).connect(g).connect(ctx.destination);
+    src.start();
+    tone(70, 0, 0.18, 0.25, 'square');
+  }
+
+  // ====================================================================
+  // Screen handling
+  // ====================================================================
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // ====================================================================
+  // Difficulty toggle
+  // ====================================================================
+  function setDifficulty(d) {
+    state.difficulty = d;
+    const j = $('diffJunior'), p = $('diffPro');
+    j.classList.toggle('selected', d === 'junior');
+    p.classList.toggle('selected', d === 'pro');
+    j.setAttribute('aria-pressed', String(d === 'junior'));
+    p.setAttribute('aria-pressed', String(d === 'pro'));
+  }
+  $('diffJunior').addEventListener('click', () => { ensureAudio(); setDifficulty('junior'); });
+  $('diffPro').addEventListener('click', () => { ensureAudio(); setDifficulty('pro'); });
+
+  // ====================================================================
+  // Build screen
+  // ====================================================================
+  function startBuild() {
+    state.parts = (state.difficulty === 'pro' ? PARTS_PRO : PARTS_JUNIOR).slice();
+    state.built = {};
+    state.truckColor = '#9aa3b2';
+    state.giant = false;
+    state.activePart = null;
+
+    // reset truck visuals
+    $('truck').style.setProperty('--truck-paint', state.truckColor);
+    state.parts.forEach(id => {
+      const grp = svgGroupFor(id);
+      if (grp) grp.classList.remove('placed');
+    });
+    $('partWheels').classList.remove('giant');
+    $('partLights').querySelectorAll('.headlight').forEach(h => h.classList.remove('lit'));
+    $('partLights').querySelector('.head-glow').classList.remove('lit');
+
+    $('buildTitle').textContent = state.difficulty === 'pro'
+      ? '🏆 Build Your Pro Monster Truck!'
+      : '🔧 Build Your Monster Truck!';
+
+    renderPartsMenu();
+    updateProgress();
+    $('driveWrap').classList.add('hidden');
+    $('buildHint').textContent = '👆 Tap a part below to start building!';
+    showScreen('buildScreen');
+  }
+
+  function svgGroupFor(id) {
+    switch (id) {
+      case 'wheels': return $('partWheels');
+      case 'suspension': return $('partSpring');
+      case 'engine': return $('partEngine');
+      case 'body': return $('partBody');
+      case 'lights': return $('partLights');
+      case 'turbo': return $('partTurbo');
+      default: return null; // giantTires + paint have no own group
+    }
+  }
+
+  function renderPartsMenu() {
+    const menu = $('partsMenu');
+    menu.innerHTML = '';
+    const firstUnbuilt = state.parts.find(id => !state.built[id]);
+    state.parts.forEach(id => {
+      const meta = PART_META[id];
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'part-chip';
+      const done = !!state.built[id];
+      if (done) chip.classList.add('done');
+      else if (id === firstUnbuilt) chip.classList.add('next');
+      chip.setAttribute('aria-label', (done ? 'Built: ' : 'Build: ') + meta.name);
+      chip.innerHTML =
+        '<span class="pc-lock" aria-hidden="true">' + (done ? '✅' : '🔒') + '</span>' +
+        '<span class="pc-emoji" aria-hidden="true">' + meta.emoji + '</span>' +
+        '<span class="pc-name">' + meta.name + '</span>';
+      if (!done) chip.addEventListener('click', () => openChallenge(id));
+      menu.appendChild(chip);
+    });
+  }
+
+  function updateProgress() {
+    const total = state.parts.length;
+    const built = state.parts.filter(id => state.built[id]).length;
+    $('progressText').textContent = built + ' of ' + total + ' parts built';
+    const dots = $('progressDots');
+    dots.innerHTML = '';
+    for (let i = 0; i < total; i++) {
+      const d = document.createElement('span');
+      d.className = 'pdot' + (i < built ? ' done' : '');
+      dots.appendChild(d);
+    }
+  }
+
+  // ---------- Place a part on the truck ----------
+  function placePart(id) {
+    const grp = svgGroupFor(id);
+    if (grp) {
+      grp.classList.add('placed');
+    }
+    if (id === 'wheels' && state.giant) grp.classList.add('giant');
+    if (id === 'giantTires') {
+      state.giant = true;
+      if (state.built.wheels) $('partWheels').classList.add('giant');
+    }
+    if (id === 'lights') {
+      const lg = $('partLights');
+      lg.querySelectorAll('.headlight').forEach(h => h.classList.add('lit'));
+      lg.querySelector('.head-glow').classList.add('lit');
+    }
+    if (id === 'paint') {
+      $('truck').style.setProperty('--truck-paint', state.truckColor);
+    }
+  }
+
+  function onPartBuilt(id) {
+    state.built[id] = true;
+    placePart(id);
+    playClunk();
+    renderPartsMenu();
+    updateProgress();
+
+    const remaining = state.parts.filter(p => !state.built[p]).length;
+    if (remaining === 0) {
+      $('buildHint').textContent = '🎉 Your monster truck is COMPLETE! Tap Drive!';
+      $('driveWrap').classList.remove('hidden');
+    } else {
+      $('buildHint').textContent = remaining === 1
+        ? '🔧 Just 1 more part to go!'
+        : '🔧 ' + remaining + ' more parts to build — keep going!';
+    }
+  }
+
+  // ====================================================================
+  // Challenge modal
+  // ====================================================================
+  function openChallenge(id) {
+    ensureAudio();
+    state.activePart = id;
+    const meta = PART_META[id];
+    const bank = (CHALLENGES[id] && CHALLENGES[id][state.difficulty]) || (CHALLENGES[id] && CHALLENGES[id].junior) || [];
+    if (!bank.length) { onPartBuilt(id); return; }
+    const cfg = bank[Math.floor(Math.random() * bank.length)];
+
+    $('modalEmoji').textContent = meta.emoji;
+    $('modalTitle').textContent = 'Build the ' + meta.name + '!';
+    $('modalPrompt').innerHTML = cfg.prompt + (cfg.ref ? '<span class="ref-spring">' + cfg.ref + '</span>' : '');
+    $('modalFeedback').textContent = '';
+    $('modalFeedback').className = 'modal-feedback';
+
+    const body = $('modalBody');
+    body.innerHTML = '';
+    if (cfg.type === 'mc') renderMC(body, cfg);
+    else if (cfg.type === 'count') renderCount(body, cfg);
+    else if (cfg.type === 'steppers') renderSteppers(body, cfg);
+    else if (cfg.type === 'circuit') renderCircuit(body, cfg);
+    else if (cfg.type === 'paint') renderPaint(body, cfg);
+
+    $('challengeModal').removeAttribute('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeChallenge() {
+    $('challengeModal').setAttribute('hidden', '');
+    document.body.style.overflow = '';
+    state.activePart = null;
+  }
+
+  function solveActivePart() {
+    const id = state.activePart;
+    closeChallenge();
+    if (id) {
+      // tiny delay so the modal closes before the snap animation
+      setTimeout(() => onPartBuilt(id), 120);
+    }
+  }
+
+  function feedbackGood(text) {
+    const fb = $('modalFeedback');
+    fb.className = 'modal-feedback good';
+    fb.textContent = text || (PRAISE[Math.floor(Math.random() * PRAISE.length)]);
+  }
+  function feedbackGentle(hint) {
+    const fb = $('modalFeedback');
+    fb.className = 'modal-feedback gentle';
+    fb.textContent = hint || GENTLE[Math.floor(Math.random() * GENTLE.length)];
+  }
+
+  // ---------- Multiple choice ----------
+  function renderMC(body, cfg) {
+    const grid = document.createElement('div');
+    const cols = cfg.options.length === 3 ? 'cols3' : (cfg.options.length === 1 ? 'cols1' : '');
+    grid.className = 'opt-grid ' + cols;
+    shuffle(cfg.options).forEach(opt => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'opt-btn';
+      btn.innerHTML = opt.html || opt.label;
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('locked')) return;
+        if (opt.correct) {
+          ensureAudio();
+          grid.querySelectorAll('.opt-btn').forEach(b => b.classList.add('locked'));
+          btn.classList.add('good');
+          playHappy();
+          const r = btn.getBoundingClientRect();
+          burstConfetti(r.left + r.width / 2, r.top + r.height / 2, 18);
+          feedbackGood();
+          setTimeout(solveActivePart, 700);
+        } else {
+          btn.classList.remove('bad'); void btn.offsetWidth; btn.classList.add('bad');
+          setTimeout(() => btn.classList.remove('bad'), 460);
+          playGentle();
+          feedbackGentle(cfg.hint);
+        }
+      });
+      grid.appendChild(btn);
+    });
+    body.appendChild(grid);
+  }
+
+  // ---------- Count (tap N items) ----------
+  function renderCount(body, cfg) {
+    let picked = 0;
+    const pool = document.createElement('div');
+    pool.className = 'count-pool';
+    const readout = document.createElement('p');
+    readout.className = 'count-readout';
+    readout.textContent = 'Tapped: 0 / ' + cfg.target;
+    for (let i = 0; i < cfg.pool; i++) {
+      const it = document.createElement('button');
+      it.type = 'button';
+      it.className = 'count-item';
+      it.setAttribute('aria-label', 'wheel');
+      it.textContent = cfg.item;
+      it.addEventListener('click', () => {
+        if (it.classList.contains('picked') || picked >= cfg.target) return;
+        it.classList.add('picked');
+        picked++;
+        readout.textContent = 'Tapped: ' + picked + ' / ' + cfg.target;
+        ensureAudio();
+        tone(440 + picked * 70, 0, 0.1, 0.14, 'triangle');
+        const r = it.getBoundingClientRect();
+        burstConfetti(r.left + r.width / 2, r.top + r.height / 2, 8);
+        if (picked >= cfg.target) {
+          playHappy();
+          feedbackGood();
+          pool.querySelectorAll('.count-item').forEach(x => x.classList.add('picked'));
+          setTimeout(solveActivePart, 700);
+        }
+      });
+      pool.appendChild(it);
+    }
+    body.appendChild(pool);
+    body.appendChild(readout);
+  }
+
+  // ---------- Steppers (set both to target) ----------
+  function renderSteppers(body, cfg) {
+    const vals = [0, 0];
+    const wrap = document.createElement('div');
+    wrap.className = 'steppers';
+    const springEls = [];
+    const valEls = [];
+    [0, 1].forEach(idx => {
+      const st = document.createElement('div');
+      st.className = 'stepper';
+      st.innerHTML =
+        '<div class="st-label">Spring ' + (idx + 1) + '</div>' +
+        '<div class="st-spring"></div>' +
+        '<div class="st-controls">' +
+          '<button type="button" class="st-btn" data-act="dec" aria-label="Lower spring ' + (idx + 1) + '">−</button>' +
+          '<span class="st-val">0</span>' +
+          '<button type="button" class="st-btn" data-act="inc" aria-label="Raise spring ' + (idx + 1) + '">+</button>' +
+        '</div>';
+      const springSlot = st.querySelector('.st-spring');
+      const valEl = st.querySelector('.st-val');
+      springEls.push(springSlot);
+      valEls.push(valEl);
+      const draw = () => { springSlot.innerHTML = coilSVG(12 + vals[idx] * 7); valEl.textContent = vals[idx]; };
+      draw();
+      st.querySelectorAll('.st-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          ensureAudio();
+          const act = b.getAttribute('data-act');
+          if (act === 'inc') vals[idx] = Math.min(cfg.max, vals[idx] + 1);
+          else vals[idx] = Math.max(0, vals[idx] - 1);
+          tone(act === 'inc' ? 520 : 360, 0, 0.07, 0.12, 'triangle');
+          draw();
+          checkSteppers();
+        });
+      });
+      wrap.appendChild(st);
+    });
+    const target = document.createElement('p');
+    target.className = 'st-target';
+    target.textContent = '🎯 Make BOTH springs show ' + cfg.target;
+    body.appendChild(wrap);
+    body.appendChild(target);
+
+    let solved = false;
+    function checkSteppers() {
+      if (solved) return;
+      if (vals[0] === cfg.target && vals[1] === cfg.target) {
+        solved = true;
+        playHappy();
+        feedbackGood('Perfectly balanced! ' + PRAISE[Math.floor(Math.random() * PRAISE.length)]);
+        const r = wrap.getBoundingClientRect();
+        burstConfetti(r.left + r.width / 2, r.top + r.height / 2, 18);
+        setTimeout(solveActivePart, 750);
+      } else if (vals[0] === vals[1] && vals[0] !== 0) {
+        feedbackGentle('Both match — now make them both ' + cfg.target + '! 🎯');
+      }
+    }
+  }
+
+  // ---------- Circuit (junior single tap) ----------
+  function renderCircuit(body, cfg) {
+    const stage = document.createElement('div');
+    stage.className = 'circuit-stage';
+    stage.innerHTML =
+      '<svg viewBox="0 0 300 120" role="img" aria-label="Headlight circuit">' +
+        '<rect x="16" y="46" width="26" height="34" rx="4" fill="#6BE6A8" stroke="#2d2d5f" stroke-width="2.5"/>' +
+        '<text x="29" y="68" font-size="16" text-anchor="middle" fill="#2d2d5f" font-family="Fredoka,sans-serif" font-weight="700">🔋</text>' +
+        '<path d="M42,56 L96,56" fill="none" stroke="#FFD93D" stroke-width="6" stroke-linecap="round"/>' +
+        '<path class="wire-tap" id="wireTap" d="M96,56 L150,56 L150,40"/>' +
+        '<path d="M150,40 L150,30 L246,30 L246,44" fill="none" stroke="#FFD93D" stroke-width="6" stroke-linecap="round" id="wireTop2"/>' +
+        '<path d="M42,72 L246,72 L246,82" fill="none" stroke="#FFD93D" stroke-width="6" stroke-linecap="round"/>' +
+        '<ellipse id="bulbGlow1" cx="246" cy="56" rx="26" ry="18" fill="#FFE57A" opacity="0"/>' +
+        '<circle id="bulb1" cx="246" cy="56" r="14" fill="#fff" stroke="#2d2d5f" stroke-width="3"/>' +
+        '<text x="246" y="62" font-size="14" text-anchor="middle">💡</text>' +
+        '<path id="wireHit" d="M96,56 L150,56 L150,40" fill="none" stroke="transparent" stroke-width="30" stroke-linecap="round" style="cursor:pointer"/>' +
+      '</svg>';
+    body.appendChild(stage);
+    const note = document.createElement('p');
+    note.className = 'count-readout';
+    note.textContent = '👆 Tap the dotted wire!';
+    body.appendChild(note);
+
+    const wire = stage.querySelector('#wireTap');
+    const wireHit = stage.querySelector('#wireHit');
+    let done = false;
+    function connect() {
+      if (done) return;
+      done = true;
+      wire.style.stroke = '#FFD93D';
+      wire.style.strokeDasharray = 'none';
+      stage.querySelector('#bulbGlow1').setAttribute('opacity', '0.8');
+      stage.querySelector('#bulb1').setAttribute('fill', '#FFE57A');
+      note.textContent = '💡 Lights ON!';
+      ensureAudio();
+      playHappy();
+      const r = stage.getBoundingClientRect();
+      burstConfetti(r.left + r.width / 2, r.top + r.height / 2, 18);
+      feedbackGood();
+      setTimeout(solveActivePart, 750);
+    }
+    wire.addEventListener('click', connect);
+    wireHit.addEventListener('click', connect);
+    wire.style.cursor = 'pointer';
+  }
+
+  // ---------- Paint (question, then free swatch choice) ----------
+  function renderPaint(body, cfg) {
+    // Step 1: the question (MC). On correct -> step 2 swatches.
+    const grid = document.createElement('div');
+    grid.className = 'opt-grid ' + (cfg.options.length === 3 ? 'cols3' : '');
+    shuffle(cfg.options).forEach(opt => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'opt-btn';
+      btn.innerHTML = opt.label;
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('locked')) return;
+        if (opt.correct) {
+          ensureAudio();
+          grid.querySelectorAll('.opt-btn').forEach(b => b.classList.add('locked'));
+          btn.classList.add('good');
+          playHappy();
+          feedbackGood('Yes! Now pick your paint! 🎨');
+          setTimeout(() => showSwatches(body), 600);
+        } else {
+          btn.classList.remove('bad'); void btn.offsetWidth; btn.classList.add('bad');
+          setTimeout(() => btn.classList.remove('bad'), 460);
+          playGentle();
+          feedbackGentle(cfg.hint);
+        }
+      });
+      grid.appendChild(btn);
+    });
+    body.appendChild(grid);
+  }
+
+  function showSwatches(body) {
+    body.innerHTML = '';
+    $('modalPrompt').textContent = '🎨 Pick your paint color — any color you love!';
+    const grid = document.createElement('div');
+    grid.className = 'swatch-grid';
+    SWATCHES.forEach(color => {
+      const sw = document.createElement('button');
+      sw.type = 'button';
+      sw.className = 'swatch';
+      sw.style.background = color;
+      sw.setAttribute('aria-label', 'Paint it this color');
+      sw.addEventListener('click', () => {
+        ensureAudio();
+        state.truckColor = color;
+        $('truck').style.setProperty('--truck-paint', color);
+        playHappy();
+        const r = sw.getBoundingClientRect();
+        burstConfetti(r.left + r.width / 2, r.top + r.height / 2, 18);
+        feedbackGood('Beautiful color! 🌈');
+        setTimeout(solveActivePart, 650);
+      });
+      grid.appendChild(sw);
+    });
+    body.appendChild(grid);
+  }
+
+  // ====================================================================
+  // Finale
+  // ====================================================================
+  function runFinale() {
+    showScreen('finaleScreen');
+    $('namePanel').hidden = true;
+    $('garagePanel').hidden = true;
+    $('finaleHeading').textContent = '🎉 What a Monster! 🎉';
+    $('finaleMsg').textContent = 'Your monster truck is ALIVE! Watch it crush those cars! 🚗💥';
+
+    // clone the finished truck into the finale
+    const jump = $('finaleTruckJump');
+    jump.innerHTML = $('truck').outerHTML.replace('id="truck"', 'id="finaleTruckSvg"');
+
+    const car1 = $('car1'), car2 = $('car2');
+    car1.classList.remove('squished');
+    car2.classList.remove('squished');
+
+    const stage = $('finaleStage');
+    const truck = $('finaleTruck');
+    const stageW = stage.clientWidth || 320;
+    const truckW = truck.offsetWidth || 180;
+
+    // place cars near the right
+    const car1X = stageW * 0.58;
+    const car2X = stageW * 0.78;
+    car1.style.left = car1X + 'px';
+    car2.style.left = car2X + 'px';
+
+    const startX = -truckW - 20;
+    const endX = stageW + 30;
+    const duration = 3600;
+
+    truck.style.transform = 'translateX(' + startX + 'px)';
+
+    setTimeout(() => { ensureAudio(); playRev(); }, 150);
+
+    const driveAnim = truck.animate([
+      { transform: 'translateX(' + startX + 'px)' },
+      { transform: 'translateX(' + endX + 'px)' }
+    ], { duration: duration, easing: 'cubic-bezier(0.45, 0.05, 0.55, 0.95)', fill: 'forwards' });
+
+    // jump arc in the middle
+    jump.animate([
+      { transform: 'translateY(0)', offset: 0 },
+      { transform: 'translateY(0)', offset: 0.32 },
+      { transform: 'translateY(-46px) rotate(-7deg)', offset: 0.46 },
+      { transform: 'translateY(0) rotate(0deg)', offset: 0.6 },
+      { transform: 'translateY(0)', offset: 1 }
+    ], { duration: duration, easing: 'ease-in-out', fill: 'forwards' });
+
+    // squish timing: when truck front reaches each car
+    const frac1 = (car1X - startX) / (endX - startX);
+    const frac2 = (car2X - startX) / (endX - startX);
+    setTimeout(() => squishCar(car1), frac1 * duration);
+    setTimeout(() => squishCar(car2), frac2 * duration);
+
+    driveAnim.onfinish = () => {
+      // park in the middle
+      truck.animate([
+        { transform: 'translateX(' + endX + 'px)' },
+        { transform: 'translateX(' + ((stageW - truckW) / 2) + 'px)' }
+      ], { duration: 600, easing: 'ease-out', fill: 'forwards' });
+      bigConfetti();
+      playFanfare();
+      setTimeout(bigConfetti, 700);
+      setTimeout(() => {
+        $('namePanel').hidden = false;
+        $('truckName').focus({ preventScroll: true });
+      }, 700);
+    };
+  }
+
+  function squishCar(car) {
+    car.classList.add('squished');
+    playCrunch();
+    const r = car.getBoundingClientRect();
+    burstConfetti(r.left + r.width / 2, r.top, 16);
+    // little dust puff
+    const dust = document.createElement('span');
+    dust.className = 'dust';
+    dust.textContent = '💥';
+    dust.style.left = (car.offsetLeft - 6) + 'px';
+    dust.style.bottom = '26%';
+    $('finaleStage').appendChild(dust);
+    dust.animate([
+      { opacity: 0.9, transform: 'translateY(0) scale(0.6)' },
+      { opacity: 0, transform: 'translateY(-30px) scale(1.4)' }
+    ], { duration: 700, easing: 'ease-out' });
+    setTimeout(() => dust.remove(), 720);
+  }
+
+  // ---------- Save to garage ----------
+  function saveTruck() {
+    const raw = $('truckName').value.trim();
+    const name = (raw || 'My Monster Truck').slice(0, 18);
+    state.garage.push({ name: name, color: state.truckColor });
+    renderGarage();
+    $('namePanel').hidden = true;
+    $('garagePanel').hidden = false;
+    bigConfetti();
+    playFanfare();
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }
+
+  function renderGarage() {
+    const row = $('garageRow');
+    row.innerHTML = '';
+    state.garage.forEach(t => {
+      const cell = document.createElement('div');
+      cell.className = 'garage-truck';
+      cell.innerHTML = miniTruckSVG(t.color) + '<div class="gt-name">' + escapeHtml(t.name) + '</div>';
+      row.appendChild(cell);
+    });
+  }
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  // ====================================================================
+  // Wire up buttons
+  // ====================================================================
+  $('startBtn').addEventListener('click', (e) => {
+    ensureAudio();
+    burstConfetti(e.clientX, e.clientY, 18);
+    startBuild();
+  });
+  $('driveBtn').addEventListener('click', (e) => {
+    ensureAudio();
+    burstConfetti(e.clientX, e.clientY, 22);
+    playRev();
+    runFinale();
+  });
+  $('modalClose').addEventListener('click', closeChallenge);
+  $('challengeModal').addEventListener('click', (e) => {
+    if (e.target === $('challengeModal')) closeChallenge();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !$('challengeModal').hasAttribute('hidden')) closeChallenge();
+  });
+  $('saveTruckBtn').addEventListener('click', saveTruck);
+  $('truckName').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveTruck(); });
+  $('playAgainBtn').addEventListener('click', (e) => {
+    burstConfetti(e.clientX, e.clientY, 18);
+    showScreen('startScreen');
+  });
+  $('mascot').addEventListener('click', (e) => {
+    ensureAudio();
+    burstConfetti(e.clientX, e.clientY, 18);
+    playRev();
+  });
+
+  // init paint variable
+  $('truck').style.setProperty('--truck-paint', state.truckColor);
+  </script>
+</body>
+</html>
