@@ -10,11 +10,13 @@
 
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%97%3C/text%3E%3C/svg%3E" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bubblegum+Sans&display=swap" rel="stylesheet" />
 
+    <!-- Self-hosted fonts (offline; no external requests) -->
   <style>
+  @font-face { font-family:'Fredoka'; font-style:normal; font-weight:300 700; font-display:swap; src:url('fonts/fredoka.woff2') format('woff2'); }
+  @font-face { font-family:'Bubblegum Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('fonts/bubblegum-sans-400.woff2') format('woff2'); }
+  </style>
+<style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --yellow: #FFD93D;
@@ -294,8 +296,8 @@
   <div class="container">
     <header>
       <nav class="nav-links" aria-label="Game navigation">
-        <a class="nav-link" href="/">← Zak's Brain Games</a>
-        <a class="nav-link" href="/hangcar">🚗 HangCar Home</a>
+        <a class="nav-link" href="index.html">← Zak's Brain Games</a>
+        <a class="nav-link" href="hangcar.html">🚗 HangCar Home</a>
       </nav>
       <h1>🚗 HangCar</h1>
       <p class="tagline">Guess the secret word — one letter at a time! Every wrong guess builds the car. Beat the car!</p>
@@ -407,7 +409,7 @@
 
           <div class="controls">
             <button class="btn btn-primary" id="newGameBtn">🔄 New Word</button>
-            <a class="btn btn-secondary" href="/">🏠 Home</a>
+            <a class="btn btn-secondary" href="index.html">🏠 Home</a>
           </div>
           <p class="hint">Tip: you can tap a letter above, or use your keyboard.</p>
         </section>

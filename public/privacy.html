@@ -4,12 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy Policy — Zak's Brain Games</title>
-  <meta name="description" content="Zak's Brain Games privacy policy. We don't collect any personal information. Kid-safe and ad-free." />
+  <meta name="description" content="Zak's Brain Games privacy policy. A kid-safe app/site that collects no personal information, has no ads or trackers, and works fully offline. COPPA compliant." />
   <meta name="robots" content="index, follow" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Bubblegum+Sans&display=swap" rel="stylesheet" />
+
+  <!-- Self-hosted fonts (offline; no external requests) -->
+  <style>
+  @font-face { font-family:'Fredoka'; font-style:normal; font-weight:300 700; font-display:swap; src:url('fonts/fredoka.woff2') format('woff2'); }
+  @font-face { font-family:'Bubblegum Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('fonts/bubblegum-sans-400.woff2') format('woff2'); }
+  </style>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -37,7 +40,15 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .updated { text-align: center; color: #888; margin-bottom: 30px; font-size: 0.95rem; }
+    .updated { text-align: center; color: #888; margin-bottom: 8px; font-size: 0.95rem; }
+    .summary {
+      background: #FFF8E7;
+      border: 2px dashed #FFD93D;
+      border-radius: 18px;
+      padding: 18px 22px;
+      margin: 24px 0 10px;
+    }
+    .summary strong { color: #B073FF; }
     h2 {
       font-family: 'Bubblegum Sans', cursive;
       color: #B073FF;
@@ -45,7 +56,7 @@
       margin: 26px 0 10px;
     }
     p { line-height: 1.65; margin-bottom: 12px; font-size: 1.05rem; color: #444; }
-    ul { padding-left: 20px; margin-bottom: 12px; }
+    ul { padding-left: 22px; margin-bottom: 12px; }
     ul li { line-height: 1.65; margin-bottom: 6px; color: #444; }
     a { color: #B073FF; font-weight: 600; text-decoration: none; }
     a:hover { text-decoration: underline; }
@@ -65,36 +76,53 @@
 <body>
   <div class="container">
     <h1>🔒 Privacy Policy</h1>
-    <p class="updated">Last updated: May 2026</p>
+    <p class="updated">Last updated: May 24, 2026</p>
 
-    <p>Hi! Zak's Brain Games is built to be a safe, friendly place to play. Here's exactly what we do (and don't do) with your information — written in plain language so kids and grown-ups can understand it.</p>
+    <div class="summary">
+      <p style="margin-bottom:0;"><strong>The short version:</strong> Zak's Brain Games is made for kids. It collects <strong>no</strong> personal information, has <strong>no</strong> ads, <strong>no</strong> trackers, and <strong>no</strong> logins. All the games are built right into the app, so it works <strong>fully offline</strong> and makes <strong>no network requests</strong>. Nothing about you ever leaves your device.</p>
+    </div>
 
-    <h2>What we collect</h2>
-    <p><strong>Almost nothing.</strong> Just visiting and playing requires no sign-ups, no logins, and no accounts. We don't collect, store, or share any personal information from regular visits.</p>
-    <p>We do offer two optional forms at the bottom of the page — one for submitting a game and one for getting in touch. If you choose to use those, the information you type in (and only that) is emailed to the site owner so they can reply or review your suggestion. We don't store form submissions on the site, and we don't share them with anyone else.</p>
+    <p>Hi! Zak's Brain Games is built to be a safe, friendly place for children to play and learn. This policy explains, in plain language that both kids and grown-ups can understand, exactly what we do (and don't do) with information.</p>
 
-    <h2>Cookies & tracking</h2>
-    <p>We don't use cookies. We don't use analytics. We don't track you across the web.</p>
+    <h2>Who this app is for</h2>
+    <p>Zak's Brain Games is intended for <strong>children</strong> and families. We have designed it to comply with the U.S. Children's Online Privacy Protection Act (<strong>COPPA</strong>) and to respect the principles of the European Union's data-protection rules for children (<strong>GDPR-K</strong>). The simplest way we protect kids' privacy is by not collecting any information in the first place.</p>
 
-    <h2>Ads</h2>
-    <p>There are no ads on Zak's Brain Games.</p>
+    <h2>What information we collect</h2>
+    <p><strong>None.</strong> Really, none. We do not collect, store, request, or transmit any personal information. There are:</p>
+    <ul>
+      <li>No accounts, sign-ups, or logins</li>
+      <li>No names, email addresses, phone numbers, or birthdays</li>
+      <li>No location data</li>
+      <li>No photos, microphone, or camera access</li>
+      <li>No contact lists or device identifiers</li>
+      <li>No contact or submission forms</li>
+    </ul>
 
-    <h2>About the games</h2>
-    <p>Zak's Brain Games is a directory that links out to other game websites. When you click "Play Now," you'll open a new tab to that game's website (like fourcircles.app, stopthefire.app, playhue.app, or demoderby.app). Those sites are separate from this one, and each has its own privacy policy. We recommend checking their policies if you'd like to know how those games handle information.</p>
+    <h2>No analytics, ads, or trackers</h2>
+    <p>There are <strong>no</strong> third-party analytics, <strong>no</strong> advertising, and <strong>no</strong> tracking technologies anywhere in this app. We do not use cookies to follow you, and we do not build profiles of players. The app does not "phone home."</p>
 
-    <h2>Game previews</h2>
-    <p>To show a live preview image of each game, we use a free public screenshot service (thum.io) that fetches a picture of the game's home page. This service only sees the URL of the game site — never any personal info about you.</p>
+    <h2>Works fully offline</h2>
+    <p>Every game is bundled inside the app itself. Once it is installed, Zak's Brain Games runs <strong>completely offline</strong> and makes <strong>no network requests</strong> to any outside server. All of the games live inside the app and open in the same window — there are no links out to other websites.</p>
 
-    <h2>Kids and families (COPPA)</h2>
-    <p>Zak's Brain Games is designed to be kid-friendly and family-safe. Because we don't collect any information at all, we don't collect anything from children under 13 (or anyone else). If you're a parent or guardian and have any questions, please feel free to reach out.</p>
+    <h2>Where game progress is stored</h2>
+    <p>Some games may remember small things like your current streak or best score so the game is more fun to come back to. When they do, that information is saved <strong>only on your own device</strong> (for example, in the browser's local storage). It is never sent anywhere, never shared, and you can clear it at any time by clearing the app's or browser's data.</p>
+
+    <h2>No data sharing or selling</h2>
+    <p>Because we collect nothing, there is nothing to share or sell. We do not share, sell, rent, or trade any information with anyone, ever.</p>
+
+    <h2>No in-app purchases</h2>
+    <p>Zak's Brain Games is free to play. There are <strong>no in-app purchases</strong>, no subscriptions, and no payment forms anywhere in the app.</p>
+
+    <h2>For parents and guardians</h2>
+    <p>Because the app collects no personal information from anyone, it collects nothing from children under 13 (or any age). There is nothing for a parent to delete, because nothing is ever stored off the device. If you have any questions or concerns about your child's privacy, please reach out — we're happy to help.</p>
 
     <h2>Changes to this policy</h2>
-    <p>If we ever change this policy, we'll update this page and the date at the top. We'll only ever change it to make things clearer or safer.</p>
+    <p>If we ever update this policy, we will change the date at the top of this page. We will only ever change it to make things clearer or safer.</p>
 
-    <h2>Questions?</h2>
-    <p>If you'd like to ask anything about this privacy policy, you can reach out through the contact information posted on our deployment account.</p>
+    <h2>Contact us</h2>
+    <p>If you have any questions about this privacy policy, you can email us at <a href="mailto:ovaisinamullah@gmail.com">ovaisinamullah@gmail.com</a>.</p>
 
-    <a class="back" href="/">← Back to the Games</a>
+    <a class="back" href="index.html">← Back to the Games</a>
   </div>
 </body>
 </html>
