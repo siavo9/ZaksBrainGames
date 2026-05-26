@@ -151,6 +151,7 @@
       <button class="tool orange" id="eraserBtn">🧽 Eraser</button>
       <button class="tool purple" id="undoBtn">↩️ Undo</button>
       <button class="tool green" id="pictureBtn">🖼️ Pictures</button>
+      <button class="tool" id="blankBtn">📄 Blank Canvas</button>
       <button class="tool" id="clearBtn">🗑️ Clear</button>
       <button class="tool pink" id="shareBtn">📤 Share</button>
     </div>
@@ -175,6 +176,7 @@
   var eraserBtn = document.getElementById("eraserBtn");
   var undoBtn = document.getElementById("undoBtn");
   var pictureBtn = document.getElementById("pictureBtn");
+  var blankBtn = document.getElementById("blankBtn");
   var clearBtn = document.getElementById("clearBtn");
   var shareBtn = document.getElementById("shareBtn");
 
@@ -429,6 +431,12 @@
   undoBtn.addEventListener("click", undo);
   pictureBtn.addEventListener("click", function () {
     pictureIndex = (pictureIndex + 1) % pictures.length;
+    pctx.clearRect(0, 0, cssW(), cssH());
+    undoStack = [];
+    drawPicture(pictures[pictureIndex]);
+  });
+  blankBtn.addEventListener("click", function () {
+    pictureIndex = 0;            // "blank" is always the first entry
     pctx.clearRect(0, 0, cssW(), cssH());
     undoStack = [];
     drawPicture(pictures[pictureIndex]);
