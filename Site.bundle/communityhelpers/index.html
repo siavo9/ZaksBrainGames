@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Community Helpers — Zak's Brain Games</title>
+  <meta name="description" content="Community Helpers is a gentle social-studies game for little learners! Tap to match helpers like firefighters and doctors to their jobs, tools, and workplaces. Ages 4+." />
+  <meta name="theme-color" content="#FF9F45" />
+  <link rel="canonical" href="https://zaksbraingames.app/communityhelpers/" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%92%3C/text%3E%3C/svg%3E" />
+
+
+    <!-- Self-hosted fonts (offline; no external requests) -->
+  <style>
+  @font-face { font-family:'Fredoka'; font-style:normal; font-weight:300 700; font-display:swap; src:url('../fonts/fredoka.woff2') format('woff2'); }
+  @font-face { font-family:'Bubblegum Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('../fonts/bubblegum-sans-400.woff2') format('woff2'); }
+  </style>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow: #FFD93D;
+      --yellow-dark: #C99700;
+      --pink: #FF6FB5;
+      --blue: #4FC3F7;
+      --blue-dark: #0288D1;
+      --mint: #6BE6A8;
+      --mint-dark: #1FB97A;
+      --purple: #B073FF;
+      --orange: #FF9F45;
+      --orange-dark: #E07B1E;
+      --coral: #FF6B6B;
+      --dark: #2D2D5F;
+      --cream: #FFF8E7;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Fredoka', system-ui, sans-serif;
+      color: var(--dark);
+      background: linear-gradient(135deg, #FFF1E0 0%, #FFF8E7 50%, #FFE5F1 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .shape {
+      position: fixed; border-radius: 50%; opacity: 0.3; z-index: 0;
+      animation: float 8s ease-in-out infinite; pointer-events: none;
+    }
+    .shape.s1 { width: 120px; height: 120px; background: var(--orange); top: 10%; left: 5%;  animation-delay: 0s; }
+    .shape.s2 { width: 80px;  height: 80px;  background: var(--pink);   top: 62%; left: 92%; animation-delay: 2s; }
+    .shape.s3 { width: 100px; height: 100px; background: var(--yellow); top: 82%; left: 8%;  animation-delay: 4s; }
+    .shape.s4 { width: 60px;  height: 60px;  background: var(--blue);   top: 22%; left: 88%; animation-delay: 1s; }
+    .shape.s5 { width: 90px;  height: 90px;  background: var(--mint);   top: 45%; left: 3%;  animation-delay: 3s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-26px) rotate(12deg); }
+    }
+
+    .container { max-width: 760px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+
+    .topnav { padding: 18px 0 6px; display: flex; justify-content: flex-start; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--orange-dark); font-weight: 700; text-decoration: none;
+      padding: 12px 18px; border-radius: 24px; background: white;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.18);
+      transition: transform 0.18s, box-shadow 0.18s; font-size: 1rem; min-height: 48px;
+    }
+    .back-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(45, 45, 95, 0.22); }
+    .back-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(45, 45, 95, 0.22); }
+
+    .screen { display: none; padding: 14px 0 48px; }
+    .screen.active { display: block; animation: screenIn 0.3s ease; }
+    @keyframes screenIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .welcome { text-align: center; padding: 6px 14px 18px; }
+    .mascot {
+      font-size: 92px; display: inline-block; animation: wave 3s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.12)); user-select: none; cursor: pointer;
+    }
+    @keyframes wave {
+      0%, 100% { transform: rotate(-8deg) translateY(0); }
+      25% { transform: rotate(8deg) translateY(-8px); }
+      75% { transform: rotate(-12deg) translateY(-4px); }
+    }
+    h1.title {
+      font-family: 'Bubblegum Sans', cursive; font-size: clamp(2.2rem, 6.5vw, 4rem);
+      margin: 6px 0 4px;
+      background: linear-gradient(135deg, var(--orange), var(--pink), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      text-shadow: 4px 4px 0 rgba(255, 159, 69, 0.32); letter-spacing: 1px;
+    }
+    .tagline {
+      font-size: clamp(1.05rem, 2.6vw, 1.3rem); color: var(--dark); font-weight: 500;
+      margin: 4px auto 14px; max-width: 520px; line-height: 1.45;
+    }
+    .tagline span { color: var(--pink); font-weight: 700; }
+
+    .btn {
+      display: inline-block; padding: 18px 36px; border-radius: 50px;
+      font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.3rem;
+      border: none; cursor: pointer; color: white; text-decoration: none; text-align: center;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, box-shadow 0.15s; min-height: 58px; line-height: 1.2;
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 9px 0 rgba(0, 0, 0, 0.15); }
+    .btn:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15); }
+    .btn-primary { background: var(--orange); }
+    .btn-yellow  { background: var(--yellow); color: var(--dark); }
+    .btn-purple  { background: var(--purple); }
+    .big-cta { font-size: 1.5rem; padding: 20px 48px; animation: pulseGlow 2.2s ease-in-out infinite; }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 0 rgba(255, 159, 69, 0.5); }
+      50% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 18px rgba(255, 159, 69, 0); }
+    }
+
+    .panel {
+      background: white; border-radius: 26px; padding: 22px 20px 24px;
+      box-shadow: 0 8px 0 rgba(45, 45, 95, 0.1), 0 14px 30px rgba(45, 45, 95, 0.08);
+      margin-bottom: 18px;
+    }
+    .panel h2 {
+      font-family: 'Bubblegum Sans', cursive; color: var(--orange-dark);
+      font-size: clamp(1.6rem, 4vw, 2.1rem); text-align: center; margin-bottom: 14px;
+    }
+
+    .rules-list { list-style: none; max-width: 520px; margin: 0 auto; padding: 0; }
+    .rules-list li {
+      background: var(--cream); border-radius: 18px; padding: 16px 20px; margin-bottom: 12px;
+      font-size: 1.18rem; line-height: 1.45; font-weight: 500;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.08);
+    }
+    .rules-actions { text-align: center; margin-top: 8px; }
+
+    /* Advanced toggle */
+    .adv-toggle {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      max-width: 460px; margin: 4px auto 16px; background: var(--cream);
+      border-radius: 18px; padding: 12px 16px; font-weight: 600; font-size: 1rem;
+    }
+    .switch { position: relative; width: 58px; height: 32px; flex: 0 0 auto; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; cursor: pointer; background: #D8D2C0;
+      border-radius: 32px; transition: background 0.2s;
+    }
+    .slider::before {
+      content: ''; position: absolute; height: 24px; width: 24px; left: 4px; top: 4px;
+      background: #fff; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .switch input:checked + .slider { background: var(--mint-dark); }
+    .switch input:checked + .slider::before { transform: translateX(26px); }
+    .switch input:focus-visible + .slider { outline: 3px solid var(--purple); outline-offset: 2px; }
+
+    /* ---------- Question ---------- */
+    .q-head { text-align: center; margin-bottom: 10px; }
+    .q-progress { font-weight: 700; color: var(--orange-dark); font-size: 1.05rem; }
+    .helper-stage { font-size: 4.2rem; line-height: 1; min-height: 80px; margin: 6px 0; }
+    .helper-stage.celebrate-helper { animation: helperCheer 0.7s ease; }
+    @keyframes helperCheer { 0% { transform: scale(1) rotate(0); } 30% { transform: scale(1.3) rotate(-12deg); } 60% { transform: scale(1.3) rotate(12deg); } 100% { transform: scale(1) rotate(0); } }
+    .q-text {
+      font-family: 'Bubblegum Sans', cursive; font-size: clamp(1.5rem, 5vw, 2.1rem);
+      color: var(--dark); text-align: center; margin: 4px auto 8px; max-width: 560px; line-height: 1.2;
+    }
+    .options {
+      display: grid; gap: 16px; grid-template-columns: 1fr 1fr; margin: 16px 0 6px;
+    }
+    @media (min-width: 560px) { .options.three { grid-template-columns: repeat(3, 1fr); } }
+    .option-btn {
+      background: linear-gradient(180deg, #fff 0%, #FFF1E0 100%);
+      border: 4px solid var(--orange); border-radius: 26px; padding: 18px 10px;
+      font-family: 'Fredoka', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--dark);
+      cursor: pointer; box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18);
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s, border-color 0.15s;
+      min-height: 130px; line-height: 1.2;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    }
+    .option-btn .opt-emoji { font-size: 3.4rem; line-height: 1; filter: drop-shadow(1px 2px 0 rgba(0,0,0,0.15)); }
+    .option-btn .opt-label { font-size: 1.05rem; }
+    .option-btn:hover:not(:disabled) {
+      transform: translateY(-4px); border-color: var(--pink);
+      background: linear-gradient(180deg, #fff 0%, #FFE5F1 100%); box-shadow: 0 10px 0 rgba(0, 0, 0, 0.18);
+    }
+    .option-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.18); }
+    .option-btn.correct {
+      background: linear-gradient(180deg, #DFFBEB 0%, #B0F0CF 100%);
+      border-color: var(--mint-dark); color: var(--mint-dark);
+      animation: popCorrect 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .option-btn.wrong { animation: shake 0.45s ease-in-out; }
+    .option-btn:disabled { cursor: default; }
+    @keyframes popCorrect { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-9px); } 40% { transform: translateX(9px); } 60% { transform: translateX(-6px); } 80% { transform: translateX(6px); } }
+
+    .feedback { min-height: 30px; text-align: center; font-weight: 700; font-size: 1.2rem; margin-top: 8px; line-height: 1.3; }
+    .feedback.good { color: var(--mint-dark); animation: bouncePraise 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .feedback.gentle { color: var(--purple); }
+    @keyframes bouncePraise { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+
+    .progress-dots { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+    .progress-dots .dot { width: 16px; height: 16px; border-radius: 50%; background: #E7DEC8; transition: background 0.2s, transform 0.2s; }
+    .progress-dots .dot.done { background: var(--mint-dark); transform: scale(1.1); }
+
+    /* ---------- Celebration ---------- */
+    .celebrate { text-align: center; }
+    .celebrate .trophy {
+      font-size: 5rem; display: inline-block; animation: trophyBounce 1.4s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.15));
+    }
+    @keyframes trophyBounce { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-14px) rotate(6deg); } }
+    .celebrate h2 {
+      font-family: 'Bubblegum Sans', cursive; font-size: clamp(2rem, 5vw, 2.6rem);
+      background: linear-gradient(135deg, var(--orange), var(--pink), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 8px 0;
+    }
+    .celebrate .msg {
+      font-size: 1.25rem; line-height: 1.5; color: var(--dark);
+      background: var(--cream); padding: 16px 18px; border-radius: 18px;
+      margin: 14px auto; max-width: 520px; font-weight: 600;
+    }
+    .gallery { font-size: 2.2rem; letter-spacing: 6px; margin: 10px 0; }
+    .celebrate-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+
+    .confetti { position: fixed; width: 10px; height: 10px; pointer-events: none; z-index: 9999; border-radius: 2px; }
+
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+    @media (max-width: 480px) {
+      .panel { padding: 18px 12px 22px; }
+      .btn { padding: 16px 30px; font-size: 1.2rem; }
+      .big-cta { font-size: 1.35rem; padding: 18px 38px; }
+      .option-btn { min-height: 116px; padding: 14px 8px; }
+      .option-btn .opt-emoji { font-size: 3rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
+  <div class="shape s3"></div>
+  <div class="shape s4"></div>
+  <div class="shape s5"></div>
+
+  <div class="container">
+    <header class="topnav">
+      <a class="back-btn" href="../index.html" aria-label="Back to Zak's Brain Games">← Back to Zak's Brain Games</a>
+    </header>
+
+    <main>
+      <!-- ============== WELCOME / RULES ============== -->
+      <section class="screen active" id="startScreen" aria-label="How to play">
+        <div class="welcome">
+          <div class="mascot" id="mascot" role="img" aria-label="Fire engine mascot">🚒</div>
+          <h1 class="title">Community Helpers</h1>
+          <p class="tagline">Meet the helpers and tap to <span>match them!</span> 🙌</p>
+        </div>
+        <div class="panel">
+          <h2>How to Play</h2>
+          <ul class="rules-list">
+            <li>👀 Look at the question and the big pictures.</li>
+            <li>👆 <strong>Tap</strong> the picture that is the right answer.</li>
+            <li>🎉 Get it right and the helper will cheer for you!</li>
+            <li>🌟 Not sure? That's okay — just tap again!</li>
+          </ul>
+          <div class="adv-toggle">
+            <span>🧠 Add "What would you do?" questions</span>
+            <label class="switch">
+              <input type="checkbox" id="advToggle" aria-label="Add what would you do questions" />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="rules-actions">
+            <button class="btn btn-primary big-cta" id="startBtn">Play! ▶</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== GAME ============== -->
+      <section class="screen" id="gameScreen" aria-label="Match the helpers">
+        <div class="panel">
+          <div class="q-head">
+            <div class="q-progress" id="qProgress">1 of 8</div>
+            <div class="helper-stage" id="helperStage" aria-hidden="true">🙂</div>
+            <p class="q-text" id="qText">Loading…</p>
+          </div>
+          <div class="options" id="optionsGrid" role="group" aria-label="Choices"></div>
+          <p class="feedback" id="feedback" aria-live="polite"></p>
+          <div class="progress-dots" id="progressDots" aria-hidden="true"></div>
+        </div>
+      </section>
+
+      <!-- ============== CELEBRATION ============== -->
+      <section class="screen" id="celebrateScreen" aria-label="All done">
+        <div class="panel celebrate">
+          <div class="trophy">🏆</div>
+          <h2>Super Helper!</h2>
+          <div class="gallery" aria-hidden="true">🧑‍🚒 👮 🧑‍⚕️ 🧑‍🏫 🧑‍🍳</div>
+          <p class="msg" id="celebrateMsg">You met all the community helpers! Thank you for learning about them! 💖</p>
+          <div class="celebrate-buttons">
+            <button class="btn btn-yellow" id="playAgainBtn">Play Again ↺</button>
+            <a class="btn btn-purple" href="../index.html">← Back to Zak's Brain Games</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  // ====================================================================
+  // Community Helpers — gentle tap-to-match game for the youngest players.
+  // ====================================================================
+  // Each question: { stage (big emoji), text, options:[{emoji,label,correct}], hint }
+  const BASIC_QUESTIONS = [
+    { stage: '🔥', text: "Who helps put out a fire?", options: [
+      { emoji: '🧑‍🚒', label: 'Firefighter', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🏫', label: 'Teacher' } ],
+      hint: "A firefighter helps with fires!" },
+    { stage: '🚦', text: "Who keeps us safe and helps with traffic?", options: [
+      { emoji: '👮', label: 'Police Officer', correct: true }, { emoji: '🧑‍🌾', label: 'Farmer' }, { emoji: '🧑‍🍳', label: 'Chef' } ],
+      hint: "A police officer keeps us safe!" },
+    { stage: '🤒', text: "Who helps you when you feel sick?", options: [
+      { emoji: '🧑‍⚕️', label: 'Doctor', correct: true }, { emoji: '🧑‍🚒', label: 'Firefighter' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
+      hint: "A doctor helps you feel better!" },
+    { stage: '🏫', text: "Who teaches you at school?", options: [
+      { emoji: '🧑‍🏫', label: 'Teacher', correct: true }, { emoji: '👮', label: 'Police Officer' }, { emoji: '🧑‍🍳', label: 'Chef' } ],
+      hint: "A teacher teaches at school!" },
+    { stage: '🍳', text: "Who cooks yummy food at a restaurant?", options: [
+      { emoji: '🧑‍🍳', label: 'Chef', correct: true }, { emoji: '🧑‍🏫', label: 'Teacher' }, { emoji: '👮', label: 'Police Officer' } ],
+      hint: "A chef cooks the food!" },
+    { stage: '🌾', text: "Who grows our food on a farm?", options: [
+      { emoji: '🧑‍🌾', label: 'Farmer', correct: true }, { emoji: '🧑‍⚕️', label: 'Doctor' }, { emoji: '🧑‍🚒', label: 'Firefighter' } ],
+      hint: "A farmer grows our food!" },
+    { stage: '🩺', text: "What does a doctor use?", options: [
+      { emoji: '🩺', label: 'Stethoscope', correct: true }, { emoji: '🖍️', label: 'Crayon' }, { emoji: '🍳', label: 'Frying Pan' } ],
+      hint: "A doctor listens to your heart with a stethoscope!" },
+    { stage: '👨‍🚒', text: "What does a firefighter use?", options: [
+      { emoji: '🧯', label: 'Fire Extinguisher', correct: true }, { emoji: '📚', label: 'Book' }, { emoji: '🪥', label: 'Toothbrush' } ],
+      hint: "A firefighter uses a fire extinguisher!" },
+    { stage: '👨‍🍳', text: "What does a chef use to cook?", options: [
+      { emoji: '🍳', label: 'Frying Pan', correct: true }, { emoji: '🩺', label: 'Stethoscope' }, { emoji: '✏️', label: 'Pencil' } ],
+      hint: "A chef cooks with a frying pan!" },
+    { stage: '👩‍🏫', text: "What does a teacher use?", options: [
+      { emoji: '✏️', label: 'Pencil', correct: true }, { emoji: '🧯', label: 'Extinguisher' }, { emoji: '🚜', label: 'Tractor' } ],
+      hint: "A teacher writes with a pencil!" },
+    { stage: '👨‍🌾', text: "What does a farmer use?", options: [
+      { emoji: '🚜', label: 'Tractor', correct: true }, { emoji: '🩺', label: 'Stethoscope' }, { emoji: '📚', label: 'Book' } ],
+      hint: "A farmer drives a tractor!" },
+    { stage: '🧑‍🏫', text: "Where does a teacher work?", options: [
+      { emoji: '🏫', label: 'School', correct: true }, { emoji: '🏥', label: 'Hospital' }, { emoji: '🚒', label: 'Fire Station' } ],
+      hint: "A teacher works at school!" },
+    { stage: '🧑‍⚕️', text: "Where does a doctor work?", options: [
+      { emoji: '🏥', label: 'Hospital', correct: true }, { emoji: '🏫', label: 'School' }, { emoji: '🚒', label: 'Fire Station' } ],
+      hint: "A doctor works at the hospital!" },
+    { stage: '🧑‍🚒', text: "Where does a firefighter work?", options: [
+      { emoji: '🚒', label: 'Fire Station', correct: true }, { emoji: '🏫', label: 'School' }, { emoji: '🏥', label: 'Hospital' } ],
+      hint: "A firefighter works at the fire station!" },
+    { stage: '🧑‍🍳', text: "Where does a chef work?", options: [
+      { emoji: '🍽️', label: 'Restaurant', correct: true }, { emoji: '🏫', label: 'School' }, { emoji: '🚜', label: 'Farm' } ],
+      hint: "A chef works at a restaurant!" },
+    { stage: '📚', text: "Where can you borrow books?", options: [
+      { emoji: '📚', label: 'Library', correct: true }, { emoji: '🏥', label: 'Hospital' }, { emoji: '🚒', label: 'Fire Station' } ],
+      hint: "A librarian helps you at the library!" },
+    { stage: '✉️', text: "Who brings letters to your house?", options: [
+      { emoji: '📬', label: 'Mail Carrier', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🏫', label: 'Teacher' } ],
+      hint: "A mail carrier brings the mail!" },
+    { stage: '🚌', text: "Who drives the school bus?", options: [
+      { emoji: '🚌', label: 'Bus Driver', correct: true }, { emoji: '🧑‍⚕️', label: 'Doctor' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
+      hint: "A bus driver drives the bus!" }
+  ];
+
+  const ADVANCED_QUESTIONS = [
+    { stage: '🤕', text: "Someone fell and is hurt. Who can help?", options: [
+      { emoji: '🧑‍⚕️', label: 'Doctor', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🏫', label: 'Teacher' } ],
+      hint: "A doctor helps people who are hurt!" },
+    { stage: '🔥', text: "You see flames in the kitchen. Who do you call?", options: [
+      { emoji: '🧑‍🚒', label: 'Firefighter', correct: true }, { emoji: '🧑‍🌾', label: 'Farmer' }, { emoji: '🧑‍🍳', label: 'Chef' } ],
+      hint: "Call a firefighter for a fire!" },
+    { stage: '🗺️', text: "You are lost and need to find your way. Who can help?", options: [
+      { emoji: '👮', label: 'Police Officer', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
+      hint: "A police officer can help you when you're lost!" },
+    { stage: '🐶', text: "Your puppy is feeling sick. Who can help?", options: [
+      { emoji: '🐾', label: 'Vet', correct: true }, { emoji: '👮', label: 'Police Officer' }, { emoji: '🧑‍🏫', label: 'Teacher' } ],
+      hint: "A vet helps animals feel better!" }
+  ];
+
+  const PRAISE = [
+    "Yay! You did it! 🎉", "Great job! 🌟", "Wonderful! 💖", "You're so smart! ✨",
+    "Perfect! 🙌", "Hooray! 🎈", "Amazing! ⭐", "Super helper! 🦸", "Way to go! 🎊",
+    "Fantastic! 🌈", "You got it! 💪", "Brilliant! 🌟", "Yes! High five! ✋",
+    "Awesome! 🎉", "So good! 💖", "Bravo! 👏", "Wow, nice! ⭐"
+  ];
+  const GENTLE = [
+    "Let's try again! 🌟", "Almost! Try another one ✨", "Oops, try again! 💫",
+    "You can do it — tap another! 🌈", "So close! Give it another tap 🌟"
+  ];
+
+  const TARGET = 8;
+  const state = { advanced: false, list: [], index: 0, busy: false };
+  const $ = (id) => document.getElementById(id);
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+
+  // ---------- Confetti ----------
+  const CONFETTI_COLORS = ['#FFD93D', '#FF6FB5', '#4FC3F7', '#6BE6A8', '#B073FF', '#FF9F45'];
+  function burstConfetti(x, y, count) {
+    const n = count || 28;
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = x + 'px'; c.style.top = y + 'px';
+      c.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      document.body.appendChild(c);
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = 80 + Math.random() * 140;
+      const dx = Math.cos(angle) * velocity, dy = Math.sin(angle) * velocity - 80;
+      c.animate([
+        { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+        { transform: 'translate(' + dx + 'px, ' + (dy + 320) + 'px) rotate(' + (Math.random() * 720) + 'deg)', opacity: 0 }
+      ], { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(.2,.6,.4,1)' });
+      setTimeout(() => c.remove(), 1700);
+    }
+  }
+  function bigConfetti() {
+    const w = window.innerWidth, h = window.innerHeight;
+    burstConfetti(w * 0.25, h * 0.35, 38);
+    setTimeout(() => burstConfetti(w * 0.75, h * 0.35, 38), 180);
+    setTimeout(() => burstConfetti(w * 0.5, h * 0.25, 46), 360);
+  }
+
+  // ---------- Sound ----------
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audioCtx = null; } }
+    if (audioCtx && audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch (e) {} }
+    return audioCtx;
+  }
+  function tone(freq, start, dur, vol, type) {
+    const ctx = ensureAudio(); if (!ctx) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime + start;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + dur);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  }
+  function playHappy() {
+    tone(523.25, 0, 0.12, 0.18, 'triangle');
+    tone(659.25, 0.1, 0.12, 0.18, 'triangle');
+    tone(783.99, 0.2, 0.18, 0.2, 'triangle');
+    tone(1046.5, 0.32, 0.22, 0.2, 'triangle');
+  }
+  function playGentle() {
+    const ctx = ensureAudio(); if (!ctx) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime;
+    o.frequency.setValueAtTime(392, t0);
+    o.frequency.linearRampToValueAtTime(330, t0 + 0.28);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.1, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + 0.34);
+    o.start(t0); o.stop(t0 + 0.38);
+  }
+  function playFanfare() {
+    tone(523.25, 0, 0.18, 0.2); tone(659.25, 0.12, 0.18, 0.2);
+    tone(783.99, 0.24, 0.18, 0.2); tone(1046.5, 0.36, 0.4, 0.22);
+  }
+
+  // ---------- Game ----------
+  function buildList() {
+    let pool = BASIC_QUESTIONS.slice();
+    if (state.advanced) pool = pool.concat(ADVANCED_QUESTIONS);
+    return shuffle(pool).slice(0, TARGET);
+  }
+
+  function startGame() {
+    state.list = buildList();
+    state.index = 0;
+    state.busy = false;
+    buildDots();
+    showScreen('gameScreen');
+    renderQuestion();
+  }
+
+  function buildDots() {
+    const dots = $('progressDots');
+    dots.innerHTML = '';
+    for (let i = 0; i < state.list.length; i++) {
+      const d = document.createElement('div');
+      d.className = 'dot';
+      dots.appendChild(d);
+    }
+  }
+  function updateDots() {
+    const dots = $('progressDots').children;
+    for (let i = 0; i < dots.length; i++) dots[i].classList.toggle('done', i < state.index);
+  }
+
+  function renderQuestion() {
+    state.busy = false;
+    const q = state.list[state.index];
+    $('qProgress').textContent = (state.index + 1) + ' of ' + state.list.length;
+    const stage = $('helperStage');
+    stage.classList.remove('celebrate-helper');
+    stage.textContent = q.stage;
+    $('qText').textContent = q.text;
+    $('feedback').textContent = '';
+    $('feedback').className = 'feedback';
+    updateDots();
+
+    const grid = $('optionsGrid');
+    grid.className = 'options' + (q.options.length >= 3 ? ' three' : '');
+    grid.innerHTML = '';
+    shuffle(q.options).forEach(opt => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'option-btn';
+      b.innerHTML = '<span class="opt-emoji" aria-hidden="true">' + opt.emoji + '</span>' +
+        '<span class="opt-label">' + opt.label + '</span>';
+      b.setAttribute('aria-label', opt.label);
+      b.addEventListener('click', (e) => handleAnswer(e, b, opt, q));
+      grid.appendChild(b);
+    });
+  }
+
+  function handleAnswer(e, button, opt, q) {
+    if (state.busy) return;
+    ensureAudio();
+    const fb = $('feedback');
+    if (opt.correct) {
+      state.busy = true;
+      button.parentElement.querySelectorAll('.option-btn').forEach(b => { b.disabled = true; });
+      button.classList.add('correct');
+      const stage = $('helperStage');
+      stage.textContent = opt.emoji;
+      void stage.offsetWidth;
+      stage.classList.add('celebrate-helper');
+      fb.className = 'feedback good';
+      fb.textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+      playHappy();
+      burstConfetti(e.clientX || (window.innerWidth / 2), e.clientY || 220, 24);
+      setTimeout(() => {
+        state.index++;
+        if (state.index >= state.list.length) goToCelebration();
+        else renderQuestion();
+      }, 1300);
+    } else {
+      button.classList.add('wrong');
+      button.disabled = true;
+      fb.className = 'feedback gentle';
+      fb.textContent = GENTLE[Math.floor(Math.random() * GENTLE.length)] + ' ' + q.hint;
+      playGentle();
+      setTimeout(() => button.classList.remove('wrong'), 700);
+    }
+  }
+
+  function goToCelebration() {
+    updateDots();
+    showScreen('celebrateScreen');
+    setTimeout(() => { bigConfetti(); playFanfare(); }, 200);
+    setTimeout(bigConfetti, 1000);
+    setTimeout(bigConfetti, 1800);
+  }
+
+  // ---------- Buttons ----------
+  $('advToggle').addEventListener('change', (e) => { state.advanced = e.target.checked; });
+  $('startBtn').addEventListener('click', (e) => { ensureAudio(); burstConfetti(e.clientX, e.clientY, 18); startGame(); });
+  $('playAgainBtn').addEventListener('click', (e) => { burstConfetti(e.clientX, e.clientY, 18); startGame(); });
+  $('mascot').addEventListener('click', (e) => { ensureAudio(); burstConfetti(e.clientX, e.clientY, 18); playHappy(); });
+  </script>
+</body>
+</html>

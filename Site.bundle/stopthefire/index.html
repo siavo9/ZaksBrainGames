@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#ff5500" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="MoreFire" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="manifest" href="manifest.json" />
+<title>MoreFire 🔥</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+  html, body {
+    height: 100%;
+    font-family: 'Comic Sans MS', 'Trebuchet MS', system-ui, sans-serif;
+    overflow: hidden;
+    background: #0b1020;
+    color: #fff;
+  }
+  /* Full-viewport scene container — svh handles iOS dynamic toolbar without clipping */
+  .scene,
+  #app {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    height: 100svh;
+    overflow: hidden;
+  }
+
+  /* Touch-friendly tap target: ensures a 96px+ minimum hit area on mobile,
+     suppresses iOS tap highlight + double-tap zoom delay. */
+  .fire-target {
+    min-width: 96px;
+    min-height: 96px;
+    padding: 16px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  @media (min-width: 640px) {
+    .fire-target { min-width: 120px; min-height: 120px; padding: 18px; }
+  }
+  @media (min-width: 1024px) {
+    .fire-target { min-width: 144px; min-height: 144px; padding: 20px; }
+  }
+
+  /* ---------- START SCREEN ---------- */
+  #start {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 30%, #ff8c1a 0%, #c0392b 40%, #2c1100 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: safe center;
+    gap: 24px; padding: 30px 20px; text-align: center;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: flicker 3s infinite alternate;
+  }
+  @keyframes flicker {
+    0%   { filter: brightness(1)   hue-rotate(0deg); }
+    100% { filter: brightness(1.1) hue-rotate(-8deg); }
+  }
+  #start h1 {
+    font-size: clamp(50px, 10vw, 110px);
+    text-shadow: 0 0 20px #ffd28a, 0 0 40px #ff5500, 4px 4px 0 #6b1500;
+    letter-spacing: 2px;
+  }
+  #start p { font-size: clamp(16px, 2.4vw, 22px); opacity: 0.95; max-width: 600px; }
+  #start p.water-hint {
+    font-size: clamp(13px, 1.8vw, 17px);
+    background: rgba(0, 60, 120, 0.45);
+    border: 2px solid #6cd0ff;
+    padding: 8px 16px;
+    border-radius: 999px;
+    color: #d8f2ff;
+    text-shadow: 1px 1px 0 #001a33;
+    margin-top: -10px;
+  }
+  #scene-picker {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 18px;
+    width: min(700px, 92vw);
+  }
+  .scene-btn {
+    cursor: pointer;
+    padding: 18px 14px;
+    border-radius: 18px;
+    border: 4px solid #fff;
+    background: rgba(0,0,0,0.35);
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #000;
+    transition: transform 0.15s, background 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    font-family: inherit;
+  }
+  .scene-btn:hover { transform: scale(1.06) rotate(-1deg); background: rgba(255,140,40,0.55); }
+  .scene-btn .emoji { font-size: 42px; }
+
+  /* ---------- GAME SCREEN ---------- */
+  #game { position: absolute; inset: 0; display: none; }
+  #scene-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* HUD */
+  #hud {
+    position: absolute; top: 14px; left: 14px; right: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    pointer-events: none; z-index: 10;
+  }
+  #counter {
+    background: rgba(0,0,0,0.55); padding: 8px 14px; border-radius: 999px;
+    font-size: 18px; font-weight: bold; border: 2px solid #ffb84d;
+    text-shadow: 1px 1px 0 #000;
+  }
+  #restart-btn {
+    pointer-events: auto;
+    cursor: pointer; background: #fff; color: #c0392b;
+    border: none; padding: 8px 14px; border-radius: 999px;
+    font-weight: bold; font-family: inherit; font-size: 14px;
+  }
+  #restart-btn:hover { background: #ffe0b3; }
+
+  /* Fire click target — vertical drift driven by --fire-y (set in JS) so we
+     animate transform instead of `top`, avoiding layout work each click.
+     Baseline `top: 62%` matches the t=0 position from the original formula. */
+  #fire-wrap {
+    --fire-y: 0px;
+    position: absolute;
+    left: 50%; top: 62%;
+    transform: translate(-50%, calc(-50% + var(--fire-y)));
+    cursor: pointer;
+    transition: transform 0.18s ease-out;
+    z-index: 5;
+  }
+  #fire-wrap:active { transform: translate(-50%, calc(-50% + var(--fire-y))) scale(0.92); }
+  .fire {
+    position: relative;
+    width: 80px; height: 100px;
+    transition: width 0.25s, height 0.25s;
+  }
+  #fire-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: block;
+    pointer-events: none;
+  }
+  #fire-wrap {
+    filter: drop-shadow(0 0 32px rgba(255,100,0,0.85)) drop-shadow(0 0 80px rgba(255,40,0,0.45));
+  }
+  /* Idle ember drift */
+  .idle-ember {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff8c0 0%, #ffaa00 55%, transparent 100%);
+    animation: ember-drift 2s ease-out forwards;
+  }
+  @keyframes ember-drift {
+    0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.85; }
+    40%  { opacity: 0.7; }
+    100% { transform: translate(calc(-50% + var(--dx,0px)), calc(-50% - var(--rise,100px))) scale(0.2); opacity: 0; }
+  }
+
+  /* Smoke + sparks layer */
+  #fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 8; }
+  .smoke, .spark, .pop {
+    position: absolute; pointer-events: none;
+    border-radius: 50%;
+  }
+  .smoke {
+    background: radial-gradient(circle, rgba(80,80,80,0.7) 0%, rgba(40,40,40,0) 70%);
+    animation: rise 3s ease-out forwards;
+  }
+  @keyframes rise {
+    0%   { transform: translate(-50%, 0) scale(0.4); opacity: 0.9; }
+    100% { transform: translate(calc(-50% + var(--dx, 0px)), -120vh) scale(2.5); opacity: 0; }
+  }
+  .spark {
+    width: 6px; height: 6px;
+    background: radial-gradient(circle, #fff8a8 0%, #ff7e1a 70%, transparent 100%);
+    animation: fly 0.9s ease-out forwards;
+  }
+  @keyframes fly {
+    0%   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--sx,0px)), calc(-50% + var(--sy,-100px))) scale(0.2); opacity: 0; }
+  }
+  .pop {
+    color: #fff;
+    font-weight: bold;
+    text-shadow: 2px 2px 0 #c0392b, 0 0 12px #ffae33;
+    font-size: 26px;
+    transform: translate(-50%, -50%);
+    animation: pop 0.7s ease-out forwards;
+    background: none; border-radius: 0;
+  }
+  @keyframes pop {
+    0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+    100% { transform: translate(-50%, -180%) scale(1.6); opacity: 0; }
+  }
+
+  /* Screen flash + shake helpers */
+  #flash {
+    position: absolute; inset: 0; background: #fff;
+    opacity: 0; pointer-events: none; z-index: 20;
+    transition: opacity 0.1s;
+  }
+  .shake { animation: shake 0.25s; }
+  @keyframes shake {
+    0%, 100% { transform: translate(0,0); }
+    20% { transform: translate(-6px, 4px); }
+    40% { transform: translate(7px, -3px); }
+    60% { transform: translate(-5px, -5px); }
+    80% { transform: translate(4px, 6px); }
+  }
+
+  /* GAME OVER */
+  #gameover {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column; align-items: center; justify-content: safe center;
+    background: radial-gradient(circle, rgba(0,0,0,0.4), rgba(0,0,0,0.85));
+    color: #fff; z-index: 30; text-align: center; padding: 30px 20px; gap: 22px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  #gameover h2 {
+    font-size: clamp(48px, 9vw, 100px);
+    text-shadow: 0 0 30px #ff5500, 4px 4px 0 #6b1500;
+    animation: flicker 2s infinite alternate;
+  }
+  #gameover p { font-size: clamp(16px, 2.2vw, 22px); max-width: 500px; opacity: 0.9; }
+  #gameover button {
+    cursor: pointer; padding: 14px 28px; border-radius: 999px;
+    border: 4px solid #fff; background: #ff5500; color: #fff;
+    font-size: 22px; font-weight: bold; font-family: inherit;
+    text-shadow: 1px 1px 0 #6b1500;
+    transition: transform 0.15s;
+  }
+  #gameover button:hover { transform: scale(1.08); }
+
+  /* Scene SVG element styles for burning */
+  .burnable { transition: filter 1s, opacity 1s; }
+  .charred  { filter: brightness(0.15) saturate(0.2); }
+  .gone     { opacity: 0; }
+
+  /* ---------- WATER BUCKET ---------- */
+  #bucket-wrap {
+    position: absolute;
+    right: 24px; top: 55%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    z-index: 7;
+    transition: transform 0.12s ease-out;
+    text-align: center;
+  }
+  #bucket-wrap:hover { transform: translateY(-50%) scale(1.06) rotate(-3deg); }
+  #bucket-svg { width: 110px; height: 130px; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.5)); }
+  /* Bucket tipping animation when clicked */
+  #bucket-wrap.tipping #bucket-svg { animation: bucketTip 0.7s ease-in-out; transform-origin: 50% 90%; }
+  @keyframes bucketTip {
+    0%   { transform: rotate(0deg); }
+    25%  { transform: rotate(-70deg); }
+    55%  { transform: rotate(-70deg); }
+    100% { transform: rotate(0deg); }
+  }
+  #bucket-label {
+    margin-top: 6px;
+    font-size: 14px; font-weight: bold;
+    background: rgba(0,0,0,0.55);
+    padding: 4px 10px; border-radius: 999px;
+    border: 2px solid #6cd0ff;
+    text-shadow: 1px 1px 0 #000;
+    color: #d8f2ff;
+  }
+  /* Big water droplets that arc from the bucket to the fire */
+  .water-drop {
+    position: absolute; pointer-events: none;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    background: radial-gradient(circle at 35% 30%, #ffffff 0%, #d8f2ff 25%, #6cd0ff 60%, #1d7fd0 100%);
+    box-shadow: 0 0 18px rgba(108, 208, 255, 0.95), inset -4px -6px 10px rgba(29, 127, 208, 0.45);
+    animation: waterArc var(--dur, 0.75s) cubic-bezier(0.45, 0, 0.7, 1) forwards;
+    z-index: 9;
+  }
+  @keyframes waterArc {
+    0%   { transform: translate(-50%, -50%) scale(0.5) rotate(0deg); opacity: 0.9; }
+    20%  { opacity: 1; }
+    60%  { transform: translate(calc(-50% + var(--mx,0px)), calc(-50% + var(--my,0px))) scale(1) rotate(20deg); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--ex,0px)), calc(-50% + var(--ey,0px))) scale(0.85) rotate(35deg); opacity: 0; }
+  }
+  /* Big splash ring on the fire */
+  .big-splash {
+    position: absolute; pointer-events: none;
+    width: 50px; height: 50px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(216,242,255,0.7) 30%, rgba(108,208,255,0.5) 60%, rgba(78,168,255,0) 100%);
+    box-shadow: 0 0 40px rgba(108,208,255,0.9), 0 0 80px rgba(108,208,255,0.5);
+    animation: bigSplash 0.9s ease-out forwards;
+    z-index: 9;
+  }
+  @keyframes bigSplash {
+    0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+    50%  { transform: translate(-50%, -50%) scale(1.8); opacity: 0.9; }
+    100% { transform: translate(-50%, -50%) scale(3.0); opacity: 0; }
+  }
+  /* Smaller splash droplets exploding outward from impact */
+  .splash {
+    position: absolute; pointer-events: none;
+    width: 22px; height: 22px;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    background: radial-gradient(circle at 35% 30%, #ffffff 0%, #d8f2ff 30%, #4ea8ff 80%, transparent 100%);
+    animation: splash 0.95s ease-out forwards;
+    box-shadow: 0 0 16px #6cd0ff;
+    z-index: 9;
+  }
+  @keyframes splash {
+    0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 1; }
+    60%  { opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--wx,0px)), calc(-50% + var(--wy,80px))) scale(0.6); opacity: 0; }
+  }
+  .steam {
+    position: absolute; pointer-events: none;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 70%);
+    animation: rise 2.4s ease-out forwards;
+    z-index: 8;
+  }
+
+  /* ---------- HERO ENDING ---------- */
+  #hero {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column; align-items: center; justify-content: safe center;
+    background: radial-gradient(circle at 50% 30%, #fff8c4 0%, #7ec8ff 40%, #1f4a85 100%);
+    color: #082c5a; z-index: 30; text-align: center; padding: 30px 20px; gap: 22px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  #hero h2 {
+    font-size: clamp(48px, 9vw, 100px);
+    color: #fff;
+    text-shadow: 0 0 30px #ffe680, 4px 4px 0 #1f4a85, 0 0 60px #ffd86b;
+    letter-spacing: 2px;
+    animation: heroPulse 2s infinite alternate;
+  }
+  @keyframes heroPulse {
+    0%   { transform: scale(1); filter: drop-shadow(0 0 12px #ffd86b); }
+    100% { transform: scale(1.04); filter: drop-shadow(0 0 30px #fff8c4); }
+  }
+  #hero p { font-size: clamp(16px, 2.4vw, 24px); max-width: 600px; color: #082c5a; font-weight: bold; }
+  #hero .hero-art {
+    font-size: clamp(80px, 18vw, 200px);
+    line-height: 1;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.35));
+    animation: heroBob 2.5s ease-in-out infinite;
+  }
+  @keyframes heroBob {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50%      { transform: translateY(-14px) rotate(3deg); }
+  }
+  #hero button {
+    cursor: pointer; padding: 14px 28px; border-radius: 999px;
+    border: 4px solid #fff; background: #2ec27e; color: #fff;
+    font-size: 22px; font-weight: bold; font-family: inherit;
+    text-shadow: 1px 1px 0 #1f6b46;
+    transition: transform 0.15s;
+  }
+  #hero button:hover { transform: scale(1.08); }
+  /* Sparkles for hero */
+  .sparkle {
+    position: absolute; pointer-events: none;
+    font-size: 28px;
+    animation: twinkle 2.2s ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(0.8) rotate(0deg); }
+    50%      { opacity: 1;   transform: scale(1.3) rotate(20deg); }
+  }
+
+  /* ---------- FIRETRUCKS ---------- */
+  .firetruck-deco {
+    position: absolute;
+    bottom: 0;
+    font-size: clamp(60px, 12vw, 110px);
+    line-height: 1;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.5));
+    z-index: 0;
+  }
+  .firetruck-left {
+    left: clamp(4px, 2vw, 32px);
+    animation: truckPatrolLeft 6s ease-in-out infinite alternate;
+  }
+  .firetruck-right {
+    right: clamp(4px, 2vw, 32px);
+    transform: scaleX(-1);
+    animation: truckPatrolRight 6s ease-in-out infinite alternate;
+  }
+  @keyframes truckPatrolLeft {
+    0%   { transform: translateX(0px); }
+    100% { transform: translateX(18px); }
+  }
+  @keyframes truckPatrolRight {
+    0%   { transform: scaleX(-1) translateX(0px); }
+    100% { transform: scaleX(-1) translateX(18px); }
+  }
+  /* siren flash overlay on trucks */
+  .firetruck-left::after,
+  .firetruck-right::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    animation: sirenGlow 0.9s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  @keyframes sirenGlow {
+    0%   { filter: drop-shadow(0 0 0px #ff2200); }
+    100% { filter: drop-shadow(0 0 22px #ff2200) drop-shadow(0 0 40px #ff6600); }
+  }
+
+  /* ---------- PYROMANIAC ENDING ---------- */
+  #pyro {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column; align-items: center; justify-content: safe center;
+    background:
+      radial-gradient(circle at 50% 40%, rgba(255,80,0,0.55) 0%, rgba(0,0,0,0) 60%),
+      radial-gradient(circle, #2a0000 0%, #000 100%);
+    color: #ffe0a8; z-index: 30; text-align: center; padding: 30px 20px; gap: 18px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: pyroFlicker 0.18s infinite alternate;
+  }
+  @keyframes pyroFlicker {
+    0%   { filter: brightness(1)    contrast(1); }
+    100% { filter: brightness(1.18) contrast(1.1) hue-rotate(-6deg); }
+  }
+  #pyro h2 {
+    font-size: clamp(44px, 8vw, 92px);
+    color: #fff;
+    text-shadow:
+      0 0 20px #ff2a00,
+      0 0 50px #ff7e1a,
+      4px 4px 0 #3a0000,
+      -2px 2px 0 #6b1500;
+    letter-spacing: 2px;
+    position: relative; z-index: 2;
+  }
+  #pyro p {
+    font-size: clamp(18px, 2.6vw, 28px);
+    max-width: 700px;
+    color: #ffd28a;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #3a0000, 0 0 14px #ff2a00;
+    letter-spacing: 1px;
+    position: relative; z-index: 2;
+  }
+  #pyro .pyro-art {
+    position: relative; z-index: 2;
+    width: clamp(220px, 38vw, 360px);
+    height: clamp(220px, 38vw, 360px);
+    display: flex; align-items: center; justify-content: center;
+  }
+  #pyro .pyro-art .smile-svg {
+    width: 100%; height: 100%;
+    filter: drop-shadow(0 0 30px #ff2a00) drop-shadow(0 0 60px #ff7e1a);
+    animation: smileLeer 3s ease-in-out infinite;
+  }
+  @keyframes smileLeer {
+    0%, 100% { transform: rotate(-3deg) scale(1); }
+    50%      { transform: rotate(3deg)  scale(1.04); }
+  }
+  /* Background party flames around the pyromaniac smile */
+  .pyro-flame {
+    position: absolute; bottom: 0;
+    width: 60px; height: 120px;
+    background: radial-gradient(ellipse at 50% 100%, #fff8a8 0%, #ffd23f 25%, #ff7e1a 55%, #c0392b 80%, transparent 100%);
+    border-radius: 50% 50% 35% 35% / 70% 70% 30% 30%;
+    transform-origin: 50% 100%;
+    animation: pyroDance 0.45s ease-in-out infinite alternate;
+    filter: drop-shadow(0 0 24px #ff7a00);
+    pointer-events: none;
+    z-index: 0;
+  }
+  @keyframes pyroDance {
+    0%   { transform: scaleY(1)    skewX(-6deg); }
+    50%  { transform: scaleY(1.18) skewX(4deg); }
+    100% { transform: scaleY(0.9)  skewX(-3deg); }
+  }
+  #pyro button {
+    cursor: pointer; padding: 14px 28px; border-radius: 999px;
+    border: 4px solid #fff; background: #ff2a00; color: #fff;
+    font-size: 22px; font-weight: bold; font-family: inherit;
+    text-shadow: 1px 1px 0 #6b1500;
+    transition: transform 0.15s;
+    position: relative; z-index: 3;
+    box-shadow: 0 0 24px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.5);
+  }
+  #pyro button:hover { transform: scale(1.08); }
+</style>
+</head>
+<body>
+<a href="../index.html" class="zbg-home" aria-label="Back to Zak's Brain Games">🏠</a>
+<style>.zbg-home{position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:46px;height:46px;background:#fff;border:2px solid #FFD93D;border-radius:50%;font-size:22px;text-decoration:none;box-shadow:0 3px 8px rgba(0,0,0,.25);line-height:1}.zbg-home:active{transform:scale(.92)}</style>
+<div id="app" class="scene">
+
+  <!-- START SCREEN -->
+  <div id="start">
+    <span class="firetruck-deco firetruck-left">🚒</span>
+    <span class="firetruck-deco firetruck-right">🚒</span>
+    <h1>🔥 MoreFire 🔥</h1>
+    <p>Pick a scene. Click the fire. Watch it grow. <br>Cause maximum chaos in 20 clicks!</p>
+    <p class="water-hint">💧 Feeling merciful? Click the <b>water bucket</b> instead to put it out and become a hero.</p>
+    <div id="scene-picker">
+      <button class="scene-btn" data-scene="house">    <span class="emoji">🏠</span> House </button>
+      <button class="scene-btn" data-scene="hospital"> <span class="emoji">🏥</span> Hospital </button>
+      <button class="scene-btn" data-scene="park">     <span class="emoji">🌳</span> Park </button>
+      <button class="scene-btn" data-scene="farm">     <span class="emoji">🚜</span> Farm </button>
+      <button class="scene-btn" data-scene="city">     <span class="emoji">🏙️</span> City </button>
+      <button class="scene-btn" data-scene="monstertruck"><span class="emoji">🛻</span> Monster Truck </button>
+      <button class="scene-btn" data-scene="dump">     <span class="emoji">🗑️</span> Trash Dump </button>
+      <button class="scene-btn" data-scene="campsite"> <span class="emoji">⛺</span> Campsite </button>
+      <button class="scene-btn" data-scene="forest">   <span class="emoji">🌲</span> Forest </button>
+      <button class="scene-btn" data-scene="random">   <span class="emoji">🎲</span> Random </button>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="game">
+    <svg id="scene-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice"></svg>
+    <div id="fx"></div>
+    <div id="fire-wrap" class="fire-target" title="Click me!">
+      <div class="fire" id="fire">
+        <canvas id="fire-canvas"></canvas>
+      </div>
+    </div>
+    <div id="hud">
+      <div id="counter">🚒 Fire: 5 / 20</div>
+      <button id="restart-btn">↺ Restart</button>
+    </div>
+    <!-- WATER BUCKET -->
+    <div id="bucket-wrap" title="Pour water!">
+      <svg id="bucket-svg" viewBox="0 0 100 120" aria-hidden="true">
+        <!-- handle -->
+        <path d="M20 30 Q50 -10 80 30" fill="none" stroke="#7a4a1d" stroke-width="6" stroke-linecap="round"/>
+        <!-- bucket body -->
+        <path d="M14 32 L86 32 L78 110 L22 110 Z" fill="#9aa7b3" stroke="#3a4654" stroke-width="3"/>
+        <!-- rim -->
+        <ellipse cx="50" cy="32" rx="36" ry="8" fill="#cbd5df" stroke="#3a4654" stroke-width="3"/>
+        <!-- water surface -->
+        <ellipse cx="50" cy="34" rx="30" ry="6" fill="#4ea8ff"/>
+        <!-- water shine -->
+        <ellipse cx="42" cy="33" rx="10" ry="2" fill="#d8f2ff" opacity="0.85"/>
+        <!-- droplet -->
+        <path d="M50 92 Q44 102 50 110 Q56 102 50 92 Z" fill="#6cd0ff" opacity="0.9"/>
+      </svg>
+      <div id="bucket-label">💧 Pour Water</div>
+    </div>
+    <div id="flash"></div>
+  </div>
+
+  <!-- GAME OVER (Pyromaniac) -->
+  <div id="pyro">
+    <h2>Congratulations! You Destroyed Everything!</h2>
+    <p>You are a Crazy Pyromaniac!</p>
+    <div class="pyro-art">
+      <!-- Menacing smile -->
+      <svg class="smile-svg" viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+          <radialGradient id="faceGrad" cx="50%" cy="45%" r="60%">
+            <stop offset="0%"  stop-color="#ffd86b"/>
+            <stop offset="60%" stop-color="#ff7e1a"/>
+            <stop offset="100%" stop-color="#6b1500"/>
+          </radialGradient>
+        </defs>
+        <circle cx="100" cy="100" r="90" fill="url(#faceGrad)" stroke="#3a0000" stroke-width="4"/>
+        <!-- evil eyes -->
+        <path d="M50 80 L80 70 L78 90 Z" fill="#3a0000"/>
+        <path d="M150 80 L120 70 L122 90 Z" fill="#3a0000"/>
+        <circle cx="68" cy="82" r="4" fill="#fff"/>
+        <circle cx="132" cy="82" r="4" fill="#fff"/>
+        <!-- menacing smile with teeth -->
+        <path d="M40 120 Q100 180 160 120 Q150 145 100 155 Q50 145 40 120 Z"
+              fill="#1a0000" stroke="#3a0000" stroke-width="3"/>
+        <!-- jagged teeth -->
+        <path d="M55 130 L65 145 L72 130 L80 148 L88 130 L96 150 L104 130 L112 150 L120 130 L128 148 L136 130 L144 145 L152 130 Z"
+              fill="#fff" stroke="#3a0000" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <p style="font-size: clamp(13px,1.8vw,17px); opacity:0.7; margin-top:-10px;">🚒 The firetrucks showed up... but it was too late. 🚒</p>
+    <button id="pyro-again">Play Again</button>
+  </div>
+
+  <!-- GAME OVER (Hero) -->
+  <div id="hero">
+    <h2>Congratulations! You are a Hero!</h2>
+    <p>You saved the day. The fire is out. The world is grateful.</p>
+    <div class="hero-art">🦸‍♂️🚒💧</div>
+    <button id="hero-again">Play Again</button>
+  </div>
+
+</div>
+
+<script>
+/* ===========================================================
+   MoreFire - simple click-to-burn game
+   =========================================================== */
+
+const MAX_CLICKS  = 20;
+const START_FIRE  = 5;
+
+const startEl    = document.getElementById('start');
+const gameEl     = document.getElementById('game');
+const svgEl      = document.getElementById('scene-svg');
+const fireWrap   = document.getElementById('fire-wrap');
+const fireEl     = document.getElementById('fire');
+const counterEl  = document.getElementById('counter');
+const fxEl       = document.getElementById('fx');
+const flashEl    = document.getElementById('flash');
+const pyroEl     = document.getElementById('pyro');
+const heroEl     = document.getElementById('hero');
+const bucketWrap = document.getElementById('bucket-wrap');
+
+let clicks = 0;
+let currentScene = null;
+let burnableEls = []; // scene parts in destruction order
+let gameEnded = false;
+
+/* ---------- SCENES (SVG strings) ---------- */
+const SCENES = {
+
+  house: () => `
+    <!-- sky -->
+    <rect class="bg" width="1000" height="450" fill="url(#skyGrad)"/>
+    <defs>
+      <linearGradient id="skyGrad" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%"  stop-color="#7ec8ff"/>
+        <stop offset="100%" stop-color="#cfe9ff"/>
+      </linearGradient>
+    </defs>
+    <!-- sun -->
+    <circle class="burnable" data-burn="9" cx="850" cy="110" r="55" fill="#ffd86b"/>
+    <!-- ground -->
+    <rect y="450" width="1000" height="150" fill="#7cc36a"/>
+    <rect y="540" width="1000" height="60"  fill="#5fa852"/>
+    <!-- tree -->
+    <g class="burnable" data-burn="3">
+      <rect x="120" y="380" width="30" height="100" fill="#5b3a1e"/>
+      <circle cx="135" cy="370" r="60" fill="#3da955"/>
+      <circle cx="100" cy="390" r="45" fill="#3da955"/>
+      <circle cx="170" cy="395" r="50" fill="#3da955"/>
+    </g>
+    <!-- house body -->
+    <g class="burnable" data-burn="6">
+      <rect x="380" y="320" width="320" height="200" fill="#f7e1b5" stroke="#7a4a1d" stroke-width="4"/>
+    </g>
+    <!-- roof -->
+    <g class="burnable" data-burn="5">
+      <polygon points="360,320 540,200 720,320" fill="#b3471a" stroke="#5b1f08" stroke-width="4"/>
+    </g>
+    <!-- door -->
+    <g class="burnable" data-burn="7">
+      <rect x="500" y="400" width="80" height="120" fill="#7a4a1d" stroke="#3d2210" stroke-width="3"/>
+      <circle cx="565" cy="465" r="4" fill="#ffd86b"/>
+    </g>
+    <!-- windows -->
+    <g class="burnable" data-burn="8">
+      <rect x="410" y="350" width="60" height="60" fill="#9bd3ff" stroke="#3d2210" stroke-width="3"/>
+      <line x1="440" y1="350" x2="440" y2="410" stroke="#3d2210" stroke-width="2"/>
+      <line x1="410" y1="380" x2="470" y2="380" stroke="#3d2210" stroke-width="2"/>
+
+      <rect x="610" y="350" width="60" height="60" fill="#9bd3ff" stroke="#3d2210" stroke-width="3"/>
+      <line x1="640" y1="350" x2="640" y2="410" stroke="#3d2210" stroke-width="2"/>
+      <line x1="610" y1="380" x2="670" y2="380" stroke="#3d2210" stroke-width="2"/>
+    </g>
+    <!-- chimney -->
+    <g class="burnable" data-burn="4">
+      <rect x="630" y="220" width="40" height="70" fill="#8a3414" stroke="#3d2210" stroke-width="3"/>
+    </g>
+    <!-- bushes -->
+    <g class="burnable" data-burn="2">
+      <circle cx="780" cy="500" r="35" fill="#3da955"/>
+      <circle cx="820" cy="510" r="30" fill="#3da955"/>
+    </g>
+    <!-- ground itself burns last -->
+    <g class="burnable" data-burn="10">
+      <rect y="450" width="1000" height="150" fill="transparent"/>
+    </g>
+  `,
+
+  hospital: () => `
+    <rect class="bg" width="1000" height="450" fill="#cfe9ff"/>
+    <rect y="450" width="1000" height="150" fill="#cccccc"/>
+    <rect y="540" width="1000" height="60"  fill="#888"/>
+    <!-- sun -->
+    <circle class="burnable" data-burn="9" cx="120" cy="100" r="45" fill="#ffd86b"/>
+    <!-- tree -->
+    <g class="burnable" data-burn="3">
+      <rect x="880" y="380" width="24" height="100" fill="#5b3a1e"/>
+      <circle cx="892" cy="370" r="50" fill="#3da955"/>
+    </g>
+    <!-- main building -->
+    <g class="burnable" data-burn="6">
+      <rect x="250" y="200" width="500" height="320" fill="#ffffff" stroke="#666" stroke-width="4"/>
+    </g>
+    <!-- red cross -->
+    <g class="burnable" data-burn="5">
+      <rect x="470" y="225" width="60" height="120" fill="#e63946"/>
+      <rect x="440" y="255" width="120" height="60" fill="#e63946"/>
+    </g>
+    <!-- entrance -->
+    <g class="burnable" data-burn="7">
+      <rect x="460" y="430" width="80" height="90" fill="#5a8fbf"/>
+      <rect x="460" y="430" width="80" height="14" fill="#34495e"/>
+    </g>
+    <!-- windows -->
+    <g class="burnable" data-burn="8">
+      <rect x="290" y="380" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
+      <rect x="370" y="380" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
+      <rect x="580" y="380" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
+      <rect x="660" y="380" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
+
+      <rect x="290" y="290" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
+      <rect x="370" y="290" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
+      <rect x="580" y="290" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
+      <rect x="660" y="290" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
+    </g>
+    <!-- ambulance -->
+    <g class="burnable" data-burn="2">
+      <rect x="60" y="450" width="160" height="70" fill="#ffffff" stroke="#222" stroke-width="3"/>
+      <rect x="170" y="470" width="50" height="50" fill="#9bd3ff" stroke="#222" stroke-width="2"/>
+      <rect x="100" y="465" width="40" height="10" fill="#e63946"/>
+      <rect x="115" y="455" width="10" height="30" fill="#e63946"/>
+      <circle cx="100" cy="525" r="14" fill="#222"/>
+      <circle cx="190" cy="525" r="14" fill="#222"/>
+    </g>
+    <!-- helipad H -->
+    <g class="burnable" data-burn="4">
+      <circle cx="500" cy="180" r="22" fill="none" stroke="#e63946" stroke-width="4"/>
+      <text x="500" y="190" text-anchor="middle" font-size="28" font-weight="bold" fill="#e63946" font-family="sans-serif">H</text>
+    </g>
+    <g class="burnable" data-burn="10">
+      <rect y="450" width="1000" height="150" fill="transparent"/>
+    </g>
+  `,
+
+  park: () => `
+    <rect class="bg" width="1000" height="450" fill="url(#sky2)"/>
+    <defs>
+      <linearGradient id="sky2" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%"  stop-color="#9fdcff"/>
+        <stop offset="100%" stop-color="#dff4ff"/>
+      </linearGradient>
+    </defs>
+    <rect y="450" width="1000" height="150" fill="#7cc36a"/>
+    <rect y="540" width="1000" height="60"  fill="#5fa852"/>
+    <!-- sun -->
+    <circle class="burnable" data-burn="9" cx="180" cy="110" r="50" fill="#ffd86b"/>
+    <!-- clouds -->
+    <g class="burnable" data-burn="9">
+      <ellipse cx="700" cy="120" rx="60" ry="22" fill="#fff"/>
+      <ellipse cx="740" cy="105" rx="40" ry="18" fill="#fff"/>
+      <ellipse cx="770" cy="130" rx="50" ry="20" fill="#fff"/>
+    </g>
+    <!-- tree left -->
+    <g class="burnable" data-burn="2">
+      <rect x="110" y="360" width="30" height="120" fill="#5b3a1e"/>
+      <circle cx="125" cy="350" r="65" fill="#3da955"/>
+      <circle cx="85"  cy="370" r="50" fill="#3da955"/>
+      <circle cx="170" cy="375" r="55" fill="#3da955"/>
+    </g>
+    <!-- tree right -->
+    <g class="burnable" data-burn="3">
+      <rect x="850" y="360" width="30" height="120" fill="#5b3a1e"/>
+      <circle cx="865" cy="350" r="65" fill="#3da955"/>
+      <circle cx="825" cy="375" r="50" fill="#3da955"/>
+      <circle cx="905" cy="375" r="55" fill="#3da955"/>
+    </g>
+    <!-- bench -->
+    <g class="burnable" data-burn="6">
+      <rect x="380" y="450" width="240" height="20" fill="#7a4a1d"/>
+      <rect x="380" y="430" width="240" height="14" fill="#7a4a1d"/>
+      <rect x="395" y="470" width="14" height="40" fill="#7a4a1d"/>
+      <rect x="591" y="470" width="14" height="40" fill="#7a4a1d"/>
+    </g>
+    <!-- swing set -->
+    <g class="burnable" data-burn="5">
+      <line x1="700" y1="280" x2="660" y2="470" stroke="#444" stroke-width="6"/>
+      <line x1="900" y1="280" x2="940" y2="470" stroke="#444" stroke-width="6"/>
+      <line x1="660" y1="280" x2="940" y2="280" stroke="#444" stroke-width="6"/>
+      <line x1="760" y1="280" x2="760" y2="400" stroke="#222" stroke-width="3"/>
+      <line x1="820" y1="280" x2="820" y2="400" stroke="#222" stroke-width="3"/>
+      <rect x="745" y="395" width="90" height="14" fill="#b3471a"/>
+    </g>
+    <!-- flowers -->
+    <g class="burnable" data-burn="4">
+      <circle cx="280" cy="500" r="12" fill="#ff6b9c"/>
+      <circle cx="320" cy="510" r="12" fill="#ffd86b"/>
+      <circle cx="360" cy="500" r="12" fill="#ff6b9c"/>
+      <circle cx="220" cy="510" r="12" fill="#9b6bff"/>
+    </g>
+    <!-- pond -->
+    <g class="burnable" data-burn="7">
+      <ellipse cx="500" cy="540" rx="160" ry="30" fill="#5ab8e8"/>
+    </g>
+    <!-- duck -->
+    <g class="burnable" data-burn="8">
+      <ellipse cx="500" cy="525" rx="22" ry="12" fill="#fff"/>
+      <circle cx="520" cy="515" r="9" fill="#fff"/>
+      <polygon points="528,515 540,517 528,520" fill="#ff8c1a"/>
+      <circle cx="522" cy="513" r="1.5" fill="#000"/>
+    </g>
+    <g class="burnable" data-burn="10">
+      <rect y="450" width="1000" height="150" fill="transparent"/>
+    </g>
+  `,
+
+  farm: () => `
+    <defs>
+      <linearGradient id="farmSky" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%"  stop-color="#ffd28a"/>
+        <stop offset="100%" stop-color="#ffe9c2"/>
+      </linearGradient>
+    </defs>
+    <rect class="bg" width="1000" height="450" fill="url(#farmSky)"/>
+    <rect y="450" width="1000" height="150" fill="#a3d36b"/>
+    <rect y="540" width="1000" height="60"  fill="#7fb84e"/>
+    <!-- sun -->
+    <circle class="burnable" data-burn="9" cx="180" cy="120" r="48" fill="#ffd86b"/>
+    <!-- silo -->
+    <g class="burnable" data-burn="6">
+      <rect x="80" y="280" width="100" height="200" fill="#cfd6db" stroke="#5a6470" stroke-width="3"/>
+      <ellipse cx="130" cy="280" rx="50" ry="14" fill="#9aa7b3" stroke="#5a6470" stroke-width="3"/>
+      <path d="M80 280 Q130 230 180 280 Z" fill="#a3aeb8" stroke="#5a6470" stroke-width="3"/>
+    </g>
+    <!-- barn body -->
+    <g class="burnable" data-burn="5">
+      <rect x="380" y="300" width="340" height="220" fill="#c0392b" stroke="#3a0a05" stroke-width="4"/>
+      <polygon points="380,300 550,200 720,300" fill="#a83020" stroke="#3a0a05" stroke-width="4"/>
+      <!-- white X door -->
+      <rect x="500" y="380" width="100" height="140" fill="#f4ead2" stroke="#3a0a05" stroke-width="3"/>
+      <line x1="500" y1="380" x2="600" y2="520" stroke="#3a0a05" stroke-width="4"/>
+      <line x1="600" y1="380" x2="500" y2="520" stroke="#3a0a05" stroke-width="4"/>
+      <!-- hayloft window -->
+      <rect x="525" y="240" width="50" height="50" fill="#f4ead2" stroke="#3a0a05" stroke-width="3"/>
+    </g>
+    <!-- haystack -->
+    <g class="burnable" data-burn="2">
+      <ellipse cx="800" cy="490" rx="60" ry="40" fill="#e8b94a" stroke="#7a5a1d" stroke-width="3"/>
+      <path d="M745 490 L855 490 M755 470 L845 470 M765 510 L835 510" stroke="#7a5a1d" stroke-width="2"/>
+    </g>
+    <!-- fence -->
+    <g class="burnable" data-burn="4">
+      <rect x="240" y="470" width="6" height="50" fill="#7a4a1d"/>
+      <rect x="290" y="470" width="6" height="50" fill="#7a4a1d"/>
+      <rect x="340" y="470" width="6" height="50" fill="#7a4a1d"/>
+      <rect x="240" y="480" width="110" height="6" fill="#7a4a1d"/>
+      <rect x="240" y="500" width="110" height="6" fill="#7a4a1d"/>
+    </g>
+    <!-- tractor -->
+    <g class="burnable" data-burn="3">
+      <rect x="880" y="460" width="80" height="40" fill="#2ec27e" stroke="#143d22" stroke-width="3"/>
+      <rect x="900" y="430" width="40" height="40" fill="#2ec27e" stroke="#143d22" stroke-width="3"/>
+      <rect x="908" y="438" width="24" height="20" fill="#9bd3ff"/>
+      <circle cx="895" cy="510" r="18" fill="#222"/>
+      <circle cx="950" cy="510" r="26" fill="#222"/>
+    </g>
+    <!-- cow -->
+    <g class="burnable" data-burn="7">
+      <ellipse cx="450" cy="510" rx="55" ry="25" fill="#fff" stroke="#222" stroke-width="3"/>
+      <ellipse cx="500" cy="505" rx="14" ry="10" fill="#222"/>
+      <ellipse cx="430" cy="515" rx="10" ry="7" fill="#222"/>
+      <circle cx="510" cy="490" r="14" fill="#fff" stroke="#222" stroke-width="3"/>
+      <circle cx="514" cy="488" r="2" fill="#222"/>
+      <rect x="425" y="530" width="6" height="14" fill="#222"/>
+      <rect x="475" y="530" width="6" height="14" fill="#222"/>
+    </g>
+    <!-- chicken -->
+    <g class="burnable" data-burn="8">
+      <ellipse cx="660" cy="525" rx="20" ry="14" fill="#fff" stroke="#444" stroke-width="2"/>
+      <circle cx="676" cy="515" r="9" fill="#fff" stroke="#444" stroke-width="2"/>
+      <polygon points="685,515 695,517 685,520" fill="#ff8c1a"/>
+      <path d="M676 506 Q672 500 678 502 Q684 500 680 506 Z" fill="#e63946"/>
+      <line x1="655" y1="540" x2="655" y2="548" stroke="#ff8c1a" stroke-width="2"/>
+      <line x1="665" y1="540" x2="665" y2="548" stroke="#ff8c1a" stroke-width="2"/>
+    </g>
+    <g class="burnable" data-burn="10">
+      <rect y="450" width="1000" height="150" fill="transparent"/>
+    </g>
+  `,
+
+  city: () => `
+    <defs>
+      <linearGradient id="citySky" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%"  stop-color="#ff7a47"/>
+        <stop offset="60%" stop-color="#ffb066"/>
+        <stop offset="100%" stop-color="#fde0a8"/>
+      </linearGradient>
+    </defs>
+    <rect class="bg" width="1000" height="450" fill="url(#citySky)"/>
+    <!-- sidewalk + road -->
+    <rect y="450" width="1000" height="40"  fill="#bdc3c7"/>
+    <rect y="490" width="1000" height="80"  fill="#3a3f44"/>
+    <rect y="570" width="1000" height="30"  fill="#bdc3c7"/>
+    <!-- road dashes -->
+    <g>
+      <rect x="40"  y="525" width="60" height="8" fill="#ffd86b"/>
+      <rect x="180" y="525" width="60" height="8" fill="#ffd86b"/>
+      <rect x="320" y="525" width="60" height="8" fill="#ffd86b"/>
+      <rect x="460" y="525" width="60" height="8" fill="#ffd86b"/>
+      <rect x="600" y="525" width="60" height="8" fill="#ffd86b"/>
+      <rect x="740" y="525" width="60" height="8" fill="#ffd86b"/>
+      <rect x="880" y="525" width="60" height="8" fill="#ffd86b"/>
+    </g>
+    <!-- sun -->
+    <circle class="burnable" data-burn="9" cx="850" cy="130" r="50" fill="#fff5b0"/>
+    <!-- skyscraper left -->
+    <g class="burnable" data-burn="5">
+      <rect x="60" y="180" width="170" height="270" fill="#5a6470" stroke="#1f2630" stroke-width="3"/>
+      <g fill="#ffd86b">
+        <rect x="80"  y="200" width="20" height="20"/>
+        <rect x="120" y="200" width="20" height="20"/>
+        <rect x="160" y="200" width="20" height="20"/>
+        <rect x="200" y="200" width="20" height="20"/>
+        <rect x="80"  y="240" width="20" height="20"/>
+        <rect x="120" y="240" width="20" height="20"/>
+        <rect x="160" y="240" width="20" height="20"/>
+        <rect x="80"  y="280" width="20" height="20"/>
+        <rect x="160" y="280" width="20" height="20"/>
+        <rect x="200" y="280" width="20" height="20"/>
+        <rect x="80"  y="320" width="20" height="20"/>
+        <rect x="120" y="320" width="20" height="20"/>
+        <rect x="200" y="320" width="20" height="20"/>
+        <rect x="120" y="360" width="20" height="20"/>
+        <rect x="160" y="360" width="20" height="20"/>
+        <rect x="80"  y="400" width="20" height="20"/>
+        <rect x="200" y="400" width="20" height="20"/>
+      </g>
+    </g>
+    <!-- skyscraper center (tallest) -->
+    <g class="burnable" data-burn="6">
+      <rect x="280" y="100" width="200" height="350" fill="#4a90c2" stroke="#143d5a" stroke-width="3"/>
+      <rect x="370" y="60"  width="20"  height="40" fill="#5a6470"/>
+      <g fill="#9bd3ff">
+        <rect x="300" y="120" width="160" height="14"/>
+        <rect x="300" y="150" width="160" height="14"/>
+        <rect x="300" y="180" width="160" height="14"/>
+        <rect x="300" y="210" width="160" height="14"/>
+        <rect x="300" y="240" width="160" height="14"/>
+        <rect x="300" y="270" width="160" height="14"/>
+        <rect x="300" y="300" width="160" height="14"/>
+        <rect x="300" y="330" width="160" height="14"/>
+        <rect x="300" y="360" width="160" height="14"/>
+        <rect x="300" y="390" width="160" height="14"/>
+      </g>
+    </g>
+    <!-- skyscraper right -->
+    <g class="burnable" data-burn="7">
+      <rect x="540" y="220" width="180" height="230" fill="#7a4a1d" stroke="#3a2410" stroke-width="3"/>
+      <g fill="#ffd86b">
+        <rect x="560" y="240" width="22" height="22"/>
+        <rect x="600" y="240" width="22" height="22"/>
+        <rect x="640" y="240" width="22" height="22"/>
+        <rect x="680" y="240" width="22" height="22"/>
+        <rect x="560" y="280" width="22" height="22"/>
+        <rect x="640" y="280" width="22" height="22"/>
+        <rect x="680" y="280" width="22" height="22"/>
+        <rect x="600" y="320" width="22" height="22"/>
+        <rect x="640" y="320" width="22" height="22"/>
+        <rect x="560" y="360" width="22" height="22"/>
+        <rect x="680" y="360" width="22" height="22"/>
+        <rect x="600" y="400" width="22" height="22"/>
+        <rect x="640" y="400" width="22" height="22"/>
+      </g>
+    </g>
+    <!-- billboard -->
+    <g class="burnable" data-burn="4">
+      <rect x="760" y="220" width="200" height="100" fill="#fff" stroke="#222" stroke-width="3"/>
+      <rect x="800" y="320" width="10" height="130" fill="#444"/>
+      <rect x="910" y="320" width="10" height="130" fill="#444"/>
+      <text x="860" y="280" text-anchor="middle" font-size="38" font-weight="bold" fill="#c0392b" font-family="sans-serif">SALE!</text>
+    </g>
+    <!-- streetlamp -->
+    <g class="burnable" data-burn="3">
+      <rect x="245" y="340" width="6" height="110" fill="#222"/>
+      <path d="M248 340 Q280 320 280 305" stroke="#222" stroke-width="6" fill="none"/>
+      <circle cx="280" cy="300" r="10" fill="#fff5b0"/>
+    </g>
+    <!-- car -->
+    <g class="burnable" data-burn="2">
+      <rect x="380" y="510" width="170" height="40" fill="#e63946" stroke="#3a0a05" stroke-width="3"/>
+      <path d="M410 510 L430 480 L520 480 L540 510 Z" fill="#e63946" stroke="#3a0a05" stroke-width="3"/>
+      <rect x="425" y="485" width="40" height="22" fill="#9bd3ff"/>
+      <rect x="475" y="485" width="40" height="22" fill="#9bd3ff"/>
+      <circle cx="415" cy="555" r="16" fill="#222"/>
+      <circle cx="525" cy="555" r="16" fill="#222"/>
+    </g>
+    <!-- traffic light -->
+    <g class="burnable" data-burn="8">
+      <rect x="730" y="380" width="6" height="80" fill="#222"/>
+      <rect x="715" y="340" width="36" height="60" fill="#222" stroke="#000" stroke-width="2"/>
+      <circle cx="733" cy="354" r="6" fill="#e63946"/>
+      <circle cx="733" cy="370" r="6" fill="#ffd86b"/>
+      <circle cx="733" cy="386" r="6" fill="#2ec27e"/>
+    </g>
+    <g class="burnable" data-burn="10">
+      <rect y="450" width="1000" height="150" fill="transparent"/>
+    </g>
+  `,
+
+  monstertruck: () => `
+    <defs>
+      <linearGradient id="mtSky" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%"  stop-color="#3a1a55"/>
+        <stop offset="100%" stop-color="#c0392b"/>
+      </linearGradient>
+    </defs>
+    <rect class="bg" width="1000" height="450" fill="url(#mtSky)"/>
+    <rect y="450" width="1000" height="150" fill="#7a5a1d"/>
+    <rect y="540" width="1000" height="60"  fill="#5b3a1e"/>
+    <!-- sun -->
+    <circle class="burnable" data-burn="9" cx="160" cy="120" r="55" fill="#ffae33"/>
+    <!-- dirt ramp -->
+    <g class="burnable" data-burn="4">
+      <path d="M30 460 L240 460 L160 360 Z" fill="#a06a2e" stroke="#3a2410" stroke-width="3"/>
+    </g>
+    <!-- crushed car 1 -->
+    <g class="burnable" data-burn="2">
+      <path d="M340 470 L360 440 L470 440 L490 470 L490 500 L340 500 Z" fill="#4a90c2" stroke="#143d5a" stroke-width="3" transform="translate(0,15) scale(1,0.55)"/>
+      <rect x="340" y="494" width="150" height="10" fill="#143d5a"/>
+      <circle cx="365" cy="515" r="12" fill="#222"/>
+      <circle cx="465" cy="515" r="12" fill="#222"/>
+    </g>
+    <!-- crushed car 2 -->
+    <g class="burnable" data-burn="3">
+      <path d="M810 470 L830 442 L920 442 L940 470 L940 498 L810 498 Z" fill="#2ec27e" stroke="#143d22" stroke-width="3" transform="translate(0,18) scale(1,0.5)"/>
+      <rect x="810" y="492" width="130" height="10" fill="#143d22"/>
+      <circle cx="830" cy="515" r="12" fill="#222"/>
+      <circle cx="920" cy="515" r="12" fill="#222"/>
+    </g>
+    <!-- monster truck wheels -->
+    <g class="burnable" data-burn="5">
+      <circle cx="490" cy="510" r="60" fill="#1a1a1a" stroke="#000" stroke-width="3"/>
+      <circle cx="490" cy="510" r="22" fill="#bdc3c7" stroke="#000" stroke-width="3"/>
+      <circle cx="710" cy="510" r="60" fill="#1a1a1a" stroke="#000" stroke-width="3"/>
+      <circle cx="710" cy="510" r="22" fill="#bdc3c7" stroke="#000" stroke-width="3"/>
+      <!-- tread marks -->
+      <path d="M450 470 L450 460 M490 450 L490 440 M530 470 L530 460" stroke="#000" stroke-width="3"/>
+      <path d="M670 470 L670 460 M710 450 L710 440 M750 470 L750 460" stroke="#000" stroke-width="3"/>
+    </g>
+    <!-- monster truck body -->
+    <g class="burnable" data-burn="6">
+      <rect x="430" y="370" width="340" height="110" fill="#9b1d1d" stroke="#3a0a05" stroke-width="4"/>
+      <!-- cab -->
+      <path d="M470 370 L500 310 L660 310 L690 370 Z" fill="#7a1010" stroke="#3a0a05" stroke-width="4"/>
+      <rect x="510" y="320" width="60" height="40" fill="#9bd3ff" stroke="#000" stroke-width="2"/>
+      <rect x="590" y="320" width="60" height="40" fill="#9bd3ff" stroke="#000" stroke-width="2"/>
+      <!-- front bumper / grille -->
+      <rect x="430" y="430" width="20" height="50" fill="#bdc3c7" stroke="#000" stroke-width="2"/>
+      <rect x="750" y="430" width="20" height="50" fill="#bdc3c7" stroke="#000" stroke-width="2"/>
+    </g>
+    <!-- flame decals -->
+    <g class="burnable" data-burn="7">
+      <path d="M450 410 Q480 380 510 410 Q540 380 570 410 Q600 380 630 410 Q660 380 690 410 Q720 380 750 410 L750 440 L450 440 Z"
+            fill="#ffae33" stroke="#c0392b" stroke-width="3"/>
+    </g>
+    <!-- dust cloud -->
+    <g class="burnable" data-burn="8">
+      <circle cx="280" cy="500" r="28" fill="#d8c8a3" opacity="0.8"/>
+      <circle cx="320" cy="510" r="24" fill="#d8c8a3" opacity="0.8"/>
+      <circle cx="350" cy="495" r="20" fill="#d8c8a3" opacity="0.8"/>
+    </g>
+    <g class="burnable" data-burn="10">
+      <rect y="450" width="1000" height="150" fill="transparent"/>
+    </g>
+  `,
+
+  dump: () => `
+    <defs>
+      <linearGradient id="dumpSky" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%"  stop-color="#7d8a5a"/>
+        <stop offset="100%" stop-color="#bfb888"/>
+      </linearGradient>
+    </defs>
+    <rect class="bg" width="1000" height="450" fill="url(#dumpSky)"/>
+    <rect y="450" width="1000" height="150" fill="#8a6f3a"/>
+    <rect y="540" width="1000" height="60"  fill="#5b4520"/>
+    <!-- weak sun -->
+    <circle class="burnable" data-burn="9" cx="850" cy="120" r="40" fill="#d4c878"/>
+    <!-- big trash bag pile -->
+    <g class="burnable" data-burn="5">
+      <ellipse cx="500" cy="490" rx="180" ry="80" fill="#2a2a2a" stroke="#000" stroke-width="3"/>
+      <ellipse cx="430" cy="460" rx="55" ry="45" fill="#2a2a2a" stroke="#000" stroke-width="3"/>
+      <ellipse cx="540" cy="445" rx="60" ry="50" fill="#2a2a2a" stroke="#000" stroke-width="3"/>
+      <ellipse cx="610" cy="465" rx="55" ry="45" fill="#2a2a2a" stroke="#000" stroke-width="3"/>
+      <!-- twisty tops -->
+      <path d="M430 415 L425 405 L435 408 L432 400" stroke="#000" stroke-width="3" fill="none"/>
+      <path d="M540 395 L535 385 L545 388 L542 380" stroke="#000" stroke-width="3" fill="none"/>
+      <path d="M610 420 L605 410 L615 413 L612 405" stroke="#000" stroke-width="3" fill="none"/>
+    </g>
+    <!-- dumpster -->
+    <g class="burnable" data-burn="6">
+      <rect x="60" y="380" width="240" height="130" fill="#2ec27e" stroke="#143d22" stroke-width="4"/>
+      <rect x="60" y="380" width="240" height="20" fill="#1f8d5a" stroke="#143d22" stroke-width="3"/>
+      <rect x="80" y="410" width="200" height="6" fill="#143d22"/>
+      <rect x="80" y="440" width="200" height="6" fill="#143d22"/>
+      <rect x="80" y="470" width="200" height="6" fill="#143d22"/>
+      <circle cx="100" cy="515" r="12" fill="#222"/>
+      <circle cx="260" cy="515" r="12" fill="#222"/>
+      <!-- overflowing trash -->
+      <ellipse cx="120" cy="375" rx="22" ry="14" fill="#7a4a1d"/>
+      <ellipse cx="180" cy="370" rx="28" ry="16" fill="#3a3a3a"/>
+      <ellipse cx="240" cy="376" rx="20" ry="12" fill="#c0392b"/>
+    </g>
+    <!-- old TV -->
+    <g class="burnable" data-burn="4">
+      <rect x="720" y="430" width="120" height="90" fill="#3a3f44" stroke="#000" stroke-width="3"/>
+      <rect x="734" y="444" width="92" height="62" fill="#5a6470"/>
+      <line x1="734" y1="444" x2="826" y2="506" stroke="#9aa7b3" stroke-width="3"/>
+      <line x1="826" y1="444" x2="734" y2="506" stroke="#9aa7b3" stroke-width="3"/>
+      <rect x="845" y="450" width="6" height="6" fill="#222"/>
+      <rect x="845" y="470" width="6" height="6" fill="#222"/>
+      <line x1="745" y1="430" x2="730" y2="405" stroke="#222" stroke-width="3"/>
+      <line x1="815" y1="430" x2="830" y2="405" stroke="#222" stroke-width="3"/>
+    </g>
+    <!-- broken chair -->
+    <g class="burnable" data-burn="3">
+      <rect x="350" y="470" width="60" height="14" fill="#7a4a1d" stroke="#3a2410" stroke-width="2"/>
+      <rect x="350" y="420" width="14" height="50" fill="#7a4a1d" stroke="#3a2410" stroke-width="2"/>
+      <rect x="354" y="484" width="6" height="36" fill="#7a4a1d" transform="rotate(15 357 502)"/>
+      <rect x="400" y="484" width="6" height="20" fill="#7a4a1d" transform="rotate(-30 403 494)"/>
+    </g>
+    <!-- tire -->
+    <g class="burnable" data-burn="2">
+      <circle cx="900" cy="520" r="34" fill="#1a1a1a" stroke="#000" stroke-width="3"/>
+      <circle cx="900" cy="520" r="14" fill="#5a5a5a" stroke="#000" stroke-width="2"/>
+    </g>
+    <!-- banana peel -->
+    <g class="burnable" data-burn="7">
+      <path d="M250 530 Q260 510 280 515 Q300 520 305 540 Q285 545 270 540 Q255 545 250 530 Z" fill="#ffd86b" stroke="#7a5a1d" stroke-width="2"/>
+    </g>
+    <!-- flies -->
+    <g class="burnable" data-burn="8">
+      <text x="500" y="380" font-size="22" fill="#222">~~ 🪰 ~~</text>
+      <text x="200" y="350" font-size="18" fill="#222">🪰</text>
+      <text x="780" y="380" font-size="20" fill="#222">🪰</text>
+    </g>
+    <g class="burnable" data-burn="10">
+      <rect y="450" width="1000" height="150" fill="transparent"/>
+    </g>
+  `,
+
+  campsite: () => `
+    <defs>
+      <linearGradient id="campSky" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%"  stop-color="#142850"/>
+        <stop offset="60%" stop-color="#3a1a55"/>
+        <stop offset="100%" stop-color="#c25b4a"/>
+      </linearGradient>
+    </defs>
+    <rect class="bg" width="1000" height="450" fill="url(#campSky)"/>
+    <rect y="450" width="1000" height="150" fill="#3a5d2a"/>
+    <rect y="540" width="1000" height="60"  fill="#234119"/>
+    <!-- moon + stars -->
+    <g class="burnable" data-burn="9">
+      <circle cx="180" cy="120" r="42" fill="#fff5b0"/>
+      <circle cx="195" cy="110" r="36" fill="#3a1a55"/>
+      <text x="400" y="100" font-size="22" fill="#fff">✦</text>
+      <text x="600" y="80"  font-size="18" fill="#fff">✦</text>
+      <text x="780" y="140" font-size="22" fill="#fff">✦</text>
+      <text x="500" y="180" font-size="18" fill="#fff">✦</text>
+      <text x="850" y="220" font-size="18" fill="#fff">✦</text>
+    </g>
+    <!-- tree left -->
+    <g class="burnable" data-burn="2">
+      <rect x="80" y="380" width="22" height="100" fill="#3a2410"/>
+      <polygon points="91,210 50,320 132,320" fill="#1f4a2a"/>
+      <polygon points="91,260 40,360 142,360" fill="#1f4a2a"/>
+      <polygon points="91,310 30,400 152,400" fill="#1f4a2a"/>
+    </g>
+    <!-- tree right -->
+    <g class="burnable" data-burn="3">
+      <rect x="900" y="380" width="22" height="100" fill="#3a2410"/>
+      <polygon points="911,230 870,330 952,330" fill="#1f4a2a"/>
+      <polygon points="911,280 860,370 962,370" fill="#1f4a2a"/>
+      <polygon points="911,330 850,410 972,410" fill="#1f4a2a"/>
+    </g>
+    <!-- log seat -->
+    <g class="burnable" data-burn="4">
+      <ellipse cx="700" cy="500" rx="80" ry="14" fill="#7a4a1d" stroke="#3a2410" stroke-width="3"/>
+      <ellipse cx="700" cy="495" rx="80" ry="14" fill="#a36b30" stroke="#3a2410" stroke-width="3"/>
+      <ellipse cx="700" cy="495" rx="14" ry="6"  fill="#7a4a1d"/>
+      <line x1="694" y1="494" x2="706" y2="496" stroke="#3a2410" stroke-width="2"/>
+    </g>
+    <!-- campfire logs -->
+    <g class="burnable" data-burn="5">
+      <rect x="430" y="500" width="120" height="14" fill="#7a4a1d" stroke="#3a2410" stroke-width="3" transform="rotate(-15 490 507)"/>
+      <rect x="430" y="514" width="120" height="14" fill="#7a4a1d" stroke="#3a2410" stroke-width="3" transform="rotate(15 490 521)"/>
+      <!-- glowing embers -->
+      <circle cx="490" cy="510" r="6" fill="#ff6b1a"/>
+      <circle cx="475" cy="515" r="4" fill="#ffd86b"/>
+      <circle cx="505" cy="513" r="5" fill="#ffae33"/>
+    </g>
+    <!-- tent -->
+    <g class="burnable" data-burn="6">
+      <polygon points="220,510 350,300 480,510" fill="#e63946" stroke="#3a0a05" stroke-width="4"/>
+      <polygon points="350,300 480,510 460,510 350,330 240,510 220,510" fill="#a3202c" stroke="#3a0a05" stroke-width="4"/>
+      <polygon points="320,510 350,360 380,510" fill="#1a1a1a"/>
+    </g>
+    <!-- lantern -->
+    <g class="burnable" data-burn="7">
+      <rect x="780" y="430" width="6" height="40" fill="#222"/>
+      <rect x="770" y="470" width="26" height="36" fill="#5a6470" stroke="#000" stroke-width="2"/>
+      <rect x="775" y="476" width="16" height="22" fill="#fff5b0"/>
+      <rect x="770" y="466" width="26" height="6"  fill="#3a3f44"/>
+      <path d="M783 430 Q770 410 760 415" stroke="#222" stroke-width="3" fill="none"/>
+    </g>
+    <!-- backpack -->
+    <g class="burnable" data-burn="8">
+      <rect x="600" y="490" width="60" height="50" rx="8" fill="#2ec27e" stroke="#143d22" stroke-width="3"/>
+      <rect x="612" y="500" width="36" height="20" fill="#1f8d5a" stroke="#143d22" stroke-width="2"/>
+      <path d="M605 490 Q605 470 625 470" stroke="#143d22" stroke-width="3" fill="none"/>
+      <path d="M655 490 Q655 470 635 470" stroke="#143d22" stroke-width="3" fill="none"/>
+    </g>
+    <g class="burnable" data-burn="10">
+      <rect y="450" width="1000" height="150" fill="transparent"/>
+    </g>
+  `,
+
+  forest: () => `
+    <defs>
+      <linearGradient id="forestSky" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%"  stop-color="#a8d8a0"/>
+        <stop offset="100%" stop-color="#dff4d2"/>
+      </linearGradient>
+    </defs>
+    <rect class="bg" width="1000" height="450" fill="url(#forestSky)"/>
+    <rect y="450" width="1000" height="150" fill="#6ba84e"/>
+    <rect y="540" width="1000" height="60"  fill="#3f6b29"/>
+    <!-- sun rays through canopy -->
+    <circle class="burnable" data-burn="9" cx="500" cy="100" r="40" fill="#fff5b0" opacity="0.85"/>
+    <!-- back-row tree -->
+    <g class="burnable" data-burn="5">
+      <rect x="490" y="320" width="26" height="180" fill="#5b3a1e"/>
+      <polygon points="503,150 430,310 576,310" fill="#1f6b3a"/>
+      <polygon points="503,210 410,360 596,360" fill="#2a8050"/>
+      <polygon points="503,270 400,420 606,420" fill="#3da955"/>
+    </g>
+    <!-- tree left tall -->
+    <g class="burnable" data-burn="2">
+      <rect x="100" y="340" width="30" height="160" fill="#5b3a1e"/>
+      <circle cx="115" cy="320" r="60" fill="#3da955"/>
+      <circle cx="80"  cy="350" r="50" fill="#3da955"/>
+      <circle cx="155" cy="355" r="55" fill="#3da955"/>
+    </g>
+    <!-- tree right tall -->
+    <g class="burnable" data-burn="3">
+      <rect x="850" y="340" width="30" height="160" fill="#5b3a1e"/>
+      <circle cx="865" cy="320" r="60" fill="#3da955"/>
+      <circle cx="830" cy="350" r="50" fill="#3da955"/>
+      <circle cx="905" cy="355" r="55" fill="#3da955"/>
+    </g>
+    <!-- pine tree -->
+    <g class="burnable" data-burn="4">
+      <rect x="280" y="380" width="22" height="110" fill="#3a2410"/>
+      <polygon points="291,220 240,330 342,330" fill="#1f6b3a"/>
+      <polygon points="291,270 230,370 352,370" fill="#1f6b3a"/>
+      <polygon points="291,320 220,410 362,410" fill="#1f6b3a"/>
+    </g>
+    <!-- bush -->
+    <g class="burnable" data-burn="6">
+      <ellipse cx="700" cy="510" rx="60" ry="30" fill="#3da955" stroke="#1f6b3a" stroke-width="3"/>
+      <circle cx="680" cy="495" r="22" fill="#3da955"/>
+      <circle cx="720" cy="490" r="26" fill="#3da955"/>
+      <circle cx="740" cy="500" r="20" fill="#3da955"/>
+    </g>
+    <!-- mushrooms -->
+    <g class="burnable" data-burn="7">
+      <ellipse cx="200" cy="520" rx="22" ry="14" fill="#e63946"/>
+      <rect x="194" y="520" width="12" height="22" fill="#fff5d4"/>
+      <circle cx="190" cy="515" r="3" fill="#fff"/>
+      <circle cx="210" cy="513" r="3" fill="#fff"/>
+      <ellipse cx="240" cy="528" rx="14" ry="9" fill="#e63946"/>
+      <rect x="236" y="528" width="8" height="14" fill="#fff5d4"/>
+    </g>
+    <!-- deer -->
+    <g class="burnable" data-burn="8">
+      <ellipse cx="600" cy="510" rx="44" ry="22" fill="#a36b30" stroke="#3a2410" stroke-width="3"/>
+      <rect x="568" y="525" width="6" height="22" fill="#a36b30" stroke="#3a2410" stroke-width="2"/>
+      <rect x="580" y="525" width="6" height="22" fill="#a36b30" stroke="#3a2410" stroke-width="2"/>
+      <rect x="616" y="525" width="6" height="22" fill="#a36b30" stroke="#3a2410" stroke-width="2"/>
+      <rect x="628" y="525" width="6" height="22" fill="#a36b30" stroke="#3a2410" stroke-width="2"/>
+      <ellipse cx="640" cy="490" rx="14" ry="12" fill="#a36b30" stroke="#3a2410" stroke-width="3"/>
+      <path d="M634 478 L630 466 M634 478 L640 470 M646 478 L650 466 M646 478 L640 470" stroke="#3a2410" stroke-width="2" fill="none"/>
+      <circle cx="644" cy="488" r="2" fill="#000"/>
+    </g>
+    <g class="burnable" data-burn="10">
+      <rect y="450" width="1000" height="150" fill="transparent"/>
+    </g>
+  `
+};
+
+/* ---------- START SCREEN HANDLERS ---------- */
+document.querySelectorAll('.scene-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    let scene = btn.dataset.scene;
+    if (scene === 'random') {
+      const opts = Object.keys(SCENES);
+      scene = opts[Math.floor(Math.random() * opts.length)];
+    }
+    startGame(scene);
+  });
+});
+
+document.getElementById('restart-btn').addEventListener('click', resetToMenu);
+document.getElementById('pyro-again').addEventListener('click', resetToMenu);
+document.getElementById('hero-again').addEventListener('click', resetToMenu);
+
+/* ---------- GAME FLOW ---------- */
+function startGame(sceneName) {
+  currentScene = sceneName;
+  clicks = START_FIRE;
+  gameEnded = false;
+  startEl.style.display = 'none';
+  pyroEl.style.display = 'none';
+  heroEl.style.display = 'none';
+  gameEl.style.display = 'block';
+  bucketWrap.style.display = 'block';
+
+  // Render scene SVG
+  svgEl.innerHTML = SCENES[sceneName]();
+  // Sort burnable elements by data-burn order
+  burnableEls = Array.from(svgEl.querySelectorAll('.burnable'))
+    .sort((a, b) => (+a.dataset.burn) - (+b.dataset.burn));
+
+  fireWrap.style.left = '50%';
+
+  // Clear FX
+  fxEl.innerHTML = '';
+
+  // Apply initial visuals based on START_FIRE
+  applyState();
+
+  // Start canvas particle fire + idle ember drift
+  initFireCanvas();
+  startIdleEmbers();
+}
+
+function resetToMenu() {
+  stopFireCanvas();
+  stopIdleEmbers();
+  gameEl.style.display = 'none';
+  pyroEl.style.display = 'none';
+  heroEl.style.display = 'none';
+  startEl.style.display = 'flex';
+  fxEl.innerHTML = '';
+  clicks = 0;
+  gameEnded = false;
+  document.body.style.background = '#0b1020';
+}
+
+/* ---------- CANVAS FIRE PARTICLES ---------- */
+let fireCanvas, fireCtx, fireAnimId;
+let fireParticles = [];
+
+function initFireCanvas() {
+  fireCanvas = document.getElementById('fire-canvas');
+  fireCtx = fireCanvas.getContext('2d');
+  fireParticles = [];
+  syncCanvasSize();
+  if (fireAnimId) cancelAnimationFrame(fireAnimId);
+  animateFire();
+}
+
+function stopFireCanvas() {
+  if (fireAnimId) { cancelAnimationFrame(fireAnimId); fireAnimId = null; }
+  fireParticles = [];
+}
+
+function syncCanvasSize() {
+  const rect = fireEl.getBoundingClientRect();
+  const w = Math.max(rect.width, 60);
+  const h = Math.max(rect.height, 80);
+  if (fireCanvas.width  !== w) fireCanvas.width  = w;
+  if (fireCanvas.height !== h) fireCanvas.height = h;
+}
+
+function makeParticle(w, h, intensity) {
+  const isEmber = Math.random() < (0.04 + intensity * 0.09);
+  const spreadX = isEmber ? 0.8 : (0.38 + intensity * 0.25);
+  const sizeMult = 0.28 + intensity * 0.82;
+  return {
+    x:       w * (0.5 - spreadX/2 + Math.random() * spreadX),
+    y:       h * (0.82 + Math.random() * 0.18),
+    vx:      (Math.random() - 0.5) * (w / 35),
+    vy:      -(h / 35 + Math.random() * h / 16),
+    size:    isEmber ? (1.5 + Math.random() * 3)
+                     : (w / 16 + Math.random() * w / 10) * sizeMult,
+    life:    0,
+    maxLife: isEmber ? (70 + Math.random() * 90) : (18 + Math.random() * 22),
+    wob:     (Math.random() - 0.5) * 0.06,
+    alpha0:  0.30 + intensity * 0.62,
+    isEmber,
+  };
+}
+
+function animateFire() {
+  syncCanvasSize();
+  const w = fireCanvas.width, h = fireCanvas.height;
+  const intensity = clicks / MAX_CLICKS;
+
+  // Spawn: 2/frame (subtle flicker) → 42/frame (inferno)
+  const rate = Math.ceil(2 + Math.pow(intensity, 0.6) * 40);
+  const cap  = Math.floor(60 + intensity * 740);
+  for (let i = 0; i < rate && fireParticles.length < cap; i++) {
+    fireParticles.push(makeParticle(w, h, intensity));
+  }
+
+  fireCtx.clearRect(0, 0, w, h);
+
+  // Base glow scales with intensity
+  fireCtx.globalCompositeOperation = 'source-over';
+  const glowStr = 0.05 + intensity * 0.30;
+  const baseGlow = fireCtx.createRadialGradient(w/2, h*0.85, 0, w/2, h*0.85, w*0.65);
+  baseGlow.addColorStop(0,   `rgba(255,90,0,${glowStr})`);
+  baseGlow.addColorStop(0.6, `rgba(200,30,0,${(glowStr*0.35).toFixed(3)})`);
+  baseGlow.addColorStop(1,   'rgba(0,0,0,0)');
+  fireCtx.fillStyle = baseGlow;
+  fireCtx.fillRect(0, 0, w, h);
+
+  // Particles with additive blending
+  fireCtx.globalCompositeOperation = 'lighter';
+  fireParticles = fireParticles.filter(p => p.life < p.maxLife);
+  for (const p of fireParticles) {
+    p.life++;
+    p.vx += p.wob;
+    p.x  += p.vx;
+    p.y  += p.vy;
+    p.vy *= 0.987;
+
+    const t = p.life / p.maxLife;
+    const alpha = t < 0.55 ? p.alpha0 : p.alpha0 * (1 - (t - 0.55) / 0.45);
+
+    if (p.isEmber) {
+      const g = fireCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+      g.addColorStop(0,   `rgba(255,245,180,${alpha})`);
+      g.addColorStop(0.5, `rgba(255,140,20,${alpha*0.5})`);
+      g.addColorStop(1,   'rgba(255,60,0,0)');
+      fireCtx.beginPath();
+      fireCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      fireCtx.fillStyle = g;
+      fireCtx.fill();
+    } else {
+      const yNorm = 1 - p.y / h;
+      let r, gr, b;
+      if (yNorm < 0.2) {
+        r = 200; gr = 30 + yNorm / 0.2 * 70; b = 0;
+      } else if (yNorm < 0.55) {
+        const tt = (yNorm - 0.2) / 0.35;
+        r = 255; gr = 100 + tt * 130; b = 0;
+      } else {
+        const tt = (yNorm - 0.55) / 0.45;
+        r = 255; gr = 230 + tt * 25; b = 40 + tt * 180;
+      }
+      const g = fireCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+      g.addColorStop(0,    `rgba(${r},${gr},${b},${alpha})`);
+      g.addColorStop(0.45, `rgba(${Math.floor(r*0.9)},${Math.floor(gr*0.55)},0,${alpha*0.55})`);
+      g.addColorStop(1,    'rgba(180,0,0,0)');
+      fireCtx.beginPath();
+      fireCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      fireCtx.fillStyle = g;
+      fireCtx.fill();
+    }
+  }
+  fireCtx.globalCompositeOperation = 'source-over';
+  fireAnimId = requestAnimationFrame(animateFire);
+}
+
+/* ---------- IDLE EMBER DRIFT ---------- */
+let idleEmberTimer = null;
+
+function startIdleEmbers() {
+  stopIdleEmbers();
+  scheduleNextEmber();
+}
+
+function stopIdleEmbers() {
+  if (idleEmberTimer) { clearTimeout(idleEmberTimer); idleEmberTimer = null; }
+}
+
+function scheduleNextEmber() {
+  const delay = Math.max(60, 220 - clicks * 9);
+  idleEmberTimer = setTimeout(() => {
+    const count = 1 + Math.floor(clicks / 7);
+    for (let i = 0; i < count; i++) spawnIdleEmber();
+    if (gameEl.style.display !== 'none') scheduleNextEmber();
+  }, delay);
+}
+
+function spawnIdleEmber() {
+  const rect = fireWrap.getBoundingClientRect();
+  if (!rect.width) return;
+  const e = document.createElement('div');
+  e.className = 'idle-ember';
+  const x = rect.left + rect.width  * (0.2 + Math.random() * 0.6);
+  const y = rect.top  + rect.height * (0.05 + Math.random() * 0.35);
+  e.style.left = x + 'px';
+  e.style.top  = y + 'px';
+  const size = 2.5 + Math.random() * 3.5 + clicks * 0.15;
+  e.style.width  = size + 'px';
+  e.style.height = size + 'px';
+  e.style.setProperty('--dx',   ((Math.random() - 0.5) * 70) + 'px');
+  e.style.setProperty('--rise', (80 + Math.random() * 100 + clicks * 4) + 'px');
+  fxEl.appendChild(e);
+  setTimeout(() => e.remove(), 2100);
+}
+
+/* ---------- CLICK / GROW ---------- */
+fireWrap.addEventListener('click', onFireClick);
+bucketWrap.addEventListener('click', onBucketClick);
+
+function onFireClick(e) {
+  if (gameEnded) return;
+  if (clicks >= MAX_CLICKS) return;
+  clicks++;
+
+  applyState();
+
+  // Sparks + smoke + floating fire emoji at click point
+  const rect = fireWrap.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top  + rect.height / 2;
+  spawnSparks(cx, cy, 8 + clicks);
+  spawnSmoke(cx, cy, Math.min(40 + clicks * 6, 200));
+  popText(cx, cy - rect.height/3, '🔥');
+
+  // Screen shake at higher intensity
+  if (clicks > 8) {
+    gameEl.classList.remove('shake');
+    void gameEl.offsetWidth;
+    gameEl.classList.add('shake');
+  }
+
+  // Flash for big clicks
+  if (clicks > 12) {
+    flashEl.style.opacity = Math.min(0.4, (clicks - 12) * 0.05);
+    setTimeout(() => { flashEl.style.opacity = 0; }, 80);
+  }
+
+  if (clicks >= MAX_CLICKS) {
+    gameEnded = true;
+    setTimeout(endGamePyro, 900);
+  }
+}
+
+function onBucketClick(e) {
+  if (gameEnded) return;
+  if (clicks <= 0) return;
+  clicks--;
+
+  applyState();
+
+  // Tip the bucket
+  bucketWrap.classList.remove('tipping');
+  void bucketWrap.offsetWidth;
+  bucketWrap.classList.add('tipping');
+
+  // Source point: lip of the bucket; target point: fire body
+  const bRect = bucketWrap.getBoundingClientRect();
+  const fireRect = fireWrap.getBoundingClientRect();
+  const sx = bRect.left + bRect.width * 0.25;     // tipped-left lip
+  const sy = bRect.top  + bRect.height * 0.35;
+  const fx = fireRect.left + fireRect.width / 2;
+  const fy = fireRect.top  + fireRect.height / 3;
+
+  // Big arcing droplets from bucket -> fire (delayed to follow the tip)
+  spawnWaterArc(sx, sy, fx, fy, 18);
+
+  // Big splash ring + smaller splashes + steam at fire (slightly delayed to land with droplets)
+  setTimeout(() => {
+    spawnBigSplash(fx, fy);
+    spawnSplash(fx, fy, 22);
+    spawnSteam(fx, fy, 80);
+    popText(fx, fy - fireRect.height/3, '💧');
+  }, 280);
+
+  if (clicks <= 0) {
+    gameEnded = true;
+    setTimeout(endGameHero, 950);
+  }
+}
+
+/* Recompute every visual based on current `clicks`. */
+function applyState() {
+  const t = clicks / MAX_CLICKS;
+  const baseW = 60, baseH = 80;
+  const maxW  = window.innerWidth  * 1.3;
+  const maxH  = window.innerHeight * 1.5;
+  const w = baseW + (maxW - baseW) * Math.pow(t, 1.4);
+  const h = baseH + (maxH - baseH) * Math.pow(t, 1.4);
+  fireEl.style.width  = w + 'px';
+  fireEl.style.height = h + 'px';
+  fireEl.style.opacity = clicks <= 0 ? 0 : 1;
+
+  // Drift fire upward as it grows. Express as transform offset (px) instead
+  // of mutating `top`, so the browser animates on the compositor.
+  const driftPct = -t * 12; // negative = up, peaks at -12% of viewport
+  const driftPx = driftPct / 100 * window.innerHeight;
+  fireWrap.style.setProperty('--fire-y', driftPx + 'px');
+
+  // Burn or restore scene elements based on current clicks
+  const burnIndex = Math.floor((clicks / MAX_CLICKS) * burnableEls.length);
+  for (let i = 0; i < burnableEls.length; i++) {
+    const el = burnableEls[i];
+    if (i < burnIndex) {
+      el.classList.add('charred');
+      if (clicks >= MAX_CLICKS - 2) {
+        el.classList.add('gone');
+      } else {
+        el.classList.remove('gone');
+      }
+    } else {
+      el.classList.remove('charred');
+      el.classList.remove('gone');
+    }
+  }
+
+  // Background tint
+  document.body.style.background = `rgb(${Math.max(11, 30 - clicks)}, ${Math.max(0, 16 - clicks)}, ${Math.max(0, 32 - clicks*2)})`;
+
+  updateCounter();
+}
+
+function updateCounter() {
+  counterEl.textContent = `🚒 Fire: ${clicks} / ${MAX_CLICKS}`;
+}
+
+/* ---------- FX ---------- */
+function spawnSparks(x, y, count) {
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement('div');
+    s.className = 'spark';
+    s.style.left = x + 'px';
+    s.style.top  = y + 'px';
+    const angle = Math.random() * Math.PI * 2;
+    const dist  = 60 + Math.random() * 120;
+    s.style.setProperty('--sx', Math.cos(angle) * dist + 'px');
+    s.style.setProperty('--sy', (Math.sin(angle) * dist - 40) + 'px');
+    s.style.width  = (4 + Math.random() * 6) + 'px';
+    s.style.height = s.style.width;
+    fxEl.appendChild(s);
+    setTimeout(() => s.remove(), 1000);
+  }
+}
+
+function spawnSmoke(x, y, size) {
+  const n = 1 + Math.floor(Math.random() * 2);
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('div');
+    s.className = 'smoke';
+    s.style.left = (x + (Math.random() - 0.5) * 40) + 'px';
+    s.style.top  = y + 'px';
+    s.style.width  = size + 'px';
+    s.style.height = size + 'px';
+    s.style.setProperty('--dx', ((Math.random() - 0.5) * 200) + 'px');
+    fxEl.appendChild(s);
+    setTimeout(() => s.remove(), 3100);
+  }
+}
+
+function popText(x, y, txt) {
+  const p = document.createElement('div');
+  p.className = 'pop';
+  p.textContent = txt;
+  p.style.left = x + 'px';
+  p.style.top  = y + 'px';
+  fxEl.appendChild(p);
+  setTimeout(() => p.remove(), 750);
+}
+
+function spawnSplash(x, y, count) {
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement('div');
+    d.className = 'splash';
+    d.style.left = x + 'px';
+    d.style.top  = y + 'px';
+    // Splashes shoot outward and up (negative y) like a real splash crown
+    const angle = Math.random() * Math.PI; // 0..PI = upper half
+    const dist  = 80 + Math.random() * 160;
+    d.style.setProperty('--wx', Math.cos(angle) * dist + 'px');
+    d.style.setProperty('--wy', (-Math.sin(angle) * dist * 0.8 + 60) + 'px');
+    const size = 16 + Math.random() * 22;
+    d.style.width  = size + 'px';
+    d.style.height = size + 'px';
+    fxEl.appendChild(d);
+    setTimeout(() => d.remove(), 1100);
+  }
+}
+
+/* Big droplets that arc from the bucket lip down to the fire. */
+function spawnWaterArc(sx, sy, tx, ty, count) {
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement('div');
+    d.className = 'water-drop';
+    d.style.left = sx + 'px';
+    d.style.top  = sy + 'px';
+    // Spread destination so the column of water has width
+    const spread = 70;
+    const ex = (tx - sx) + (Math.random() - 0.5) * spread;
+    const ey = (ty - sy) + (Math.random() - 0.5) * 30;
+    // Mid-point arcs upward then over (negative y bump)
+    const mx = ex * 0.55 + (Math.random() - 0.5) * 30;
+    const my = ey * 0.55 - 60 - Math.random() * 40;
+    d.style.setProperty('--mx', mx + 'px');
+    d.style.setProperty('--my', my + 'px');
+    d.style.setProperty('--ex', ex + 'px');
+    d.style.setProperty('--ey', ey + 'px');
+    const w = 22 + Math.random() * 28;
+    const h = w * (1.4 + Math.random() * 0.4);
+    d.style.width  = w + 'px';
+    d.style.height = h + 'px';
+    const dur = 0.55 + Math.random() * 0.35;
+    d.style.setProperty('--dur', dur + 's');
+    d.style.animationDelay = (i * 0.018 + Math.random() * 0.06) + 's';
+    fxEl.appendChild(d);
+    setTimeout(() => d.remove(), (dur + 0.4) * 1000 + i * 20);
+  }
+}
+
+function spawnBigSplash(x, y) {
+  const s = document.createElement('div');
+  s.className = 'big-splash';
+  s.style.left = x + 'px';
+  s.style.top  = y + 'px';
+  fxEl.appendChild(s);
+  setTimeout(() => s.remove(), 950);
+}
+
+function spawnSteam(x, y, size) {
+  const n = 2 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('div');
+    s.className = 'steam';
+    s.style.left = (x + (Math.random() - 0.5) * 60) + 'px';
+    s.style.top  = y + 'px';
+    s.style.width  = size + 'px';
+    s.style.height = size + 'px';
+    s.style.setProperty('--dx', ((Math.random() - 0.5) * 120) + 'px');
+    fxEl.appendChild(s);
+    setTimeout(() => s.remove(), 2500);
+  }
+}
+
+/* ---------- END SCREENS ---------- */
+function endGamePyro() {
+  // Hide the bucket; show the pyromaniac screen with celebrating background flames.
+  bucketWrap.style.display = 'none';
+  pyroEl.style.display = 'flex';
+
+  // Spawn celebrating flames across the bottom (reset first in case of replay).
+  pyroEl.querySelectorAll('.pyro-flame').forEach(f => f.remove());
+  const w = window.innerWidth;
+  const count = Math.max(8, Math.floor(w / 90));
+  for (let i = 0; i < count; i++) {
+    const f = document.createElement('div');
+    f.className = 'pyro-flame';
+    f.style.left = ((i + 0.5) * (100 / count)) + '%';
+    f.style.transform = 'translateX(-50%)';
+    const scale = 0.6 + Math.random() * 1.2;
+    f.style.height = (90 * scale) + 'px';
+    f.style.width  = (50 * scale) + 'px';
+    f.style.animationDelay = (Math.random() * -0.6) + 's';
+    f.style.animationDuration = (0.35 + Math.random() * 0.35) + 's';
+    pyroEl.appendChild(f);
+  }
+}
+
+function endGameHero() {
+  // Hide the bucket; show the hero screen with sparkles.
+  bucketWrap.style.display = 'none';
+  heroEl.style.display = 'flex';
+
+  heroEl.querySelectorAll('.sparkle').forEach(s => s.remove());
+  const sparkles = ['✨', '🌟', '💫', '⭐'];
+  for (let i = 0; i < 22; i++) {
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.textContent = sparkles[i % sparkles.length];
+    s.style.left = (Math.random() * 100) + '%';
+    s.style.top  = (Math.random() * 100) + '%';
+    s.style.animationDelay = (Math.random() * -2.2) + 's';
+    heroEl.appendChild(s);
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Learn the Words</title>
+  <style>
+    @font-face{font-family:'Fredoka';font-style:normal;font-weight:300 700;font-display:swap;src:url('../fonts/fredoka.woff2') format('woff2')}
+  </style>
+  <style>
+    :root {
+      --pink: #fde2e4;
+      --mint: #d8f3dc;
+      --lavender: #e0d7f5;
+      --blue:  #d6ecfa;
+      --yellow:#fff1c1;
+      --ink:   #4a4456;
+      --accent:#b39ddb;
+      --accent-dark:#9575cd;
+      --good:  #95d5b2;
+      --bad:   #f4a6a6;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: 'Fredoka', system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(135deg, var(--pink) 0%, var(--lavender) 45%, var(--blue) 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Floating background decor */
+    .decor {
+      position: fixed;
+      pointer-events: none;
+      font-size: 3rem;
+      opacity: 0.55;
+      animation: float 8s ease-in-out infinite;
+      z-index: 0;
+    }
+    .decor.d1 { top:  8%; left:  6%; animation-delay: 0s;   }
+    .decor.d2 { top: 18%; right: 8%; animation-delay: 1.2s; }
+    .decor.d3 { bottom: 14%; left: 10%; animation-delay: 2.4s; }
+    .decor.d4 { bottom:  8%; right: 12%; animation-delay: 3.6s; }
+    .decor.d5 { top: 50%; left:  3%; animation-delay: 4.8s; }
+    .decor.d6 { top: 60%; right: 4%; animation-delay: 6.0s; }
+    @keyframes float {
+      0%,100% { transform: translateY(0) rotate(-4deg); }
+      50%     { transform: translateY(-18px) rotate(4deg); }
+    }
+
+    .screen {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .screen.hidden { display: none; }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 4rem);
+      margin: 0 0 6px;
+      letter-spacing: 0.5px;
+      color: #6d597a;
+      text-shadow: 0 3px 0 rgba(255,255,255,0.6);
+    }
+    .tagline {
+      font-size: clamp(1rem, 2.6vw, 1.25rem);
+      max-width: 520px;
+      margin: 0 auto 28px;
+      line-height: 1.5;
+      color: #5b5468;
+    }
+
+    /* Big buttons */
+    .btn {
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 1.4rem;
+      color: white;
+      background: var(--accent);
+      border: none;
+      border-radius: 999px;
+      padding: 16px 38px;
+      cursor: pointer;
+      box-shadow: 0 6px 0 var(--accent-dark), 0 10px 22px rgba(149,117,205,0.35);
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--accent-dark), 0 6px 14px rgba(149,117,205,0.3); }
+    .btn.secondary {
+      background: white;
+      color: var(--ink);
+      box-shadow: 0 4px 0 #d6d0e0, 0 8px 16px rgba(0,0,0,0.06);
+      font-size: 1rem;
+      padding: 10px 22px;
+    }
+    .btn.secondary:active { box-shadow: 0 1px 0 #d6d0e0, 0 4px 10px rgba(0,0,0,0.06); }
+
+    /* Difficulty picker */
+    .picker {
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(8px);
+      border-radius: 28px;
+      padding: 24px 22px;
+      box-shadow: 0 10px 30px rgba(80,60,120,0.12);
+      width: 100%;
+      max-width: 540px;
+    }
+    .picker h2 { margin: 4px 0 14px; font-size: 1.6rem; color:#6d597a; }
+    .options { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 22px; }
+    .opt {
+      display: flex; align-items: center; gap: 12px;
+      background: white;
+      border-radius: 18px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-size: 1.05rem;
+      text-align: left;
+      border: 3px solid transparent;
+      transition: border-color 0.15s ease, transform 0.08s ease;
+      user-select: none;
+    }
+    .opt:hover { transform: translateY(-1px); }
+    .opt.checked { border-color: var(--accent); background: #f6f1ff; }
+    .opt input { display:none; }
+    .opt .check {
+      width: 26px; height: 26px;
+      border-radius: 8px;
+      background: #ede7f6;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .opt.checked .check { background: var(--accent); color: white; }
+    .opt .label-text { flex: 1; line-height: 1.25; }
+    .opt .ex { display:block; font-size: 0.85rem; color: #8a839a; }
+
+    /* Game HUD */
+    .hud {
+      width: 100%;
+      max-width: 760px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px;
+      gap: 10px;
+    }
+    .streak {
+      background: white;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-weight: 600;
+      box-shadow: 0 4px 0 #e3dceb;
+      font-size: 1.05rem;
+    }
+    .icon-btn {
+      background: white;
+      border: none;
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #e3dceb;
+      font-family: inherit;
+    }
+    .icon-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #e3dceb; }
+
+    /* Puzzle */
+    .clue {
+      background: white;
+      border-radius: 32px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto 24px;
+      box-shadow: 0 10px 30px rgba(80,60,120,0.15);
+      min-height: 160px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .clue.word { font-size: clamp(2.6rem, 9vw, 4.4rem); font-weight: 700; letter-spacing: 4px; color: #5b4f7a; text-transform: lowercase; }
+    .clue.emoji { font-size: clamp(5rem, 16vw, 8rem); line-height: 1; }
+
+    .prompt { font-size: 1.05rem; margin: -8px 0 14px; color: #6d597a; }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      width: 100%;
+      max-width: 600px;
+    }
+    .choice {
+      background: white;
+      border: 4px solid transparent;
+      border-radius: 24px;
+      padding: 22px 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #5b4f7a;
+      box-shadow: 0 6px 0 #e3dceb, 0 8px 18px rgba(80,60,120,0.08);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, border-color 0.15s;
+      min-height: 110px;
+    }
+    .choice:hover { transform: translateY(-2px); }
+    .choice.emoji { font-size: clamp(2.8rem, 9vw, 4rem); }
+    .choice.word  { font-size: clamp(1.2rem, 4vw, 1.8rem); text-transform: lowercase; letter-spacing: 2px; }
+    .choice.correct { background: var(--good); border-color: #74c69d; animation: pop 0.5s ease; }
+    .choice.wrong   { background: var(--bad);  border-color: #e08585; animation: shake 0.45s ease; opacity: 0.85; }
+    .choice:disabled { cursor: default; }
+
+    @keyframes pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+
+    /* Toast messages */
+    .toast {
+      position: fixed;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.6);
+      background: white;
+      padding: 16px 28px;
+      border-radius: 999px;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--ink);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 50;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    .toast.good { background: var(--good); }
+    .toast.bad  { background: var(--bad); }
+
+    /* Confetti */
+    .confetti {
+      position: fixed; top: -10px;
+      width: 10px; height: 14px;
+      pointer-events: none;
+      z-index: 40;
+      border-radius: 2px;
+      animation: fall 1.6s linear forwards;
+    }
+    @keyframes fall {
+      0%   { transform: translateY(0) rotate(0); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0.6; }
+    }
+
+    @media (max-width: 480px) {
+      .choices { gap: 10px; }
+      .choice { padding: 16px 4px; min-height: 90px; }
+      .clue { padding: 22px 16px; }
+      .picker { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+<a href="../index.html" class="zbg-home" aria-label="Back to Zak's Brain Games">🏠</a>
+<style>.zbg-home{position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:46px;height:46px;background:#fff;border:2px solid #FFD93D;border-radius:50%;font-size:22px;text-decoration:none;box-shadow:0 3px 8px rgba(0,0,0,.25);line-height:1}.zbg-home:active{transform:scale(.92)}</style>
+  <!-- floating decor (hidden during gameplay) -->
+  <div class="decor d1">🌸</div>
+  <div class="decor d2">🌟</div>
+  <div class="decor d3">🦋</div>
+  <div class="decor d4">🌈</div>
+  <div class="decor d5">🐣</div>
+  <div class="decor d6">🍭</div>
+
+  <!-- ====== WELCOME SCREEN ====== -->
+  <section id="welcome" class="screen">
+    <h1>Learn the Words</h1>
+    <p class="tagline">A friendly little reading game.<br>Match words to pictures — and pictures to words!</p>
+    <div style="font-size:3.2rem; margin: 8px 0 24px;">📚✨🐶🍎🌙</div>
+    <button class="btn" id="goToPicker">Play Now</button>
+  </section>
+
+  <!-- ====== DIFFICULTY PICKER ====== -->
+  <section id="picker" class="screen hidden">
+    <div class="picker">
+      <h2>Pick what to practice</h2>
+      <p class="tagline" style="margin-bottom:6px;">Choose one or more — or all of them!</p>
+      <div class="options" id="categoryList"></div>
+      <button class="btn" id="startGame">Start</button>
+      <div style="margin-top:14px;">
+        <button class="btn secondary" id="backToWelcome">← Back</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====== GAME SCREEN ====== -->
+  <section id="game" class="screen hidden">
+    <div class="hud">
+      <button class="btn secondary" id="backToMenu">← Menu</button>
+      <div class="streak" id="streak">🔥 Streak: 0</div>
+      <button class="icon-btn" id="muteBtn" title="Mute / Unmute">🔊</button>
+    </div>
+
+    <div class="prompt" id="prompt">Tap the picture that matches!</div>
+    <div class="clue" id="clue"></div>
+    <div class="choices" id="choices"></div>
+  </section>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /* =========================================================
+       WORD BANK — each category has {word, emoji} pairs.
+       Words limited to <=8 letters and visually distinct emoji.
+       ========================================================= */
+    const BANK = {
+      simple: {
+        name: 'Simple words',
+        example: 'cat, dog, sun, bus',
+        items: [
+          { w: 'cat',  e: '🐈' }, { w: 'dog',  e: '🐕' },
+          { w: 'pig',  e: '🐖' }, { w: 'cow',  e: '🐄' },
+          { w: 'bus',  e: '🚌' }, { w: 'sun',  e: '☀️' },
+          { w: 'bee',  e: '🐝' }, { w: 'ant',  e: '🐜' },
+          { w: 'fox',  e: '🦊' }, { w: 'bat',  e: '🦇' },
+          { w: 'egg',  e: '🥚' }, { w: 'hen',  e: '🐓' },
+          { w: 'frog', e: '🐸' }, { w: 'duck', e: '🦆' },
+          { w: 'drum', e: '🥁' }, { w: 'hat',  e: '🎩' },
+          { w: 'cup',  e: '☕' }, { w: 'key',  e: '🔑' },
+          { w: 'leg',  e: '🦵' }, { w: 'ball', e: '⚽' },
+        ]
+      },
+      silentE: {
+        name: 'Silent E words',
+        example: 'cake, bike, rose, kite',
+        items: [
+          { w: 'cake',  e: '🎂' }, { w: 'bike',  e: '🚲' },
+          { w: 'kite',  e: '🪁' }, { w: 'rose',  e: '🌹' },
+          { w: 'bone',  e: '🦴' }, { w: 'cone',  e: '🍦' },
+          { w: 'fire',  e: '🔥' }, { w: 'nose',  e: '👃' },
+          { w: 'snake', e: '🐍' }, { w: 'plate', e: '🍽️' },
+          { w: 'smile', e: '😊' }, { w: 'cube',  e: '🧊' },
+          { w: 'plane', e: '✈️' }, { w: 'whale', e: '🐳' },
+          { w: 'grape', e: '🍇' }, { w: 'horse', e: '🐴' },
+          { w: 'mouse', e: '🐭' }, { w: 'globe', e: '🌍' },
+        ]
+      },
+      doubleVowel: {
+        name: 'Double vowel words',
+        example: 'book, moon, rain, boat',
+        items: [
+          { w: 'book',  e: '📖' }, { w: 'moon',  e: '🌙' },
+          { w: 'rain',  e: '🌧️' }, { w: 'boat',  e: '⛵' },
+          { w: 'tree',  e: '🌳' }, { w: 'feet',  e: '🦶' },
+          { w: 'seed',  e: '🌱' }, { w: 'soap',  e: '🧼' },
+          { w: 'leaf',  e: '🍃' }, { w: 'meat',  e: '🥩' },
+          { w: 'train', e: '🚂' }, { w: 'queen', e: '👑' },
+          { w: 'road',  e: '🛣️' }, { w: 'peach', e: '🍑' },
+          { w: 'cloud', e: '☁️' }, { w: 'sheep', e: '🐑' },
+          { w: 'foot',  e: '🦶' }, { w: 'pool',  e: '🏊' },
+        ]
+      },
+      digraphs: {
+        name: 'SH / CH / TH words',
+        example: 'ship, fish, chip, thumb',
+        items: [
+          { w: 'ship',  e: '🚢' }, { w: 'fish',  e: '🐟' },
+          { w: 'chip',  e: '🍟' }, { w: 'thumb', e: '👍' },
+          { w: 'bath',  e: '🛁' }, { w: 'shoe',  e: '👟' },
+          { w: 'chair', e: '🪑' }, { w: 'shark', e: '🦈' },
+          { w: 'shell', e: '🐚' }, { w: 'brush', e: '🪥' },
+          { w: 'watch', e: '⌚' }, { w: 'teeth', e: '🦷' },
+          { w: 'church',e: '⛪' }, { w: 'cherry',e: '🍒' },
+          { w: 'cheese',e: '🧀' }, { w: 'thread',e: '🧵' },
+        ]
+      },
+      all: {
+        name: 'All words',
+        example: 'mix everything together!',
+        items: [] // populated below
+      }
+    };
+    // Compose "all" from the rest (dedupe by word).
+    {
+      const seen = new Set();
+      ['simple','silentE','doubleVowel','digraphs'].forEach(k=>{
+        BANK[k].items.forEach(it=>{
+          if (!seen.has(it.w)) { seen.add(it.w); BANK.all.items.push(it); }
+        });
+      });
+    }
+
+    /* =========================================================
+       STATE
+       ========================================================= */
+    let selected = new Set(['simple','silentE','doubleVowel','digraphs','all']);
+    let pool = [];           // active word pool
+    let mode = 'wordToEmoji';// or 'emojiToWord'
+    let current = null;      // {answer:{w,e}, choices:[...]}
+    let streak = 0;
+    let muted = false;
+    let busy = false;        // disables clicks during animations
+
+    /* =========================================================
+       AUDIO — Web Audio API generated tones (no files).
+       ========================================================= */
+    let audioCtx = null;
+    function ensureAudio() {
+      if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch(e) { audioCtx = null; }
+      }
+    }
+    function playTone(freqs, dur=0.18, type='sine', gain=0.18) {
+      if (muted || !audioCtx) return;
+      const now = audioCtx.currentTime;
+      freqs.forEach((f, i)=>{
+        const osc = audioCtx.createOscillator();
+        const g   = audioCtx.createGain();
+        osc.type = type; osc.frequency.value = f;
+        g.gain.setValueAtTime(0, now + i*dur*0.6);
+        g.gain.linearRampToValueAtTime(gain, now + i*dur*0.6 + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + i*dur*0.6 + dur);
+        osc.connect(g).connect(audioCtx.destination);
+        osc.start(now + i*dur*0.6);
+        osc.stop(now + i*dur*0.6 + dur + 0.02);
+      });
+    }
+    const sndCorrect = ()=> playTone([660, 880, 1175], 0.16, 'sine', 0.18);
+    const sndWrong   = ()=> playTone([300, 220],       0.22, 'triangle', 0.14);
+    const sndCheer   = ()=> playTone([523, 659, 784, 1047], 0.18, 'sine', 0.18);
+
+    /* =========================================================
+       UI WIRING
+       ========================================================= */
+    const $ = sel => document.querySelector(sel);
+    const screens = { welcome: $('#welcome'), picker: $('#picker'), game: $('#game') };
+    function show(name) {
+      Object.entries(screens).forEach(([k,el]) => el.classList.toggle('hidden', k !== name));
+      document.querySelectorAll('.decor').forEach(d => d.style.display = (name==='game' ? 'none':'block'));
+    }
+
+    $('#goToPicker').addEventListener('click', ()=> { ensureAudio(); buildPicker(); show('picker'); });
+    $('#backToWelcome').addEventListener('click', ()=> show('welcome'));
+    $('#backToMenu').addEventListener('click', ()=> show('picker'));
+    $('#muteBtn').addEventListener('click', e => {
+      muted = !muted;
+      e.currentTarget.textContent = muted ? '🔇' : '🔊';
+    });
+    $('#startGame').addEventListener('click', startGame);
+
+    function buildPicker() {
+      const list = $('#categoryList');
+      list.innerHTML = '';
+      const cats = [
+        ['simple',      BANK.simple.name,      BANK.simple.example],
+        ['silentE',     BANK.silentE.name,     BANK.silentE.example],
+        ['doubleVowel', BANK.doubleVowel.name, BANK.doubleVowel.example],
+        ['digraphs',    BANK.digraphs.name,    BANK.digraphs.example],
+        ['all',         BANK.all.name,         BANK.all.example],
+      ];
+      cats.forEach(([key, label, ex]) => {
+        const lbl = document.createElement('label');
+        lbl.className = 'opt' + (selected.has(key) ? ' checked' : '');
+        lbl.innerHTML = `
+          <span class="check">${selected.has(key) ? '✓' : ''}</span>
+          <span class="label-text">${label}<span class="ex">${ex}</span></span>
+          <input type="checkbox" ${selected.has(key) ? 'checked':''} />
+        `;
+        lbl.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (selected.has(key)) selected.delete(key); else selected.add(key);
+          lbl.classList.toggle('checked');
+          lbl.querySelector('.check').textContent = selected.has(key) ? '✓' : '';
+        });
+        list.appendChild(lbl);
+      });
+    }
+
+    /* =========================================================
+       GAME LOGIC
+       ========================================================= */
+    function startGame() {
+      if (selected.size === 0) {
+        flashToast('Pick at least one!', 'bad'); return;
+      }
+      // Build active pool, deduped by word.
+      const seen = new Set();
+      pool = [];
+      selected.forEach(k => BANK[k].items.forEach(it => {
+        if (!seen.has(it.w)) { seen.add(it.w); pool.push(it); }
+      }));
+      if (pool.length < 3) {
+        flashToast('Need more words!', 'bad'); return;
+      }
+      streak = 0;
+      updateStreak();
+      mode = 'wordToEmoji';
+      ensureAudio();
+      show('game');
+      nextRound();
+    }
+
+    function pickN(arr, n, exclude) {
+      const set = new Set();
+      const out = [];
+      while (out.length < n && set.size < arr.length) {
+        const i = Math.floor(Math.random() * arr.length);
+        if (set.has(i)) continue;
+        if (exclude && arr[i].w === exclude.w) { set.add(i); continue; }
+        set.add(i); out.push(arr[i]);
+      }
+      return out;
+    }
+
+    function nextRound() {
+      const answer = pool[Math.floor(Math.random()*pool.length)];
+      const distractors = pickN(pool, 2, answer);
+      const choices = shuffle([answer, ...distractors]);
+      current = { answer, choices };
+      render();
+    }
+
+    function shuffle(a) {
+      const arr = a.slice();
+      for (let i = arr.length-1; i>0; i--) {
+        const j = Math.floor(Math.random()*(i+1));
+        [arr[i],arr[j]] = [arr[j],arr[i]];
+      }
+      return arr;
+    }
+
+    function render() {
+      const clue = $('#clue');
+      const choices = $('#choices');
+      const prompt = $('#prompt');
+      clue.classList.remove('word','emoji');
+      choices.innerHTML = '';
+      if (mode === 'wordToEmoji') {
+        prompt.textContent = 'Tap the picture that matches!';
+        clue.classList.add('word');
+        clue.textContent = current.answer.w;
+        current.choices.forEach(c => {
+          const btn = document.createElement('button');
+          btn.className = 'choice emoji';
+          btn.textContent = c.e;
+          btn.setAttribute('aria-label', c.w);
+          btn.addEventListener('click', ()=> handleChoice(btn, c));
+          choices.appendChild(btn);
+        });
+      } else {
+        prompt.textContent = 'Tap the word that matches!';
+        clue.classList.add('emoji');
+        clue.textContent = current.answer.e;
+        current.choices.forEach(c => {
+          const btn = document.createElement('button');
+          btn.className = 'choice word';
+          btn.textContent = c.w;
+          btn.addEventListener('click', ()=> handleChoice(btn, c));
+          choices.appendChild(btn);
+        });
+      }
+      busy = false;
+    }
+
+    function handleChoice(btn, choice) {
+      if (busy || btn.disabled) return;
+      if (choice.w === current.answer.w) {
+        // CORRECT
+        busy = true;
+        btn.classList.add('correct');
+        sndCorrect();
+        streak += 1;
+        updateStreak();
+        flashToast(pickPraise(), 'good');
+        if (streak > 0 && streak % 5 === 0) { sndCheer(); confettiBurst(); }
+        setTimeout(()=>{
+          mode = (mode === 'wordToEmoji') ? 'emojiToWord' : 'wordToEmoji';
+          nextRound();
+        }, 900);
+      } else {
+        // WRONG — shake, dim, allow more tries, keep same puzzle
+        btn.classList.add('wrong');
+        btn.disabled = true;
+        sndWrong();
+        if (streak !== 0) {
+          streak = 0;
+          updateStreak();
+        }
+        flashToast(pickEncourage(), 'bad');
+      }
+    }
+
+    function updateStreak() {
+      $('#streak').textContent = `🔥 Streak: ${streak}`;
+    }
+
+    /* =========================================================
+       TOAST + CONFETTI
+       ========================================================= */
+    const PRAISE = ['Great job!','You did it!','Amazing!','Yes! ⭐','Way to go!','Brilliant!','Super!','Nice reading!'];
+    const ENCOURAGE = ['Try again!','Almost!','You can do it!','Keep going!','Have another look!'];
+    const pickPraise   = ()=> PRAISE[Math.floor(Math.random()*PRAISE.length)];
+    const pickEncourage= ()=> ENCOURAGE[Math.floor(Math.random()*ENCOURAGE.length)];
+
+    let toastTimer = null;
+    function flashToast(text, kind) {
+      const t = $('#toast');
+      t.className = 'toast show ' + (kind||'');
+      t.textContent = text;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(()=> t.classList.remove('show'), 850);
+    }
+
+    const CONFETTI_COLORS = ['#f8b6c0','#a5d8f3','#c4e3a8','#fde6a8','#cbb6e8','#f6c2da'];
+    function confettiBurst() {
+      for (let i=0; i<60; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = Math.random()*100 + 'vw';
+        c.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+        c.style.animationDuration = (1.2 + Math.random()*1.2) + 's';
+        c.style.transform = `rotate(${Math.random()*360}deg)`;
+        document.body.appendChild(c);
+        setTimeout(()=> c.remove(), 2600);
+      }
+    }
+
+    // Start on welcome screen
+    show('welcome');
+  </script>
+</body>
+</html>

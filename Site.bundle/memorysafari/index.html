@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Memory Match Safari</title>
+<style>
+  @font-face{font-family:'Special Elite';font-style:normal;font-weight:400;font-display:swap;src:url('../fonts/special-elite-400.woff2') format('woff2')}
+  @font-face{font-family:'IM Fell English SC';font-style:normal;font-weight:400;font-display:swap;src:url('../fonts/im-fell-english-sc-400.woff2') format('woff2')}
+</style>
+<style>
+  :root {
+    --paper: #e8d9b0;
+    --paper-dark: #c9b483;
+    --ink: #3d2b18;
+    --ink-soft: #5a4128;
+    --accent: #8b3a1f;
+    --accent-dark: #6a2a14;
+    --khaki: #a89060;
+    --shadow: rgba(60, 35, 10, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-family: 'Special Elite', 'Courier New', monospace;
+    color: var(--ink);
+    background:
+      radial-gradient(ellipse at top, rgba(255,240,200,0.4), transparent 60%),
+      radial-gradient(ellipse at bottom, rgba(120,80,40,0.3), transparent 60%),
+      repeating-linear-gradient(
+        45deg,
+        transparent 0 30px,
+        rgba(120,80,40,0.04) 30px 31px
+      ),
+      repeating-linear-gradient(
+        -45deg,
+        transparent 0 30px,
+        rgba(120,80,40,0.04) 30px 31px
+      ),
+      #d8c391;
+    background-attachment: fixed;
+  }
+
+  body {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 16px 60px;
+  }
+
+  /* Decorative paper edges */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 80px rgba(60,35,10,0.35);
+    z-index: 10;
+  }
+
+  .stage {
+    width: 100%;
+    max-width: 880px;
+    position: relative;
+    z-index: 1;
+  }
+
+  h1, h2, h3 {
+    font-family: 'IM Fell English SC', 'Special Elite', serif;
+    letter-spacing: 0.05em;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 6vw, 3.4rem);
+    text-align: center;
+    line-height: 1.1;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.3), 2px 2px 0 var(--shadow);
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin-top: 6px;
+    font-size: 1rem;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; animation: fadeIn 0.4s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .btn {
+    display: inline-block;
+    font-family: 'Special Elite', monospace;
+    font-size: 1.1rem;
+    padding: 12px 28px;
+    background: var(--accent);
+    color: #f4e7c8;
+    border: 2px solid var(--accent-dark);
+    border-radius: 4px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow: 2px 2px 0 var(--ink), 4px 4px 0 rgba(60,35,10,0.4);
+    transition: transform 0.08s ease, box-shadow 0.08s ease;
+    text-decoration: none;
+  }
+  .btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink), 5px 5px 0 rgba(60,35,10,0.4); }
+  .btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 var(--ink); }
+
+  .btn.secondary {
+    background: var(--paper);
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .panel {
+    background: var(--paper);
+    border: 2px solid var(--ink-soft);
+    border-radius: 6px;
+    padding: 28px;
+    box-shadow: 4px 4px 0 var(--shadow);
+    position: relative;
+  }
+  .panel::after {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1px dashed rgba(60,35,10,0.4);
+    pointer-events: none;
+    border-radius: 4px;
+  }
+
+  /* ---------- Start screen ---------- */
+  .start-wrap { text-align: center; padding-top: 12px; }
+  .start-wrap .stamp {
+    display: inline-block;
+    margin: 18px 0 28px;
+    padding: 6px 14px;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    font-family: 'IM Fell English SC', serif;
+    transform: rotate(-3deg);
+    letter-spacing: 0.15em;
+    font-size: 0.9rem;
+  }
+  .best-banner {
+    margin-top: 22px;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- HUD ---------- */
+  .hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .hud .level {
+    font-family: 'IM Fell English SC', serif;
+    font-size: 1.6rem;
+    color: var(--ink);
+  }
+  .hud .wrongs {
+    font-size: 1rem;
+    padding: 6px 12px;
+    border: 1px solid var(--ink-soft);
+    background: rgba(255,255,255,0.25);
+    border-radius: 4px;
+  }
+  .hud .wrongs.danger {
+    color: var(--accent);
+    border-color: var(--accent);
+    font-weight: bold;
+  }
+
+  /* ---------- Card grid ---------- */
+  .grid {
+    display: grid;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .card {
+    aspect-ratio: 3 / 4;
+    perspective: 800px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+  .card.flipped .card-inner,
+  .card.matched .card-inner {
+    transform: rotateY(180deg);
+  }
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    text-align: center;
+    box-shadow: 2px 2px 0 var(--shadow);
+    border: 2px solid var(--ink-soft);
+  }
+  .card-back {
+    background:
+      repeating-linear-gradient(45deg, rgba(0,0,0,0.08) 0 6px, transparent 6px 12px),
+      var(--khaki);
+    color: var(--ink);
+    font-family: 'IM Fell English SC', serif;
+    font-size: 1.6rem;
+  }
+  .card-back .compass {
+    width: 60%;
+    height: 60%;
+    border: 2px solid var(--ink);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+  }
+  .card-front {
+    background: var(--paper);
+    color: var(--ink);
+    transform: rotateY(180deg);
+    font-family: 'Special Elite', monospace;
+  }
+  .card-front.emoji { font-size: clamp(2rem, 7vw, 3.4rem); }
+  .card-front.name {
+    font-size: clamp(0.85rem, 2.4vw, 1.2rem);
+    font-family: 'IM Fell English SC', serif;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+    padding: 8px;
+  }
+  .card.matched .card-front {
+    background: #c8dab0;
+    border-color: #4d6a2c;
+    box-shadow: 0 0 0 2px rgba(77,106,44,0.4) inset;
+  }
+  .card.shake .card-inner { animation: shake 0.4s; }
+  @keyframes shake {
+    0%, 100% { transform: rotateY(180deg) translateX(0); }
+    25% { transform: rotateY(180deg) translateX(-6px); }
+    75% { transform: rotateY(180deg) translateX(6px); }
+  }
+
+  /* ---------- Intermediate / GameOver ---------- */
+  .center { text-align: center; }
+  .fact {
+    margin: 22px 0;
+    padding: 18px 22px;
+    background: rgba(255,255,255,0.4);
+    border-left: 4px solid var(--accent);
+    font-size: 1.1rem;
+    font-style: italic;
+    text-align: left;
+  }
+  .fact strong { font-family: 'IM Fell English SC', serif; font-style: normal; }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 18px;
+  }
+
+  /* ---------- Mute toggle ---------- */
+  .mute-toggle {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 2px solid var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 100;
+    font-size: 1.2rem;
+    box-shadow: 2px 2px 0 var(--shadow);
+  }
+  .mute-toggle:hover { transform: translate(-1px,-1px); }
+
+  .footer {
+    text-align: center;
+    margin-top: 28px;
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 18px;
+    border-radius: 4px;
+    box-shadow: 2px 2px 0 var(--shadow);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 50;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<a href="../index.html" class="zbg-home" aria-label="Back to Zak's Brain Games">🏠</a>
+<style>.zbg-home{position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:46px;height:46px;background:#fff;border:2px solid #FFD93D;border-radius:50%;font-size:22px;text-decoration:none;box-shadow:0 3px 8px rgba(0,0,0,.25);line-height:1}.zbg-home:active{transform:scale(.92)}</style>
+
+<button class="mute-toggle" id="muteBtn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
+
+<div class="stage">
+
+  <!-- ============ START SCREEN ============ -->
+  <section class="screen active" id="screen-start">
+    <div class="panel start-wrap">
+      <h1>Memory Match Safari</h1>
+      <p class="subtitle">An expedition of the mind through the animal kingdom</p>
+      <div class="stamp">Field Journal · Est. 1924</div>
+      <div>
+        <button class="btn" id="playBtn">Play Now</button>
+      </div>
+      <div class="best-banner" id="bestBanner"></div>
+    </div>
+    <p class="footer">Match the creatures to their names. Five wrong guesses and the expedition ends.</p>
+  </section>
+
+  <!-- ============ LEVEL SCREEN ============ -->
+  <section class="screen" id="screen-level">
+    <div class="panel">
+      <div class="hud">
+        <div class="level" id="levelLabel">Level 1</div>
+        <div class="wrongs" id="wrongsLabel">Wrong: 0 / 5</div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <!-- ============ INTERMEDIATE SCREEN ============ -->
+  <section class="screen" id="screen-fact">
+    <div class="panel center">
+      <h2>Expedition Notes</h2>
+      <p class="subtitle">A discovery from the field</p>
+      <div class="fact" id="factBox"><strong>Did you know?</strong> <span id="factText"></span></div>
+      <div class="actions">
+        <button class="btn" id="nextLevelBtn">Onward to Next Level</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GAME OVER SCREEN ============ -->
+  <section class="screen" id="screen-over">
+    <div class="panel center">
+      <h1>Expedition Ended</h1>
+      <p class="subtitle">A worthy adventurer indeed</p>
+      <h2 style="margin-top:18px;">You reached Level <span id="finalLevel">1</span></h2>
+      <p id="bestLine" style="font-style:italic; color:var(--ink-soft);"></p>
+      <div class="actions">
+        <button class="btn" id="shareBtn">Share Results</button>
+        <button class="btn secondary" id="playAgainBtn">Play Again</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ====================================================================
+   MEMORY MATCH SAFARI
+   ==================================================================== */
+
+/* --------- Animal Pool (common -> exotic) --------- */
+const ANIMALS = [
+  // Common (used early levels)
+  { emoji: '🦁', name: 'Lion' },
+  { emoji: '🐘', name: 'Elephant' },
+  { emoji: '🦒', name: 'Giraffe' },
+  { emoji: '🐅', name: 'Tiger' },
+  { emoji: '🐆', name: 'Leopard' },
+  { emoji: '🦓', name: 'Zebra' },
+  { emoji: '🐊', name: 'Crocodile' },
+  { emoji: '🦏', name: 'Rhinoceros' },
+  { emoji: '🦛', name: 'Hippopotamus' },
+  { emoji: '🐒', name: 'Monkey' },
+  // Mid-tier (mid levels)
+  { emoji: '🦍', name: 'Gorilla' },
+  { emoji: '🐃', name: 'Buffalo' },
+  { emoji: '🐪', name: 'Camel' },
+  { emoji: '🦘', name: 'Kangaroo' },
+  { emoji: '🐨', name: 'Koala' },
+  { emoji: '🦌', name: 'Deer' },
+  { emoji: '🦅', name: 'Eagle' },
+  { emoji: '🦉', name: 'Owl' },
+  { emoji: '🦩', name: 'Flamingo' },
+  { emoji: '🦃', name: 'Turkey' },
+  // Exotic (higher levels)
+  { emoji: '🦔', name: 'Hedgehog' },
+  { emoji: '🦨', name: 'Skunk' },
+  { emoji: '🦡', name: 'Badger' },
+  { emoji: '🦦', name: 'Otter' },
+  { emoji: '🦫', name: 'Beaver' },
+  { emoji: '🦥', name: 'Sloth' },
+  { emoji: '🦝', name: 'Raccoon' },
+  { emoji: '🦙', name: 'Llama' },
+  { emoji: '🦬', name: 'Bison' },
+  { emoji: '🐫', name: 'Bactrian Camel' },
+  // Very rare / unique (top levels)
+  { emoji: '🦣', name: 'Mammoth' },
+  { emoji: '🦤', name: 'Dodo' },
+  { emoji: '🦚', name: 'Peacock' },
+  { emoji: '🦜', name: 'Parrot' },
+  { emoji: '🦢', name: 'Swan' },
+  { emoji: '🦭', name: 'Seal' },
+  { emoji: '🐙', name: 'Octopus' },
+  { emoji: '🦑', name: 'Squid' },
+  { emoji: '🦈', name: 'Shark' },
+  { emoji: '🐉', name: 'Dragon' }
+];
+
+/* --------- Animal Facts --------- */
+const FACTS = [
+  "A lion's roar can be heard from up to 5 miles away.",
+  "Elephants are the only mammals that cannot jump.",
+  "A giraffe's tongue is about 18 inches long and is bluish-purple to protect it from sunburn.",
+  "Tigers have striped skin, not just striped fur.",
+  "Leopards can carry prey twice their own weight up into trees.",
+  "No two zebras have the same stripe pattern; it's as unique as a fingerprint.",
+  "Crocodiles cannot stick out their tongues.",
+  "A rhinoceros's horn is made of keratin, the same material as human fingernails.",
+  "Hippos secrete a reddish oil sometimes called 'blood sweat' that acts as sunscreen.",
+  "Monkeys can be taught to understand basic arithmetic.",
+  "Gorillas can catch human colds and other illnesses.",
+  "A buffalo can run up to 35 miles per hour despite weighing over a ton.",
+  "Camels' humps store fat, not water, which they convert to energy.",
+  "A kangaroo cannot walk backward.",
+  "Koalas sleep up to 22 hours a day.",
+  "Deer have no upper front teeth.",
+  "A bald eagle's nest can weigh over a ton and be 10 feet wide.",
+  "Owls can rotate their necks up to 270 degrees.",
+  "Flamingos are pink because of the pigments in the algae and shrimp they eat.",
+  "Turkeys can blush when they are excited or stressed.",
+  "Hedgehogs have around 5,000 spines on their bodies.",
+  "Skunk spray can be smelled from up to 1.5 miles away.",
+  "Badgers and coyotes sometimes hunt together cooperatively.",
+  "Sea otters hold hands while sleeping so they don't drift apart.",
+  "Beavers' teeth never stop growing throughout their lives.",
+  "Sloths only come down from their tree once a week to relieve themselves.",
+  "Raccoons can remember the solution to a task for up to three years.",
+  "Llamas hum to communicate with each other.",
+  "Bison can jump up to 6 feet vertically.",
+  "Bactrian camels have two humps and can drink 30 gallons of water in 13 minutes.",
+  "Mammoths went extinct only about 4,000 years ago — long after the pyramids were built.",
+  "The dodo bird was last seen alive in 1662 on the island of Mauritius.",
+  "Peacock feathers are not actually blue — they appear blue due to light refraction.",
+  "Parrots can live up to 80 years in captivity.",
+  "Swans mate for life and can live for over 20 years.",
+  "Seals can hold their breath for nearly two hours underwater.",
+  "An octopus has three hearts and blue blood.",
+  "Squids have the largest eyes in the animal kingdom — up to a foot wide.",
+  "Sharks have existed for over 450 million years, predating trees.",
+  "A pangolin's scales make up about 20% of its body weight.",
+  "Axolotls can regenerate entire limbs, including their heart and brain.",
+  "Quokkas are known as the 'happiest animals on Earth' because they appear to smile.",
+  "Capybaras are the largest rodents in the world and are friendly with almost every animal.",
+  "Narwhals have a single tusk that is actually a giant tooth with millions of nerve endings.",
+  "Honey badgers have skin so thick it can resist arrows and machetes.",
+  "Tardigrades can survive in the vacuum of space.",
+  "Mantis shrimp can punch with the force of a .22 caliber bullet.",
+  "A blue whale's tongue weighs as much as an elephant.",
+  "Cheetahs cannot roar; they purr like a house cat instead.",
+  "The platypus is one of the only mammals that lays eggs.",
+  "Reindeer eyes turn blue in winter to help them see in low light.",
+  "A group of flamingos is called a 'flamboyance.'",
+  "Snow leopards cannot roar — they hiss, growl, and chuff instead.",
+  "Wombats produce cube-shaped poop.",
+  "Elephants mourn their dead and have been observed holding 'funerals.'",
+  "A jaguar's bite is strong enough to crush a turtle's shell.",
+  "Pink river dolphins live in the Amazon and turn pinker when they're excited.",
+  "Polar bears have black skin under their white fur to absorb sunlight.",
+  "A group of owls is called a 'parliament.'",
+  "Octopuses can taste with their suckers."
+];
+
+/* --------- Sound (Web Audio API) --------- */
+let audioCtx = null;
+let muted = false;
+try { muted = localStorage.getItem('mms_muted') === '1'; } catch(e) {}
+
+function ensureAudio() {
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch(e) { audioCtx = null; }
+  }
+  return audioCtx;
+}
+
+function playTone(freqs, duration = 0.15, type = 'sine', gain = 0.15) {
+  if (muted) return;
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  freqs.forEach((f, i) => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = f;
+    g.gain.setValueAtTime(0, now + i * duration);
+    g.gain.linearRampToValueAtTime(gain, now + i * duration + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, now + i * duration + duration);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(now + i * duration);
+    osc.stop(now + i * duration + duration);
+  });
+}
+
+const sounds = {
+  match: () => playTone([660, 880], 0.12, 'triangle', 0.18),
+  mismatch: () => playTone([180, 130], 0.18, 'sawtooth', 0.12),
+  flip: () => playTone([520], 0.06, 'sine', 0.08),
+  win: () => playTone([523, 659, 784, 1047], 0.14, 'triangle', 0.2),
+  lose: () => playTone([400, 320, 240, 160], 0.2, 'sawtooth', 0.18)
+};
+
+/* --------- Mute Toggle --------- */
+const muteBtn = document.getElementById('muteBtn');
+function renderMute() { muteBtn.textContent = muted ? '🔇' : '🔊'; }
+renderMute();
+muteBtn.addEventListener('click', () => {
+  muted = !muted;
+  try { localStorage.setItem('mms_muted', muted ? '1' : '0'); } catch(e) {}
+  renderMute();
+  if (!muted) sounds.flip();
+});
+
+/* --------- Helpers --------- */
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* --------- Best Score (localStorage) --------- */
+function getBest() {
+  try { return parseInt(localStorage.getItem('mms_best') || '0', 10) || 0; }
+  catch(e) { return 0; }
+}
+function setBest(v) {
+  try { localStorage.setItem('mms_best', String(v)); } catch(e) {}
+}
+function renderBestBanner() {
+  const best = getBest();
+  document.getElementById('bestBanner').textContent =
+    best > 0 ? `Best expedition: Level ${best}` : 'No expedition completed yet.';
+}
+
+/* --------- Game State --------- */
+const MAX_WRONGS = 5;
+let level = 1;
+let wrongs = 0;
+let firstChoice = null;
+let lock = false;
+let matchedCount = 0;
+let totalPairs = 0;
+
+function pairsForLevel(lvl) {
+  // Level 1 = 4 pairs (8 cards). +1 pair per level.
+  return 3 + lvl;
+}
+
+function buildLevel(lvl) {
+  level = lvl;
+  wrongs = 0;
+  firstChoice = null;
+  lock = false;
+  matchedCount = 0;
+
+  const pairs = pairsForLevel(lvl);
+  totalPairs = pairs;
+
+  // Pick animals: start from index based on level so it gets more exotic
+  // We "slide" the window slightly with each level for variety + uniqueness
+  const startIdx = Math.min((lvl - 1) * 2, ANIMALS.length - pairs);
+  const pool = ANIMALS.slice(Math.max(0, startIdx));
+  // If not enough left, wrap around / fallback to full list
+  let chosen;
+  if (pool.length >= pairs) {
+    chosen = shuffle(pool).slice(0, pairs);
+  } else {
+    chosen = shuffle(ANIMALS).slice(0, pairs);
+  }
+
+  // Build cards: one emoji card + one name card per pair
+  const cards = [];
+  chosen.forEach((a, i) => {
+    cards.push({ id: 'e' + i, pairId: i, kind: 'emoji', value: a.emoji });
+    cards.push({ id: 'n' + i, pairId: i, kind: 'name', value: a.name });
+  });
+
+  const shuffled = shuffle(cards);
+
+  // Set grid columns based on total cards
+  const total = shuffled.length;
+  let cols;
+  if (total <= 8) cols = 4;
+  else if (total <= 12) cols = 4;
+  else if (total <= 16) cols = 4;
+  else if (total <= 20) cols = 5;
+  else cols = 6;
+
+  const grid = document.getElementById('grid');
+  grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
+  grid.style.maxWidth = (cols * 130) + 'px';
+  grid.style.margin = '0 auto';
+  grid.innerHTML = '';
+
+  shuffled.forEach(card => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.dataset.pairId = card.pairId;
+    div.dataset.kind = card.kind;
+    div.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-back"><div class="compass">N</div></div>
+        <div class="card-face card-front ${card.kind === 'emoji' ? 'emoji' : 'name'}">${card.value}</div>
+      </div>
+    `;
+    div.addEventListener('click', () => onCardClick(div));
+    grid.appendChild(div);
+  });
+
+  document.getElementById('levelLabel').textContent = 'Level ' + lvl;
+  updateWrongs();
+  showScreen('screen-level');
+}
+
+function updateWrongs() {
+  const label = document.getElementById('wrongsLabel');
+  label.textContent = `Wrong: ${wrongs} / ${MAX_WRONGS}`;
+  label.classList.toggle('danger', wrongs >= 3);
+}
+
+function onCardClick(cardEl) {
+  if (lock) return;
+  if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+
+  cardEl.classList.add('flipped');
+  sounds.flip();
+
+  if (!firstChoice) {
+    firstChoice = cardEl;
+    return;
+  }
+
+  // Second choice — evaluate
+  const a = firstChoice;
+  const b = cardEl;
+  const same = a.dataset.pairId === b.dataset.pairId && a.dataset.kind !== b.dataset.kind;
+
+  if (same) {
+    a.classList.add('matched');
+    b.classList.add('matched');
+    matchedCount++;
+    firstChoice = null;
+    sounds.match();
+    if (matchedCount === totalPairs) {
+      // Level won!
+      lock = true;
+      setTimeout(() => {
+        sounds.win();
+        onLevelWon();
+      }, 500);
+    }
+  } else {
+    // Mismatch
+    lock = true;
+    wrongs++;
+    sounds.mismatch();
+    a.classList.add('shake');
+    b.classList.add('shake');
+    setTimeout(() => {
+      a.classList.remove('flipped', 'shake');
+      b.classList.remove('flipped', 'shake');
+      firstChoice = null;
+      lock = false;
+      updateWrongs();
+      if (wrongs >= MAX_WRONGS) {
+        setTimeout(onGameOver, 250);
+      }
+    }, 900);
+    // Update counter immediately (visual urgency)
+    updateWrongs();
+  }
+}
+
+/* --------- Win / Lose --------- */
+function onLevelWon() {
+  const fact = FACTS[Math.floor(Math.random() * FACTS.length)];
+  document.getElementById('factText').textContent = fact;
+  // Update best (if completing level N, best is at least N)
+  if (level > getBest()) setBest(level);
+  showScreen('screen-fact');
+}
+
+function onGameOver() {
+  sounds.lose();
+  // The player FAILED at `level`, so highest level reached = level (they made it that far)
+  document.getElementById('finalLevel').textContent = level;
+  const best = getBest();
+  const bestLine = document.getElementById('bestLine');
+  if (level > best) {
+    setBest(level);
+    bestLine.textContent = `New personal best!`;
+  } else if (best > 0) {
+    bestLine.textContent = `Personal best: Level ${best}`;
+  } else {
+    bestLine.textContent = '';
+  }
+  showScreen('screen-over');
+}
+
+/* --------- Share --------- */
+async function shareResults() {
+  const lvl = level;
+  const text = `I just reached Level ${lvl} in Memory Match Safari! 🦁🐘🦒 Can you beat me?`;
+  const shareData = { title: 'Memory Match Safari', text };
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+    } catch (e) {
+      // User cancelled — silent
+    }
+  } else {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Copied to clipboard!');
+    } catch (e) {
+      showToast('Could not copy — your browser blocked it.');
+    }
+  }
+}
+
+/* --------- Wire Up --------- */
+document.getElementById('playBtn').addEventListener('click', () => {
+  ensureAudio();
+  buildLevel(1);
+});
+document.getElementById('nextLevelBtn').addEventListener('click', () => {
+  buildLevel(level + 1);
+});
+document.getElementById('playAgainBtn').addEventListener('click', () => {
+  renderBestBanner();
+  buildLevel(1);
+});
+document.getElementById('shareBtn').addEventListener('click', shareResults);
+
+renderBestBanner();
+</script>
+</body>
+</html>

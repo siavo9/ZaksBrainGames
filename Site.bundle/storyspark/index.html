@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Story Spark — Zak's Brain Games</title>
+  <meta name="description" content="Story Spark is a kid-friendly choose-your-own-adventure! Read magical stories, answer questions, and pick what happens next. Ages 6+." />
+  <meta name="theme-color" content="#FFD93D" />
+  <link rel="canonical" href="https://zaksbraingames.app/storyspark/" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%96%3C/text%3E%3C/svg%3E" />
+
+
+    <!-- Self-hosted fonts (offline; no external requests) -->
+  <style>
+  @font-face { font-family:'Fredoka'; font-style:normal; font-weight:300 700; font-display:swap; src:url('../fonts/fredoka.woff2') format('woff2'); }
+  @font-face { font-family:'Bubblegum Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('../fonts/bubblegum-sans-400.woff2') format('woff2'); }
+  </style>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow: #FFD93D;
+      --yellow-dark: #C99700;
+      --pink: #FF6FB5;
+      --blue: #4FC3F7;
+      --mint: #6BE6A8;
+      --mint-dark: #1FB97A;
+      --purple: #B073FF;
+      --orange: #FF9F45;
+      --coral: #FF6B6B;
+      --dark: #2D2D5F;
+      --cream: #FFF8E7;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Fredoka', system-ui, sans-serif;
+      color: var(--dark);
+      background: linear-gradient(135deg, #FFF8E7 0%, #FFF1C8 45%, #FFE5F1 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Floating shapes */
+    .shape {
+      position: fixed; border-radius: 50%; opacity: 0.32; z-index: 0;
+      animation: float 8s ease-in-out infinite; pointer-events: none;
+    }
+    .shape.s1 { width: 120px; height: 120px; background: var(--yellow); top: 10%; left: 5%; animation-delay: 0s; }
+    .shape.s2 { width: 80px;  height: 80px;  background: var(--pink);   top: 62%; left: 92%; animation-delay: 2s; }
+    .shape.s3 { width: 100px; height: 100px; background: var(--blue);   top: 82%; left: 8%;  animation-delay: 4s; }
+    .shape.s4 { width: 60px;  height: 60px;  background: var(--purple); top: 22%; left: 88%; animation-delay: 1s; }
+    .shape.s5 { width: 90px;  height: 90px;  background: var(--mint);   top: 45%; left: 3%;  animation-delay: 3s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-26px) rotate(12deg); }
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ---------- Top nav ---------- */
+    .topnav {
+      padding: 20px 0 8px;
+      display: flex;
+      justify-content: flex-start;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--purple);
+      font-weight: 600;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 24px;
+      background: white;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.12);
+      transition: transform 0.18s, box-shadow 0.18s;
+      font-size: 0.98rem;
+      min-height: 44px;
+    }
+    .back-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(45, 45, 95, 0.14); }
+    .back-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(45, 45, 95, 0.14); }
+
+    /* ---------- Screens ---------- */
+    .screen { display: none; padding: 14px 0 48px; }
+    .screen.active { display: block; animation: screenIn 0.3s ease; }
+    @keyframes screenIn {
+      from { transform: translateY(8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ---------- Welcome ---------- */
+    .welcome {
+      text-align: center;
+      padding: 10px 14px 30px;
+    }
+    .mascot {
+      font-size: 92px;
+      display: inline-block;
+      animation: wiggle 3s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.12));
+      user-select: none;
+      cursor: pointer;
+    }
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-6deg) translateY(0); }
+      50% { transform: rotate(6deg) translateY(-10px); }
+    }
+    h1.title {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: clamp(2.6rem, 7vw, 4.2rem);
+      margin: 8px 0 4px;
+      background: linear-gradient(135deg, var(--pink), var(--purple), var(--orange));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 4px 4px 0 rgba(255, 217, 61, 0.35);
+      letter-spacing: 1px;
+    }
+    .tagline {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--dark);
+      font-weight: 500;
+      margin: 4px auto 24px;
+      max-width: 540px;
+      line-height: 1.45;
+    }
+    .tagline span { color: var(--pink); font-weight: 700; }
+
+    /* ---------- Big buttons ---------- */
+    .btn {
+      display: inline-block;
+      padding: 16px 32px;
+      border-radius: 50px;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      border: none;
+      cursor: pointer;
+      color: white;
+      text-decoration: none;
+      text-align: center;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, box-shadow 0.15s;
+      min-height: 52px;
+      line-height: 1.2;
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 9px 0 rgba(0, 0, 0, 0.15); }
+    .btn:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15); }
+    .btn-primary { background: var(--pink); }
+    .btn-yellow  { background: var(--yellow); color: var(--dark); }
+    .btn-purple  { background: var(--purple); }
+    .btn-blue    { background: var(--blue); }
+    .btn-mint    { background: var(--mint-dark); }
+    .btn-ghost {
+      background: white; color: var(--dark);
+      box-shadow: 0 4px 0 rgba(45, 45, 95, 0.18);
+    }
+    .btn-ghost:hover { box-shadow: 0 6px 0 rgba(45, 45, 95, 0.18); }
+
+    .big-cta {
+      font-size: 1.35rem;
+      padding: 18px 40px;
+      animation: pulseGlow 2.2s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 0 rgba(255, 111, 181, 0.35); }
+      50% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 18px rgba(255, 111, 181, 0); }
+    }
+
+    /* ---------- Card panels ---------- */
+    .panel {
+      background: white;
+      border-radius: 26px;
+      padding: 24px 24px 26px;
+      box-shadow: 0 8px 0 rgba(45, 45, 95, 0.1), 0 14px 30px rgba(45, 45, 95, 0.08);
+      margin-bottom: 18px;
+    }
+    .panel h2 {
+      font-family: 'Bubblegum Sans', cursive;
+      color: var(--purple);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    /* ---------- Rules ---------- */
+    .rules-list {
+      list-style: none;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 0;
+    }
+    .rules-list li {
+      background: var(--cream);
+      border-radius: 18px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      font-size: 1.08rem;
+      line-height: 1.45;
+      font-weight: 500;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.08);
+    }
+    .rules-actions { text-align: center; margin-top: 8px; }
+
+    /* ---------- Picker ---------- */
+    .picker-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    @media (min-width: 700px) {
+      .picker-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    .story-card {
+      background: white;
+      border-radius: 24px;
+      padding: 22px 18px 20px;
+      text-align: center;
+      box-shadow: 0 6px 0 rgba(45, 45, 95, 0.12), 0 12px 26px rgba(45, 45, 95, 0.08);
+      cursor: pointer;
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s;
+      position: relative;
+      border: none;
+      width: 100%;
+      font-family: inherit;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      min-height: 220px;
+    }
+    .story-card:hover {
+      transform: translateY(-6px) rotate(-1deg);
+      box-shadow: 0 12px 0 rgba(45, 45, 95, 0.14), 0 18px 36px rgba(45, 45, 95, 0.15);
+    }
+    .story-card:nth-child(even):hover { transform: translateY(-6px) rotate(1deg); }
+    .story-card .cover {
+      font-size: 3.2rem;
+      line-height: 1;
+      margin-top: 4px;
+      filter: drop-shadow(2px 4px 0 rgba(0,0,0,0.1));
+    }
+    .story-card h3 {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 1.35rem;
+      color: var(--dark);
+      line-height: 1.15;
+    }
+    .story-card p {
+      font-size: 0.95rem;
+      color: #555;
+      line-height: 1.4;
+    }
+    .story-card .age-chip {
+      display: inline-block;
+      background: var(--cream);
+      color: var(--yellow-dark);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-top: auto;
+    }
+
+    /* ---------- Story page ---------- */
+    .crumbs {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .crumb {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: rgba(45, 45, 95, 0.12);
+      transition: background 0.2s, transform 0.2s;
+    }
+    .crumb.done { background: var(--mint); }
+    .crumb.current { background: var(--pink); transform: scale(1.15); }
+
+    .story-title-bar {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 1.15rem;
+      color: var(--purple);
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .art {
+      background: linear-gradient(135deg, var(--yellow), #FFEFA0);
+      border-radius: 22px;
+      padding: 24px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 0 rgba(201, 151, 0, 0.18) inset;
+      margin-bottom: 18px;
+      min-height: 140px;
+      position: relative;
+      overflow: hidden;
+    }
+    .art::before,
+    .art::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      pointer-events: none;
+    }
+    .art::before { width: 80px; height: 80px; top: -22px; left: -22px; }
+    .art::after  { width: 110px; height: 110px; bottom: -34px; right: -30px; }
+    .art-emoji {
+      font-size: clamp(3.4rem, 11vw, 5rem);
+      line-height: 1;
+      animation: bobble 3s ease-in-out infinite;
+      filter: drop-shadow(3px 4px 0 rgba(0,0,0,0.12));
+      position: relative;
+      z-index: 1;
+    }
+    .art-emoji:nth-child(1) { animation-delay: 0s; }
+    .art-emoji:nth-child(2) { animation-delay: 0.3s; }
+    .art-emoji:nth-child(3) { animation-delay: 0.6s; }
+    @keyframes bobble {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-8px) rotate(3deg); }
+    }
+
+    .passage {
+      font-size: clamp(1.05rem, 2.6vw, 1.2rem);
+      line-height: 1.65;
+      color: var(--dark);
+      background: var(--cream);
+      padding: 18px 20px;
+      border-radius: 18px;
+      margin-bottom: 14px;
+      font-weight: 500;
+    }
+    .read-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+    .read-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--blue);
+      color: white;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 12px 22px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+      min-height: 44px;
+    }
+    .read-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(0,0,0,0.15); }
+    .read-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+    .read-btn.speaking { background: var(--pink); }
+    .read-btn.speaking::after {
+      content: ' ⏹';
+    }
+    .read-fallback {
+      color: #888; font-size: 0.9rem; text-align: center; margin-top: 6px;
+    }
+
+    .step-label {
+      display: block;
+      text-align: center;
+      font-family: 'Bubblegum Sans', cursive;
+      color: var(--purple);
+      font-size: 1.3rem;
+      margin: 6px 0 12px;
+    }
+    .question {
+      font-size: clamp(1.05rem, 2.6vw, 1.18rem);
+      color: var(--dark);
+      text-align: center;
+      margin-bottom: 14px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .options {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+      margin-bottom: 8px;
+    }
+    @media (min-width: 520px) {
+      .options { grid-template-columns: 1fr 1fr; }
+      .options.single { grid-template-columns: 1fr; }
+    }
+    .option-btn {
+      background: white;
+      border: 3px solid #E5E5F2;
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--dark);
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(45, 45, 95, 0.08);
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s, border-color 0.15s;
+      min-height: 56px;
+      line-height: 1.35;
+      text-align: left;
+    }
+    .option-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      border-color: var(--purple);
+      box-shadow: 0 6px 0 rgba(45, 45, 95, 0.1);
+    }
+    .option-btn:active:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 rgba(45, 45, 95, 0.08);
+    }
+    .option-btn.correct {
+      background: #DFFBEB;
+      border-color: var(--mint-dark);
+      color: var(--mint-dark);
+      animation: popCorrect 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .option-btn.wrong {
+      background: #FFE9E9;
+      border-color: var(--coral);
+      color: var(--coral);
+      animation: shake 0.45s ease-in-out;
+    }
+    .option-btn:disabled { cursor: default; }
+    .option-btn .check {
+      display: inline-block;
+      margin-left: 4px;
+    }
+    @keyframes popCorrect {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+
+    .feedback {
+      min-height: 32px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-top: 6px;
+      line-height: 1.3;
+    }
+    .feedback.good { color: var(--mint-dark); animation: bouncePraise 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .feedback.gentle { color: var(--purple); }
+    @keyframes bouncePraise {
+      0% { transform: scale(0.6); opacity: 0; }
+      60% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ---------- Choice section ---------- */
+    .choice-section { animation: fadeIn 0.4s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .choice-section .option-btn {
+      border-color: var(--yellow);
+      background: #FFFBE8;
+      font-size: 1.1rem;
+    }
+    .choice-section .option-btn:hover:not(:disabled) {
+      border-color: var(--orange);
+      background: #FFF4D0;
+    }
+
+    /* ---------- Ending ---------- */
+    .ending {
+      text-align: center;
+    }
+    .ending .trophy {
+      font-size: 5.2rem;
+      display: inline-block;
+      animation: trophyBounce 1.4s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.15));
+    }
+    @keyframes trophyBounce {
+      0%, 100% { transform: translateY(0) rotate(-6deg); }
+      50% { transform: translateY(-14px) rotate(6deg); }
+    }
+    .ending h2 {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: clamp(2rem, 5vw, 2.6rem);
+      background: linear-gradient(135deg, var(--pink), var(--purple), var(--orange));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 8px 0;
+    }
+    .ending .ending-text {
+      font-size: 1.1rem;
+      line-height: 1.5;
+      color: var(--dark);
+      background: var(--cream);
+      padding: 16px 18px;
+      border-radius: 18px;
+      margin: 14px auto;
+      max-width: 560px;
+    }
+    .path-summary {
+      max-width: 560px;
+      margin: 18px auto;
+      text-align: left;
+      background: white;
+      border: 2px dashed var(--yellow);
+      border-radius: 20px;
+      padding: 16px 20px;
+    }
+    .path-summary h3 {
+      font-family: 'Bubblegum Sans', cursive;
+      color: var(--yellow-dark);
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .path-summary ol {
+      padding-left: 20px;
+      font-size: 0.98rem;
+      line-height: 1.55;
+      color: #444;
+    }
+    .path-summary li { margin-bottom: 4px; }
+    .ending-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    /* ---------- Confetti ---------- */
+    .confetti {
+      position: fixed;
+      width: 10px; height: 10px;
+      pointer-events: none;
+      z-index: 9999;
+      border-radius: 2px;
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+
+    @media (max-width: 480px) {
+      .panel { padding: 18px 16px 22px; }
+      .art-emoji { font-size: 3.4rem; }
+      .option-btn { padding: 14px 14px; font-size: 1rem; }
+      .btn { padding: 14px 26px; font-size: 1.05rem; }
+      .big-cta { font-size: 1.2rem; padding: 16px 30px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
+  <div class="shape s3"></div>
+  <div class="shape s4"></div>
+  <div class="shape s5"></div>
+
+  <div class="container">
+    <header class="topnav">
+      <a class="back-btn" href="../index.html" aria-label="Back to Zak's Brain Games">← Back to Zak's Brain Games</a>
+    </header>
+
+    <main>
+      <!-- ============== WELCOME ============== -->
+      <section class="screen active" id="welcomeScreen" aria-label="Welcome">
+        <div class="welcome">
+          <div class="mascot" id="mascot" role="img" aria-label="Open book mascot">📖</div>
+          <h1 class="title">Story Spark</h1>
+          <p class="tagline">Read magical stories, answer fun questions, and <span>choose what happens next!</span></p>
+          <button class="btn btn-primary big-cta" id="startBtn">Start Adventure ▶</button>
+        </div>
+      </section>
+
+      <!-- ============== RULES ============== -->
+      <section class="screen" id="rulesScreen" aria-label="How to play">
+        <div class="panel">
+          <h2>How to Play</h2>
+          <ul class="rules-list">
+            <li>📖 Read each page carefully.</li>
+            <li>✨ Answer the questions to keep going.</li>
+            <li>🌟 Pick what happens next — your choices change the story!</li>
+            <li>🔊 Stuck? Tap "Read it to me" to hear the words.</li>
+          </ul>
+          <div class="rules-actions">
+            <button class="btn btn-yellow big-cta" id="rulesNextBtn">Got it! Pick a story ▶</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== PICKER ============== -->
+      <section class="screen" id="pickerScreen" aria-label="Pick a story">
+        <div class="panel">
+          <h2>Pick Your Story</h2>
+          <div class="picker-grid" id="pickerGrid"></div>
+        </div>
+      </section>
+
+      <!-- ============== STORY PAGE ============== -->
+      <section class="screen" id="pageScreen" aria-label="Story page">
+        <div class="panel">
+          <div class="story-title-bar" id="storyTitleBar"></div>
+          <div class="crumbs" id="crumbs" aria-hidden="true"></div>
+
+          <div class="art" id="pageArt" aria-hidden="true"></div>
+
+          <p class="passage" id="passage"></p>
+          <div class="read-row">
+            <button class="read-btn" id="readBtn" type="button">🔊 Read it to me</button>
+          </div>
+          <p class="read-fallback" id="readFallback" hidden>Sorry, read-aloud isn't supported in this browser.</p>
+
+          <div id="questionsArea"></div>
+
+          <div id="choiceArea" hidden></div>
+        </div>
+      </section>
+
+      <!-- ============== ENDING ============== -->
+      <section class="screen" id="endingScreen" aria-label="Story finished">
+        <div class="panel ending">
+          <div class="trophy">🎉</div>
+          <h2>You finished your story!</h2>
+          <p class="ending-text" id="endingText"></p>
+          <div class="path-summary">
+            <h3>✨ Your Story Path ✨</h3>
+            <ol id="pathSummary"></ol>
+          </div>
+          <div class="ending-buttons">
+            <button class="btn btn-yellow" id="replayBtn">Play this story again ↺</button>
+            <button class="btn btn-purple" id="newStoryBtn">Pick a new story 📚</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  // ====================================================================
+  // Story data
+  // Each story: { id, title, emoji, cover, intro, pages: { id: pageObj } }
+  // Page object: { art (array of emojis), passage, questions [ {q, options [{text, correct}]} ],
+  //               choice? { q, options [{text, next}] }, ending? text  }
+  // ====================================================================
+  const STORIES = [
+    {
+      id: 'glowing-key',
+      title: 'The Glowing Key',
+      emoji: '🔑',
+      cover: '🔑',
+      intro: 'Maya finds a magical glowing key in her garden. Where will it lead?',
+      start: 'p1',
+      pages: {
+        p1: {
+          title: 'A twinkle in the dirt',
+          art: ['🌷', '🔑', '✨'],
+          passage: "Maya was watering her tomato plants when something twinkled in the dirt. She bent down and pulled out a small golden key. It was glowing softly, like a firefly. \"Oh wow!\" she whispered.",
+          questions: [
+            {
+              q: "Where did Maya find the key?",
+              options: [
+                { text: "In the dirt", correct: true },
+                { text: "Under her pillow", correct: false },
+                { text: "At school", correct: false }
+              ]
+            },
+            {
+              q: "How was the key glowing?",
+              options: [
+                { text: "Softly, like a firefly", correct: true },
+                { text: "Brightly, like lightning", correct: false },
+                { text: "Not at all", correct: false }
+              ]
+            }
+          ],
+          choice: {
+            q: "What does Maya do?",
+            options: [
+              { text: "🌳 Follow the glow into the forest", next: 'p2A' },
+              { text: "🐈 Run inside to show her cat", next: 'p2B' }
+            ]
+          }
+        },
+        p2A: {
+          title: 'Into the forest',
+          art: ['🌳', '🚪', '✨'],
+          passage: "Maya followed the glow through her yard and into the cool, leafy forest. The key tugged her toward a tiny door at the base of a huge oak tree. The door was no taller than her knee.",
+          questions: [
+            {
+              q: "Where did the glow lead Maya?",
+              options: [
+                { text: "Into the forest", correct: true },
+                { text: "To the moon", correct: false },
+                { text: "To the kitchen", correct: false }
+              ]
+            },
+            {
+              q: "Where was the tiny door?",
+              options: [
+                { text: "At the base of an oak tree", correct: true },
+                { text: "On the very top of the tree", correct: false },
+                { text: "Floating in the sky", correct: false }
+              ]
+            }
+          ],
+          choice: {
+            q: "What should Maya do?",
+            options: [
+              { text: "🔑 Use the key to unlock it", next: 'p3A1' },
+              { text: "✊ Knock three times first", next: 'p3A2' }
+            ]
+          }
+        },
+        p3A1: {
+          title: 'A tiny library',
+          art: ['📚', '🐿️', '🕯️'],
+          passage: "Maya slid the key into the keyhole. CLICK! The door swung open. Inside was a tiny library filled with books no bigger than her thumb, and a squirrel in a tiny vest reading by candlelight.",
+          questions: [
+            {
+              q: "What was inside the tree?",
+              options: [
+                { text: "A tiny library", correct: true },
+                { text: "A swimming pool", correct: false },
+                { text: "Nothing at all", correct: false }
+              ]
+            },
+            {
+              q: "How big were the books?",
+              options: [
+                { text: "Thumb-sized", correct: true },
+                { text: "House-sized", correct: false },
+                { text: "Invisible", correct: false }
+              ]
+            }
+          ],
+          ending: "Maya promised to come back every Saturday to read tiny books with the squirrel. The end!"
+        },
+        p3A2: {
+          title: 'Knock knock!',
+          art: ['🐿️', '🎩', '🚪'],
+          passage: "Maya knocked three times — knock, knock, knock! The door creaked open. A squirrel wearing a tiny top hat poked his head out. \"Welcome,\" he said. \"We've been waiting for someone to bring our key home.\"",
+          questions: [
+            {
+              q: "How many times did Maya knock?",
+              options: [
+                { text: "Three", correct: true },
+                { text: "One hundred", correct: false },
+                { text: "Zero", correct: false }
+              ]
+            },
+            {
+              q: "What was the squirrel wearing?",
+              options: [
+                { text: "A top hat", correct: true },
+                { text: "A bathing suit", correct: false },
+                { text: "Sunglasses", correct: false }
+              ]
+            }
+          ],
+          ending: "The squirrel gave Maya a pocket full of magic acorns — and a forever friendship. The end!"
+        },
+        p2B: {
+          title: 'Pepper takes the key',
+          art: ['🐈‍⬛', '🔑', '👀'],
+          passage: "Maya ran inside to find Pepper, her fluffy black cat. Pepper sniffed the key and her green eyes grew round as marbles. Then Pepper picked up the key in her teeth and walked straight toward the back door!",
+          questions: [
+            {
+              q: "What color is Pepper?",
+              options: [
+                { text: "Black", correct: true },
+                { text: "Rainbow", correct: false },
+                { text: "Sky blue", correct: false }
+              ]
+            },
+            {
+              q: "What did Pepper do with the key?",
+              options: [
+                { text: "Picked it up in her teeth", correct: true },
+                { text: "Hid it under the rug", correct: false },
+                { text: "Ate it", correct: false }
+              ]
+            }
+          ],
+          choice: {
+            q: "What does Maya do?",
+            options: [
+              { text: "🐾 Follow Pepper outside", next: 'p3B1' },
+              { text: "🤲 Gently take the key back", next: 'p3B2' }
+            ]
+          }
+        },
+        p3B1: {
+          title: 'A secret cat clubhouse',
+          art: ['🌹', '🏠', '🐈'],
+          passage: "Pepper led Maya behind the big rose bushes. There, hidden in the leaves, was a tiny cat-sized cottage. Pepper used the key to unlock it. Inside was a cozy room full of pillows — a secret cat clubhouse!",
+          questions: [
+            {
+              q: "Where did Pepper lead Maya?",
+              options: [
+                { text: "Behind the rose bushes", correct: true },
+                { text: "To the moon", correct: false },
+                { text: "To the dentist", correct: false }
+              ]
+            },
+            {
+              q: "What was inside the tiny cottage?",
+              options: [
+                { text: "A cozy clubhouse with pillows", correct: true },
+                { text: "A giant whale", correct: false },
+                { text: "A homework pile", correct: false }
+              ]
+            }
+          ],
+          ending: "Maya promised to keep Pepper's secret cat clubhouse safe forever. The end!"
+        },
+        p3B2: {
+          title: 'A wish to the sky',
+          art: ['🔑', '⭐', '🌌'],
+          passage: "Maya gently took the key from Pepper. The key glowed brighter and BRIGHTER, then floated up into the air! It turned into a tiny star and zoomed up into the sky with a friendly wink.",
+          questions: [
+            {
+              q: "What did the key turn into?",
+              options: [
+                { text: "A tiny star", correct: true },
+                { text: "A sandwich", correct: false },
+                { text: "A frog", correct: false }
+              ]
+            },
+            {
+              q: "Where did it go?",
+              options: [
+                { text: "Up into the sky", correct: true },
+                { text: "Down a drain", correct: false },
+                { text: "Inside her sock", correct: false }
+              ]
+            }
+          ],
+          ending: "That night Maya saw a new little star twinkling in her window. She waved hello. The end!"
+        }
+      }
+    },
+    {
+      id: 'whiskers-space',
+      title: 'Whiskers Goes to Space',
+      emoji: '🚀',
+      cover: '🐹',
+      intro: 'A tiny hamster builds a rocket and blasts off — but where will he go?',
+      start: 'p1',
+      pages: {
+        p1: {
+          title: "Whiskers's big dream",
+          art: ['🐹', '🚀', '🌌'],
+          passage: "Whiskers was a small hamster with a BIG dream. He wanted to be the first hamster on the moon. He built a rocket out of an old soup can, three pencils, and a whole roll of tape.",
+          questions: [
+            {
+              q: "What did Whiskers dream of being?",
+              options: [
+                { text: "The first hamster on the moon", correct: true },
+                { text: "A baseball coach", correct: false },
+                { text: "A famous chef", correct: false }
+              ]
+            },
+            {
+              q: "What did Whiskers use to build the rocket?",
+              options: [
+                { text: "A soup can and pencils", correct: true },
+                { text: "Bananas and grapes", correct: false },
+                { text: "Shoes and socks", correct: false }
+              ]
+            }
+          ],
+          choice: {
+            q: "What does Whiskers do first?",
+            options: [
+              { text: "🚀 Blast off right now!", next: 'p2A' },
+              { text: "🥕 Pack some snacks first", next: 'p2B' }
+            ]
+          }
+        },
+        p2A: {
+          title: 'Blast off!',
+          art: ['🚀', '💨', '✨'],
+          passage: "\"3… 2… 1… BLAST OFF!\" Whiskers's rocket shot up so fast his cheeks wobbled. In a flash he zoomed past the clouds and into the dark, sparkly sky. He could see Earth getting smaller and smaller.",
+          questions: [
+            {
+              q: "How did Whiskers count down?",
+              options: [
+                { text: "3, 2, 1", correct: true },
+                { text: "100, 99, 98", correct: false },
+                { text: "He didn't count", correct: false }
+              ]
+            },
+            {
+              q: "What got smaller as he flew up?",
+              options: [
+                { text: "Earth", correct: true },
+                { text: "His rocket", correct: false },
+                { text: "The moon", correct: false }
+              ]
+            }
+          ],
+          choice: {
+            q: "Where should Whiskers fly?",
+            options: [
+              { text: "🌕 Straight to the moon", next: 'p3A1' },
+              { text: "☄️ Toward a bright comet", next: 'p3A2' }
+            ]
+          }
+        },
+        p3A1: {
+          title: 'Moonwalker!',
+          art: ['🌕', '🐹', '🚩'],
+          passage: "Whiskers landed his rocket softly in the white moon dust. He hopped out and planted a tiny flag with his face on it. Then he tried to walk — and floated four feet up in the air! Moon gravity is the best.",
+          questions: [
+            {
+              q: "What did Whiskers plant on the moon?",
+              options: [
+                { text: "A tiny flag with his face on it", correct: true },
+                { text: "A giant tree", correct: false },
+                { text: "A turkey sandwich", correct: false }
+              ]
+            },
+            {
+              q: "How high did he float?",
+              options: [
+                { text: "Four feet up", correct: true },
+                { text: "One inch", correct: false },
+                { text: "He didn't float", correct: false }
+              ]
+            }
+          ],
+          ending: "Whiskers became the first hamster moonwalker. He was on the cover of every newspaper! The end!"
+        },
+        p3A2: {
+          title: 'Comet ride',
+          art: ['☄️', '🐹', '🪐'],
+          passage: "Whiskers steered close to the bright comet and hopped on for a ride! He held on tight as it swooshed past Saturn, with its big sparkly rings. Whiskers waved at a passing alien — who waved right back!",
+          questions: [
+            {
+              q: "What did Whiskers ride?",
+              options: [
+                { text: "A comet", correct: true },
+                { text: "A horse", correct: false },
+                { text: "A school bus", correct: false }
+              ]
+            },
+            {
+              q: "What planet did he see?",
+              options: [
+                { text: "Saturn, with sparkly rings", correct: true },
+                { text: "Pizza Planet", correct: false },
+                { text: "Couch Planet", correct: false }
+              ]
+            }
+          ],
+          ending: "The comet brought Whiskers home with a tail full of stardust to share with his hamster friends. The end!"
+        },
+        p2B: {
+          title: 'Snack time',
+          art: ['🥕', '🍪', '🐹'],
+          passage: "Whiskers packed three crunchy carrots, one sunflower-seed cookie, and a tiny water bottle. He stuffed them all into his cheeks until he looked like a fuzzy beach ball. Now he was ready!",
+          questions: [
+            {
+              q: "How many carrots did he pack?",
+              options: [
+                { text: "Three", correct: true },
+                { text: "One hundred", correct: false },
+                { text: "Zero", correct: false }
+              ]
+            },
+            {
+              q: "What did Whiskers look like with his cheeks full?",
+              options: [
+                { text: "A fuzzy beach ball", correct: true },
+                { text: "A tall giraffe", correct: false },
+                { text: "A tiny shoe", correct: false }
+              ]
+            }
+          ],
+          choice: {
+            q: "Who should come along?",
+            options: [
+              { text: "🐹 Just blast off alone", next: 'p3B1' },
+              { text: "🐹🐹 Invite his friend Mittens", next: 'p3B2' }
+            ]
+          }
+        },
+        p3B1: {
+          title: 'Floating crumbs',
+          art: ['🚀', '🐹', '🌟'],
+          passage: "Whiskers blasted off and floated in zero gravity, munching his snacks. The crumbs floated around him like tiny planets. He laughed and caught them in his mouth one by one. Best snack break ever!",
+          questions: [
+            {
+              q: "What floated around Whiskers?",
+              options: [
+                { text: "Crumbs", correct: true },
+                { text: "Elephants", correct: false },
+                { text: "Socks", correct: false }
+              ]
+            },
+            {
+              q: "How did he catch them?",
+              options: [
+                { text: "In his mouth", correct: true },
+                { text: "With a butterfly net", correct: false },
+                { text: "He didn't catch any", correct: false }
+              ]
+            }
+          ],
+          ending: "Whiskers came home full and famous. He gave a speech about space crumbs at his school. The end!"
+        },
+        p3B2: {
+          title: 'Two best friends in space',
+          art: ['🐹', '🐹', '🚀'],
+          passage: "Whiskers invited Mittens, his brave guinea pig friend. The two of them blasted off together, holding paws and giggling the whole way up. Mittens screamed \"WHEEEE!\" and Whiskers laughed so hard he snorted.",
+          questions: [
+            {
+              q: "Who did Whiskers invite?",
+              options: [
+                { text: "Mittens, his guinea pig friend", correct: true },
+                { text: "A shark", correct: false },
+                { text: "His grandpa", correct: false }
+              ]
+            },
+            {
+              q: "What did Mittens scream?",
+              options: [
+                { text: "WHEEEE!", correct: true },
+                { text: "I want pancakes!", correct: false },
+                { text: "Nothing — Mittens was asleep", correct: false }
+              ]
+            }
+          ],
+          ending: "Whiskers and Mittens became the first hamster-and-guinea-pig space team. They high-fived a passing alien. The end!"
+        }
+      }
+    },
+    {
+      id: 'library-end',
+      title: 'The Library at the End of the World',
+      emoji: '📚',
+      cover: '🦉',
+      intro: 'Hoot the owl runs a magical library — but one of his books is missing!',
+      start: 'p1',
+      pages: {
+        p1: {
+          title: 'A missing book',
+          art: ['🏰', '📚', '🦉'],
+          passage: "At the very end of the world, where the ocean turns to stars, stands a tall, twisty library where the books hum quiet songs. The librarian is a wise old owl named Hoot. Today, one of his books has gone missing.",
+          questions: [
+            {
+              q: "Where does the library stand?",
+              options: [
+                { text: "At the end of the world", correct: true },
+                { text: "Inside a pizza", correct: false },
+                { text: "In a goldfish bowl", correct: false }
+              ]
+            },
+            {
+              q: "Who is the librarian?",
+              options: [
+                { text: "An owl named Hoot", correct: true },
+                { text: "A noisy parrot", correct: false },
+                { text: "A sleepy bear", correct: false }
+              ]
+            }
+          ],
+          choice: {
+            q: "Where should Hoot search first?",
+            options: [
+              { text: "🪜 The dusty top shelf", next: 'p2A' },
+              { text: "🕯️ The shadowy basement", next: 'p2B' }
+            ]
+          }
+        },
+        p2A: {
+          title: 'A glittering feather',
+          art: ['🪜', '🪶', '✨'],
+          passage: "Hoot flew up to the very top shelf, dusty with cobwebs. Where the missing book used to be, he found a small empty space — and a single shiny feather, glittering with stardust.",
+          questions: [
+            {
+              q: "What did Hoot find on the top shelf?",
+              options: [
+                { text: "A glittering feather", correct: true },
+                { text: "A sandwich", correct: false },
+                { text: "His lost socks", correct: false }
+              ]
+            },
+            {
+              q: "What was on the feather?",
+              options: [
+                { text: "Stardust", correct: true },
+                { text: "Ketchup", correct: false },
+                { text: "Glitter glue", correct: false }
+              ]
+            }
+          ],
+          choice: {
+            q: "What does Hoot do with the feather?",
+            options: [
+              { text: "✨ Follow its sparkly trail", next: 'p3A1' },
+              { text: "🌙 Hold it up to the moonlight", next: 'p3A2' }
+            ]
+          }
+        },
+        p3A1: {
+          title: 'A baby star',
+          art: ['✨', '🌠', '🦉'],
+          passage: "Hoot followed the sparkling trail down a long hallway and out onto a balcony. There, a baby star was sitting on a railing, reading the missing book by its own light. The little star giggled and waved a pointy hand.",
+          questions: [
+            {
+              q: "Who was reading the missing book?",
+              options: [
+                { text: "A baby star", correct: true },
+                { text: "A robot", correct: false },
+                { text: "A tomato", correct: false }
+              ]
+            },
+            {
+              q: "How did the star light up the page?",
+              options: [
+                { text: "With its own light", correct: true },
+                { text: "With a flashlight", correct: false },
+                { text: "It didn't — it was dark", correct: false }
+              ]
+            }
+          ],
+          ending: "Hoot let the baby star borrow the book — as long as it came back every full moon. The end!"
+        },
+        p3A2: {
+          title: 'A shooting star thief',
+          art: ['🌙', '🌠', '📕'],
+          passage: "Hoot held the feather up to the bright full moon. The moon smiled and pointed a beam of silver light at a shooting star streaking across the sky. The shooting star had the missing book tucked under one twinkly arm!",
+          questions: [
+            {
+              q: "What did the moon do?",
+              options: [
+                { text: "Smiled and pointed a beam", correct: true },
+                { text: "Sneezed loudly", correct: false },
+                { text: "Hid behind a cloud", correct: false }
+              ]
+            },
+            {
+              q: "Who had the missing book?",
+              options: [
+                { text: "A shooting star", correct: true },
+                { text: "A cow", correct: false },
+                { text: "A kangaroo", correct: false }
+              ]
+            }
+          ],
+          ending: "Hoot caught the shooting star and got his book back — plus a wish, for being so clever. The end!"
+        },
+        p2B: {
+          title: 'Shiny eyes in the dark',
+          art: ['🕯️', '📚', '👀'],
+          passage: "The basement was dark and full of stacks of very old books. Hoot lit a tiny lantern. In the dim corner he spotted two big shiny eyes peeking out from behind a teetering pile of dictionaries.",
+          questions: [
+            {
+              q: "How was the basement?",
+              options: [
+                { text: "Dark", correct: true },
+                { text: "Sunny and bright", correct: false },
+                { text: "Full of beach balls", correct: false }
+              ]
+            },
+            {
+              q: "What did Hoot see in the corner?",
+              options: [
+                { text: "Two shiny eyes", correct: true },
+                { text: "A swimming pool", correct: false },
+                { text: "A giant pizza", correct: false }
+              ]
+            }
+          ],
+          choice: {
+            q: "What does Hoot do?",
+            options: [
+              { text: "👋 Say 'Hello!' kindly", next: 'p3B1' },
+              { text: "🤫 Hide the lantern and listen", next: 'p3B2' }
+            ]
+          }
+        },
+        p3B1: {
+          title: 'A bedtime borrower',
+          art: ['🐭', '📕', '🦉'],
+          passage: "A tiny field mouse stepped out of the shadows, holding the missing book in her little paws. \"I borrowed it to read to my babies,\" she squeaked shyly. \"I was going to bring it back tomorrow, I promise!\"",
+          questions: [
+            {
+              q: "Who had the book?",
+              options: [
+                { text: "A field mouse", correct: true },
+                { text: "A giant dolphin", correct: false },
+                { text: "A kangaroo", correct: false }
+              ]
+            },
+            {
+              q: "Why did she borrow it?",
+              options: [
+                { text: "To read to her babies", correct: true },
+                { text: "To eat for lunch", correct: false },
+                { text: "To throw in the river", correct: false }
+              ]
+            }
+          ],
+          ending: "Hoot smiled and gave the mouse her very own library card. She came back every week after that. The end!"
+        },
+        p3B2: {
+          title: 'A dragon storyteller',
+          art: ['🐉', '📖', '🪲'],
+          passage: "Hoot heard a soft, sweet voice reading aloud: \"Once upon a time…\" He peeked carefully around the shelf. A small dragon, no bigger than a teapot, was reading the book to a row of glowing fireflies.",
+          questions: [
+            {
+              q: "What was the dragon reading aloud?",
+              options: [
+                { text: "Once upon a time…", correct: true },
+                { text: "The lunch menu", correct: false },
+                { text: "Goodnight!", correct: false }
+              ]
+            },
+            {
+              q: "How big was the dragon?",
+              options: [
+                { text: "Teapot-sized", correct: true },
+                { text: "Bigger than a house", correct: false },
+                { text: "Microscopic", correct: false }
+              ]
+            }
+          ],
+          ending: "Hoot decided dragons should be allowed in the library too. He built a tiny dragon-sized reading nook just for them. The end!"
+        }
+      }
+    }
+  ];
+
+  // ====================================================================
+  // Praise & gentle phrases
+  // ====================================================================
+  const PRAISE = [
+    "Yes!", "Great reading!", "You got it!", "Amazing!", "Brain power!",
+    "Way to go!", "Smart cookie!", "Bullseye!", "Boom!", "Super star!",
+    "Fantastic!", "Nailed it!", "Reading rocket!", "Whoa, smart!", "You did it!"
+  ];
+  const GENTLE = [
+    "Almost! Read it again and try once more 🌟",
+    "Not quite — peek at the words and try again ✨",
+    "So close! Look at the passage one more time 💫",
+    "Hmm! Read it again — you've got this 🌈",
+    "Try again! The answer is hiding in the words 🔍"
+  ];
+
+  // ====================================================================
+  // State
+  // ====================================================================
+  const state = {
+    storyId: null,
+    pageId: null,
+    questionIndex: 0,    // which comprehension question is showing
+    answeredCorrect: 0,  // how many comp questions answered correctly on current page
+    path: []             // titles of pages visited (for ending summary)
+  };
+
+  // ====================================================================
+  // DOM helpers
+  // ====================================================================
+  const $ = (id) => document.getElementById(id);
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const s = $(id);
+    s.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    stopSpeech();
+  }
+
+  // ====================================================================
+  // Confetti
+  // ====================================================================
+  const CONFETTI_COLORS = ['#FFD93D', '#FF6FB5', '#4FC3F7', '#6BE6A8', '#B073FF', '#FF9F45'];
+  function burstConfetti(x, y, count) {
+    const n = count || 30;
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = x + 'px';
+      c.style.top = y + 'px';
+      c.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      document.body.appendChild(c);
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = 80 + Math.random() * 140;
+      const dx = Math.cos(angle) * velocity;
+      const dy = Math.sin(angle) * velocity - 80;
+      c.animate([
+        { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+        { transform: 'translate(' + dx + 'px, ' + (dy + 320) + 'px) rotate(' + (Math.random() * 720) + 'deg)', opacity: 0 }
+      ], { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(.2,.6,.4,1)' });
+      setTimeout(() => c.remove(), 1700);
+    }
+  }
+  function bigConfetti() {
+    const w = window.innerWidth, h = window.innerHeight;
+    burstConfetti(w * 0.25, h * 0.35, 40);
+    setTimeout(() => burstConfetti(w * 0.75, h * 0.35, 40), 180);
+    setTimeout(() => burstConfetti(w * 0.5, h * 0.25, 50), 360);
+  }
+
+  // ====================================================================
+  // Sound (Web Audio API)
+  // ====================================================================
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) {
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch (e) { audioCtx = null; }
+    }
+    return audioCtx;
+  }
+  function tone(freq, start, dur, vol) {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.value = freq;
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime + start;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + dur);
+    o.start(t0);
+    o.stop(t0 + dur + 0.05);
+  }
+  function playHappy() {
+    tone(523.25, 0, 0.18, 0.18);   // C5
+    tone(659.25, 0.08, 0.18, 0.18); // E5
+    tone(783.99, 0.16, 0.28, 0.2);  // G5
+  }
+  function playGentle() {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime;
+    o.frequency.setValueAtTime(392, t0);          // G4
+    o.frequency.linearRampToValueAtTime(330, t0 + 0.32); // E4
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.14, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + 0.4);
+    o.start(t0);
+    o.stop(t0 + 0.45);
+  }
+  function playFanfare() {
+    tone(523.25, 0,    0.18, 0.2);
+    tone(659.25, 0.12, 0.18, 0.2);
+    tone(783.99, 0.24, 0.18, 0.2);
+    tone(1046.5, 0.36, 0.4, 0.22);
+  }
+
+  // ====================================================================
+  // Speech Synthesis (Read it to me)
+  // ====================================================================
+  const speechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  let currentUtterance = null;
+
+  function stopSpeech() {
+    if (!speechSupported) return;
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+    currentUtterance = null;
+    const btn = $('readBtn');
+    if (btn) {
+      btn.classList.remove('speaking');
+      btn.firstChild && (btn.textContent = '🔊 Read it to me');
+    }
+  }
+
+  function pickVoice() {
+    if (!speechSupported) return null;
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices || !voices.length) return null;
+    // Prefer an English voice; bonus if it sounds female-ish (kids tend to enjoy that for storytelling)
+    const en = voices.filter(v => /^en[-_]/i.test(v.lang || ''));
+    const pool = en.length ? en : voices;
+    const preferred = pool.find(v => /female|samantha|victoria|karen|tessa|moira|google us english|google uk english female/i.test(v.name));
+    return preferred || pool[0];
+  }
+
+  function speak(text) {
+    if (!speechSupported) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.95;
+      u.pitch = 1.1;
+      u.volume = 1;
+      const v = pickVoice();
+      if (v) u.voice = v;
+      u.onend = () => {
+        const btn = $('readBtn');
+        if (btn) { btn.classList.remove('speaking'); btn.textContent = '🔊 Read it to me'; }
+        currentUtterance = null;
+      };
+      u.onerror = u.onend;
+      currentUtterance = u;
+      window.speechSynthesis.speak(u);
+      const btn = $('readBtn');
+      if (btn) { btn.classList.add('speaking'); btn.textContent = '⏹ Stop reading'; }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  if (speechSupported) {
+    // voices may load asynchronously
+    window.speechSynthesis.onvoiceschanged = () => {};
+  }
+
+  // ====================================================================
+  // Welcome / Rules / Picker flow
+  // ====================================================================
+  $('startBtn').addEventListener('click', (e) => {
+    ensureAudio();
+    burstConfetti(e.clientX, e.clientY, 20);
+    showScreen('rulesScreen');
+  });
+
+  $('rulesNextBtn').addEventListener('click', () => {
+    renderPicker();
+    showScreen('pickerScreen');
+  });
+
+  $('mascot').addEventListener('click', (e) => {
+    burstConfetti(e.clientX, e.clientY, 18);
+    playHappy();
+  });
+
+  function renderPicker() {
+    const grid = $('pickerGrid');
+    grid.innerHTML = '';
+    STORIES.forEach((story) => {
+      const btn = document.createElement('button');
+      btn.className = 'story-card';
+      btn.type = 'button';
+      btn.setAttribute('aria-label', 'Play ' + story.title);
+      btn.innerHTML =
+        '<div class="cover" aria-hidden="true">' + story.cover + '</div>' +
+        '<h3>' + story.emoji + ' ' + story.title + '</h3>' +
+        '<p>' + story.intro + '</p>' +
+        '<span class="age-chip">Ages 6+</span>';
+      btn.addEventListener('click', (e) => {
+        burstConfetti(e.clientX, e.clientY, 18);
+        startStory(story.id);
+      });
+      grid.appendChild(btn);
+    });
+  }
+
+  // ====================================================================
+  // Story page rendering
+  // ====================================================================
+  function getStory(id) {
+    return STORIES.find(s => s.id === id);
+  }
+
+  function startStory(storyId) {
+    const story = getStory(storyId);
+    if (!story) return;
+    state.storyId = storyId;
+    state.pageId = story.start;
+    state.path = [];
+    renderPage();
+    showScreen('pageScreen');
+  }
+
+  function renderPage() {
+    const story = getStory(state.storyId);
+    const page = story.pages[state.pageId];
+    if (!page) return;
+
+    // Track visit for the path summary (avoid dupes on replay-same-page)
+    if (state.path[state.path.length - 1] !== page.title) {
+      state.path.push(page.title);
+    }
+    state.questionIndex = 0;
+    state.answeredCorrect = 0;
+
+    $('storyTitleBar').textContent = story.emoji + ' ' + story.title;
+
+    // crumbs — show how many comp questions on this page, plus the choice/ending dot
+    const stepCount = page.questions.length + 1;
+    const crumbs = $('crumbs');
+    crumbs.innerHTML = '';
+    for (let i = 0; i < stepCount; i++) {
+      const d = document.createElement('div');
+      d.className = 'crumb' + (i === 0 ? ' current' : '');
+      d.dataset.step = i;
+      crumbs.appendChild(d);
+    }
+
+    // Art
+    const artEl = $('pageArt');
+    artEl.innerHTML = page.art.map(e => '<span class="art-emoji">' + e + '</span>').join('');
+
+    // Passage
+    $('passage').textContent = page.passage;
+
+    // Read-aloud
+    const readBtn = $('readBtn');
+    readBtn.classList.remove('speaking');
+    readBtn.textContent = '🔊 Read it to me';
+    readBtn.disabled = false;
+    if (!speechSupported) {
+      readBtn.hidden = true;
+      $('readFallback').hidden = false;
+    } else {
+      readBtn.hidden = false;
+      $('readFallback').hidden = true;
+    }
+
+    // Render first question
+    $('choiceArea').hidden = true;
+    $('choiceArea').innerHTML = '';
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const story = getStory(state.storyId);
+    const page = story.pages[state.pageId];
+    const qIdx = state.questionIndex;
+    const q = page.questions[qIdx];
+    if (!q) {
+      // No more questions — show choice or ending
+      renderChoiceOrEnding();
+      return;
+    }
+
+    // Update crumbs
+    const crumbs = $('crumbs').children;
+    for (let i = 0; i < crumbs.length; i++) {
+      crumbs[i].classList.remove('current');
+      if (i < qIdx) crumbs[i].classList.add('done');
+      else if (i === qIdx) crumbs[i].classList.add('current');
+    }
+
+    const area = $('questionsArea');
+    area.innerHTML = '';
+
+    const label = document.createElement('span');
+    label.className = 'step-label';
+    label.textContent = 'Question ' + (qIdx + 1) + ' of ' + page.questions.length;
+    area.appendChild(label);
+
+    const qEl = document.createElement('p');
+    qEl.className = 'question';
+    qEl.textContent = q.q;
+    area.appendChild(qEl);
+
+    const opts = document.createElement('div');
+    opts.className = 'options';
+    q.options.forEach((opt, i) => {
+      const b = document.createElement('button');
+      b.className = 'option-btn';
+      b.type = 'button';
+      b.textContent = opt.text;
+      b.addEventListener('click', (e) => handleAnswer(e, b, opt, q));
+      opts.appendChild(b);
+    });
+    area.appendChild(opts);
+
+    const fb = document.createElement('p');
+    fb.className = 'feedback';
+    fb.id = 'questionFeedback';
+    fb.setAttribute('aria-live', 'polite');
+    area.appendChild(fb);
+  }
+
+  function handleAnswer(e, button, opt, q) {
+    ensureAudio();
+    const fb = $('questionFeedback');
+    const buttons = button.parentElement.querySelectorAll('.option-btn');
+
+    if (opt.correct) {
+      button.classList.add('correct');
+      button.innerHTML = button.textContent + ' <span class="check">✓</span>';
+      buttons.forEach(b => { b.disabled = true; });
+      fb.className = 'feedback good';
+      fb.textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+      playHappy();
+      burstConfetti(e.clientX || (window.innerWidth / 2), e.clientY || 200, 16);
+
+      state.answeredCorrect++;
+      setTimeout(() => {
+        state.questionIndex++;
+        renderQuestion();
+      }, 950);
+    } else {
+      button.classList.add('wrong');
+      fb.className = 'feedback gentle';
+      fb.textContent = GENTLE[Math.floor(Math.random() * GENTLE.length)];
+      playGentle();
+      // Re-enable after a moment, clear the wrong style so they can try again
+      setTimeout(() => {
+        button.classList.remove('wrong');
+      }, 700);
+    }
+  }
+
+  function renderChoiceOrEnding() {
+    const story = getStory(state.storyId);
+    const page = story.pages[state.pageId];
+
+    // All comp questions answered; mark last crumb current
+    const crumbs = $('crumbs').children;
+    for (let i = 0; i < crumbs.length; i++) {
+      crumbs[i].classList.remove('current');
+      crumbs[i].classList.add('done');
+    }
+    if (crumbs.length) {
+      crumbs[crumbs.length - 1].classList.remove('done');
+      crumbs[crumbs.length - 1].classList.add('current');
+    }
+
+    $('questionsArea').innerHTML = '';
+    const choiceArea = $('choiceArea');
+    choiceArea.hidden = false;
+    choiceArea.innerHTML = '';
+    choiceArea.classList.add('choice-section');
+
+    if (page.choice) {
+      // Show the choice
+      const label = document.createElement('span');
+      label.className = 'step-label';
+      label.textContent = '✨ Your Choice ✨';
+      choiceArea.appendChild(label);
+
+      const qEl = document.createElement('p');
+      qEl.className = 'question';
+      qEl.textContent = page.choice.q;
+      choiceArea.appendChild(qEl);
+
+      const opts = document.createElement('div');
+      opts.className = 'options';
+      if (page.choice.options.length === 1) opts.classList.add('single');
+      page.choice.options.forEach((opt) => {
+        const b = document.createElement('button');
+        b.className = 'option-btn';
+        b.type = 'button';
+        b.textContent = opt.text;
+        b.addEventListener('click', (e) => {
+          burstConfetti(e.clientX, e.clientY, 14);
+          playHappy();
+          state.pageId = opt.next;
+          renderPage();
+        });
+        opts.appendChild(b);
+      });
+      choiceArea.appendChild(opts);
+    } else if (page.ending) {
+      // Final page — go to ending celebration
+      goToEnding(page.ending);
+    }
+  }
+
+  // ====================================================================
+  // Ending screen
+  // ====================================================================
+  function goToEnding(endingText) {
+    $('endingText').textContent = endingText;
+    const ol = $('pathSummary');
+    ol.innerHTML = '';
+    state.path.forEach((t) => {
+      const li = document.createElement('li');
+      li.textContent = t;
+      ol.appendChild(li);
+    });
+    showScreen('endingScreen');
+    setTimeout(() => { bigConfetti(); playFanfare(); }, 180);
+  }
+
+  $('replayBtn').addEventListener('click', () => {
+    if (state.storyId) startStory(state.storyId);
+  });
+  $('newStoryBtn').addEventListener('click', () => {
+    renderPicker();
+    showScreen('pickerScreen');
+  });
+
+  // ====================================================================
+  // Read-aloud button
+  // ====================================================================
+  $('readBtn').addEventListener('click', () => {
+    ensureAudio();
+    if (!speechSupported) return;
+    if (currentUtterance && window.speechSynthesis.speaking) {
+      stopSpeech();
+      return;
+    }
+    const story = getStory(state.storyId);
+    const page = story && story.pages[state.pageId];
+    if (page) speak(page.passage);
+  });
+
+  // Stop speech when leaving the page
+  window.addEventListener('beforeunload', stopSpeech);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopSpeech();
+  });
+  </script>
+</body>
+</html>

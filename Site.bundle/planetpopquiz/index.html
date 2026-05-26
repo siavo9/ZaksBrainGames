@@ -1,0 +1,1824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planet Pop Quiz — Zak's Brain Games</title>
+  <meta name="description" content="Planet Pop Quiz is a kid-friendly solar system trivia game! Pilot a rocket, answer planet questions, and build your own Solar System Collection. Ages 6+." />
+  <meta name="theme-color" content="#2D2D5F" />
+  <link rel="canonical" href="https://zaksbraingames.app/planetpopquiz/" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AA%90%3C/text%3E%3C/svg%3E" />
+
+
+    <!-- Self-hosted fonts (offline; no external requests) -->
+  <style>
+  @font-face { font-family:'Fredoka'; font-style:normal; font-weight:300 700; font-display:swap; src:url('../fonts/fredoka.woff2') format('woff2'); }
+  @font-face { font-family:'Bubblegum Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('../fonts/bubblegum-sans-400.woff2') format('woff2'); }
+  </style>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow: #FFD93D;
+      --yellow-dark: #C99700;
+      --pink: #FF6FB5;
+      --blue: #4FC3F7;
+      --mint: #6BE6A8;
+      --mint-dark: #1FB97A;
+      --purple: #B073FF;
+      --orange: #FF9F45;
+      --coral: #FF6B6B;
+      --dark: #2D2D5F;
+      --cream: #FFF8E7;
+      --space: #0B0B2C;
+      --space-2: #1A1B4B;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Fredoka', system-ui, sans-serif;
+      color: var(--dark);
+      background: linear-gradient(135deg, #FFF8E7 0%, #E5F4FF 50%, #EFE5FF 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.4s ease;
+    }
+    /* Game/celebration screens get a deep space background */
+    body.space-mode {
+      background: linear-gradient(180deg, #0B0B2C 0%, #1A1B4B 60%, #2D2D5F 100%);
+      color: #fff;
+    }
+
+    /* Floating shapes for bright screens */
+    .shape {
+      position: fixed; border-radius: 50%; opacity: 0.32; z-index: 0;
+      animation: float 8s ease-in-out infinite; pointer-events: none;
+    }
+    .shape.s1 { width: 120px; height: 120px; background: var(--yellow); top: 10%; left: 5%; animation-delay: 0s; }
+    .shape.s2 { width: 80px;  height: 80px;  background: var(--pink);   top: 62%; left: 92%; animation-delay: 2s; }
+    .shape.s3 { width: 100px; height: 100px; background: var(--blue);   top: 82%; left: 8%;  animation-delay: 4s; }
+    .shape.s4 { width: 60px;  height: 60px;  background: var(--purple); top: 22%; left: 88%; animation-delay: 1s; }
+    .shape.s5 { width: 90px;  height: 90px;  background: var(--mint);   top: 45%; left: 3%;  animation-delay: 3s; }
+    body.space-mode .shape { display: none; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-26px) rotate(12deg); }
+    }
+
+    /* Starfield (game / celebration) */
+    .starfield {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      display: none;
+    }
+    body.space-mode .starfield { display: block; }
+    .star {
+      position: absolute;
+      background: #fff;
+      border-radius: 50%;
+      animation: twinkle 3.2s ease-in-out infinite;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.15); }
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ---------- Top nav (back button visible on every screen) ---------- */
+    .topnav {
+      padding: 18px 0 6px;
+      display: flex;
+      justify-content: flex-start;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--purple);
+      font-weight: 600;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 24px;
+      background: white;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.18);
+      transition: transform 0.18s, box-shadow 0.18s;
+      font-size: 0.98rem;
+      min-height: 44px;
+    }
+    .back-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(45, 45, 95, 0.22); }
+    .back-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(45, 45, 95, 0.22); }
+    body.space-mode .back-btn { color: var(--space); background: #FFE894; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35); }
+
+    /* ---------- Screens ---------- */
+    .screen { display: none; padding: 14px 0 48px; }
+    .screen.active { display: block; animation: screenIn 0.3s ease; }
+    @keyframes screenIn {
+      from { transform: translateY(8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ---------- Welcome ---------- */
+    .welcome { text-align: center; padding: 10px 14px 30px; }
+    .mascot {
+      font-size: 92px;
+      display: inline-block;
+      animation: rocketWiggle 3s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.18));
+      user-select: none;
+      cursor: pointer;
+      transform-origin: center bottom;
+    }
+    @keyframes rocketWiggle {
+      0%, 100% { transform: translateY(0) rotate(-8deg); }
+      50% { transform: translateY(-14px) rotate(8deg); }
+    }
+    h1.title {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: clamp(2.5rem, 7vw, 4.2rem);
+      margin: 8px 0 4px;
+      background: linear-gradient(135deg, var(--pink), var(--purple), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 4px 4px 0 rgba(255, 217, 61, 0.35);
+      letter-spacing: 1px;
+    }
+    .tagline {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--dark);
+      font-weight: 500;
+      margin: 4px auto 20px;
+      max-width: 540px;
+      line-height: 1.45;
+    }
+    .tagline span { color: var(--pink); font-weight: 700; }
+
+    /* ---------- Big buttons ---------- */
+    .btn {
+      display: inline-block;
+      padding: 16px 32px;
+      border-radius: 50px;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      border: none;
+      cursor: pointer;
+      color: white;
+      text-decoration: none;
+      text-align: center;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, box-shadow 0.15s;
+      min-height: 52px;
+      line-height: 1.2;
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 9px 0 rgba(0, 0, 0, 0.15); }
+    .btn:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15); }
+    .btn-primary { background: var(--pink); }
+    .btn-yellow  { background: var(--yellow); color: var(--dark); }
+    .btn-purple  { background: var(--purple); }
+    .btn-blue    { background: var(--blue); }
+    .btn-mint    { background: var(--mint-dark); }
+    .btn-ghost {
+      background: white; color: var(--dark);
+      box-shadow: 0 4px 0 rgba(45, 45, 95, 0.18);
+    }
+    .btn-ghost:hover { box-shadow: 0 6px 0 rgba(45, 45, 95, 0.18); }
+
+    .big-cta {
+      font-size: 1.35rem;
+      padding: 18px 40px;
+      animation: pulseGlow 2.2s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 0 rgba(255, 111, 181, 0.35); }
+      50% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 18px rgba(255, 111, 181, 0); }
+    }
+
+    /* ---------- Card panels ---------- */
+    .panel {
+      background: white;
+      border-radius: 26px;
+      padding: 24px 24px 26px;
+      box-shadow: 0 8px 0 rgba(45, 45, 95, 0.1), 0 14px 30px rgba(45, 45, 95, 0.08);
+      margin-bottom: 18px;
+    }
+    .panel h2 {
+      font-family: 'Bubblegum Sans', cursive;
+      color: var(--purple);
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    /* ---------- Mode toggle ---------- */
+    .mode-toggle {
+      display: inline-flex;
+      background: #fff;
+      border-radius: 50px;
+      padding: 6px;
+      box-shadow: 0 4px 0 rgba(45, 45, 95, 0.12), 0 10px 20px rgba(45, 45, 95, 0.08);
+      margin: 0 auto 22px;
+      gap: 4px;
+    }
+    .mode-toggle button {
+      border: none;
+      background: transparent;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 12px 22px;
+      border-radius: 50px;
+      cursor: pointer;
+      color: var(--dark);
+      min-height: 44px;
+      transition: background 0.2s, color 0.2s, transform 0.15s;
+    }
+    .mode-toggle button.active {
+      background: linear-gradient(135deg, var(--purple), var(--blue));
+      color: #fff;
+      box-shadow: 0 3px 0 rgba(0,0,0,0.12);
+    }
+    .mode-toggle button:not(.active):hover { background: var(--cream); }
+    .mode-label {
+      display: block;
+      font-size: 0.95rem;
+      color: #555;
+      max-width: 460px;
+      margin: -10px auto 18px;
+      min-height: 1.4em;
+    }
+
+    /* ---------- Rules ---------- */
+    .rules-list {
+      list-style: none;
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 0;
+    }
+    .rules-list li {
+      background: var(--cream);
+      border-radius: 18px;
+      padding: 14px 18px;
+      margin-bottom: 12px;
+      font-size: 1.08rem;
+      line-height: 1.45;
+      font-weight: 500;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.08);
+    }
+    .rules-actions { text-align: center; margin-top: 8px; }
+
+    /* ---------- Game screen ---------- */
+    .game-wrap {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 6px 20px 30px;
+      position: relative;
+      z-index: 1;
+    }
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      color: #fff;
+    }
+    .progress-text {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+    }
+    .progress-stars {
+      font-weight: 700;
+      background: rgba(255, 217, 61, 0.18);
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 1rem;
+      color: #FFEB99;
+      border: 2px solid rgba(255, 217, 61, 0.4);
+    }
+    .progress-bar {
+      height: 10px;
+      background: rgba(255,255,255,0.14);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 18px;
+      position: relative;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--yellow), var(--orange));
+      width: 0%;
+      border-radius: 6px;
+      transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Question card */
+    .question-card {
+      background: linear-gradient(180deg, #fff 0%, #FFF8E7 100%);
+      border-radius: 24px;
+      padding: 22px 22px 18px;
+      box-shadow: 0 8px 0 rgba(0, 0, 0, 0.35), 0 16px 40px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      color: var(--dark);
+      margin-bottom: 22px;
+      position: relative;
+      animation: cardIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes cardIn {
+      from { transform: translateY(-16px) scale(0.95); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .question-prompt {
+      font-size: 4.2rem;
+      line-height: 1;
+      margin-bottom: 8px;
+      filter: drop-shadow(2px 4px 0 rgba(0,0,0,0.15));
+      animation: bobble 3s ease-in-out infinite;
+      display: inline-block;
+    }
+    @keyframes bobble {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-6px) rotate(3deg); }
+    }
+    .question-text {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: clamp(1.2rem, 3vw, 1.55rem);
+      color: var(--dark);
+      line-height: 1.3;
+    }
+
+    /* Answer options as floating asteroids/planets */
+    .options {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: 1fr 1fr;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 480px) {
+      .options { grid-template-columns: 1fr; gap: 12px; }
+    }
+    .option-btn {
+      background: linear-gradient(180deg, #fff 0%, #F4F0FF 100%);
+      border: 3px solid var(--purple);
+      border-radius: 22px;
+      padding: 14px 14px;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--dark);
+      cursor: pointer;
+      box-shadow: 0 5px 0 rgba(0, 0, 0, 0.3);
+      transition: transform 0.15s, box-shadow 0.15s, background 0.15s, border-color 0.15s;
+      min-height: 70px;
+      line-height: 1.25;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      animation: floatOption 4s ease-in-out infinite;
+    }
+    .option-btn:nth-child(1) { animation-delay: 0s; }
+    .option-btn:nth-child(2) { animation-delay: 0.5s; }
+    .option-btn:nth-child(3) { animation-delay: 1s; }
+    .option-btn:nth-child(4) { animation-delay: 1.5s; }
+    @keyframes floatOption {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    .option-btn .opt-emoji {
+      font-size: 1.7rem;
+      line-height: 1;
+      filter: drop-shadow(1px 2px 0 rgba(0,0,0,0.15));
+    }
+    .option-btn:hover:not(:disabled) {
+      transform: translateY(-3px);
+      border-color: var(--pink);
+      background: linear-gradient(180deg, #fff 0%, #FFE5F1 100%);
+      box-shadow: 0 8px 0 rgba(0, 0, 0, 0.3);
+    }
+    .option-btn:active:not(:disabled) {
+      transform: translateY(2px);
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.3);
+    }
+    .option-btn.correct {
+      background: linear-gradient(180deg, #DFFBEB 0%, #B0F0CF 100%);
+      border-color: var(--mint-dark);
+      color: var(--mint-dark);
+      animation: popCorrect 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .option-btn.wrong {
+      background: linear-gradient(180deg, #FFE9E9 0%, #FFC7C7 100%);
+      border-color: var(--coral);
+      color: var(--coral);
+      animation: shake 0.45s ease-in-out;
+    }
+    .option-btn:disabled { cursor: default; }
+    @keyframes popCorrect {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-9px); }
+      40% { transform: translateX(9px); }
+      60% { transform: translateX(-7px); }
+      80% { transform: translateX(7px); }
+    }
+
+    /* Feedback area (praise + alien hint) */
+    .feedback {
+      min-height: 64px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin: 4px auto 16px;
+      line-height: 1.4;
+      max-width: 560px;
+      padding: 6px 14px;
+    }
+    .feedback.good {
+      color: #FFEB99;
+      animation: bouncePraise 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 1.45rem;
+      letter-spacing: 0.5px;
+    }
+    .feedback.gentle {
+      color: #fff;
+      background: rgba(176, 115, 255, 0.25);
+      border: 2px solid rgba(176, 115, 255, 0.5);
+      border-radius: 18px;
+      padding: 12px 16px;
+    }
+    .feedback .alien {
+      display: inline-block;
+      font-size: 1.6rem;
+      margin-right: 6px;
+      animation: alienHover 1.6s ease-in-out infinite;
+      vertical-align: middle;
+    }
+    @keyframes alienHover {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    @keyframes bouncePraise {
+      0% { transform: scale(0.6); opacity: 0; }
+      60% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Collection at bottom of game screen */
+    .collection-wrap {
+      margin-top: 8px;
+      padding: 14px 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid rgba(255, 255, 255, 0.18);
+      border-radius: 22px;
+      color: #fff;
+    }
+    .collection-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: space-between;
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+      color: #FFEB99;
+      letter-spacing: 0.5px;
+    }
+    .rocket-track {
+      position: relative;
+      height: 38px;
+      margin: 4px 0 10px;
+    }
+    .rocket-line {
+      position: absolute;
+      left: 0; right: 0; top: 50%;
+      height: 4px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.35), rgba(255,255,255,0.05));
+      border-radius: 4px;
+      transform: translateY(-50%);
+    }
+    .rocket {
+      position: absolute;
+      top: 50%;
+      left: 0%;
+      transform: translate(-50%, -50%) rotate(35deg);
+      font-size: 2rem;
+      transition: left 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.45));
+      z-index: 2;
+    }
+    .collection-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-height: 50px;
+      padding: 6px 4px;
+    }
+    .collection-slot {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.06);
+      border: 2px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      font-size: 1.5rem;
+    }
+    .collection-slot.filled {
+      background: rgba(255, 217, 61, 0.18);
+      border: 2px solid rgba(255, 217, 61, 0.55);
+      animation: planetIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes planetIn {
+      0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+      60% { transform: scale(1.25) rotate(20deg); }
+      100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+
+    /* ---------- Celebration ---------- */
+    .celebration {
+      text-align: center;
+      color: #fff;
+    }
+    .celebration .trophy {
+      font-size: 5.4rem;
+      display: inline-block;
+      animation: trophyBounce 1.4s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.35));
+    }
+    @keyframes trophyBounce {
+      0%, 100% { transform: translateY(0) rotate(-6deg); }
+      50% { transform: translateY(-14px) rotate(6deg); }
+    }
+    .celebration h2 {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: clamp(2rem, 5vw, 2.6rem);
+      background: linear-gradient(135deg, var(--yellow), var(--pink), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 8px 0;
+    }
+    .celebration .subtitle {
+      font-size: 1.15rem;
+      line-height: 1.5;
+      color: #FFEB99;
+      max-width: 560px;
+      margin: 0 auto 18px;
+    }
+    .stars-line {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: 1.4rem;
+      color: var(--yellow);
+      margin: 12px 0 18px;
+      letter-spacing: 0.5px;
+    }
+    .celebration-collection {
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 24px;
+      padding: 20px 18px;
+      max-width: 560px;
+      margin: 0 auto 22px;
+    }
+    .celebration-collection h3 {
+      font-family: 'Bubblegum Sans', cursive;
+      color: var(--yellow);
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
+    .celebration-collection .row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+    }
+    .celebration-collection .planet-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.85rem;
+      color: #fff;
+      width: 64px;
+    }
+    .celebration-collection .planet-emoji {
+      font-size: 2rem;
+      filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.3));
+      animation: bobble 3s ease-in-out infinite;
+    }
+    .celebration-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    /* ---------- Confetti ---------- */
+    .confetti {
+      position: fixed;
+      width: 10px; height: 10px;
+      pointer-events: none;
+      z-index: 9999;
+      border-radius: 2px;
+    }
+
+    /* ---------- Real planet images (replace flat emoji where available) ---------- */
+    .body-img {
+      display: inline-block;
+      object-fit: contain;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.18), rgba(0,0,0,0.25) 70%);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.35), inset 0 0 14px rgba(255,255,255,0.05);
+      vertical-align: middle;
+    }
+    .body-img.size-prompt {
+      width: 5.2rem; height: 5.2rem;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.45), 0 0 24px rgba(255,217,61,0.18);
+    }
+    .body-img.size-option {
+      width: 2.4rem; height: 2.4rem;
+    }
+    .body-img.size-slot {
+      width: 38px; height: 38px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+    .body-img.size-celebration {
+      width: 3.2rem; height: 3.2rem;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.4), 0 0 16px rgba(255,217,61,0.2);
+    }
+    .question-prompt .body-img {
+      animation: bobble 3s ease-in-out infinite;
+    }
+    .celebration-collection .body-img {
+      animation: bobble 3s ease-in-out infinite;
+    }
+    @media (max-width: 480px) {
+      .body-img.size-prompt { width: 4.2rem; height: 4.2rem; }
+      .body-img.size-slot { width: 32px; height: 32px; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+
+    @media (max-width: 480px) {
+      .panel { padding: 18px 16px 22px; }
+      .question-prompt { font-size: 3.4rem; }
+      .question-card { padding: 18px 16px 16px; }
+      .option-btn { padding: 12px 12px; font-size: 1rem; min-height: 64px; }
+      .btn { padding: 14px 26px; font-size: 1.05rem; }
+      .big-cta { font-size: 1.2rem; padding: 16px 30px; }
+      .mode-toggle button { padding: 10px 16px; font-size: 0.95rem; }
+      .collection-slot { width: 38px; height: 38px; font-size: 1.3rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
+  <div class="shape s3"></div>
+  <div class="shape s4"></div>
+  <div class="shape s5"></div>
+  <div class="starfield" id="starfield" aria-hidden="true"></div>
+
+  <div class="container">
+    <header class="topnav">
+      <a class="back-btn" href="../index.html" aria-label="Back to Zak's Brain Games">← Back to Zak's Brain Games</a>
+    </header>
+
+    <main>
+      <!-- ============== WELCOME ============== -->
+      <section class="screen active" id="welcomeScreen" aria-label="Welcome">
+        <div class="welcome">
+          <div class="mascot" id="mascot" role="img" aria-label="Rocket mascot">🚀</div>
+          <h1 class="title">Planet Pop Quiz</h1>
+          <p class="tagline">Pilot your rocket through space, answer planet questions, and <span>build your own Solar System!</span></p>
+
+          <div class="mode-toggle" role="tablist" aria-label="Difficulty mode">
+            <button type="button" id="modeBasic" class="active" role="tab" aria-selected="true">🪐 Basic</button>
+            <button type="button" id="modeAdvanced" role="tab" aria-selected="false">🧠 Advanced</button>
+          </div>
+          <p class="mode-label" id="modeLabel">Basic Mode — see and name the planets. Great for ages 6–7!</p>
+
+          <div>
+            <button class="btn btn-primary big-cta" id="startBtn">🚀 Blast Off! ▶</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== RULES ============== -->
+      <section class="screen" id="rulesScreen" aria-label="How to play">
+        <div class="panel">
+          <h2>How to Play</h2>
+          <ul class="rules-list">
+            <li>🚀 Read each space question carefully.</li>
+            <li>🪐 Tap the right answer to collect the planet.</li>
+            <li>🌟 Get all 10 questions to build your Solar System!</li>
+            <li>🧠 Switch to Advanced Mode for trickier space facts.</li>
+            <li>✨ Stuck? You always get another try.</li>
+          </ul>
+          <div class="rules-actions">
+            <button class="btn btn-yellow big-cta" id="rulesNextBtn">Let's go! 🚀</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== GAME ============== -->
+      <section class="screen" id="gameScreen" aria-label="Quiz game">
+        <div class="game-wrap">
+          <div class="progress-row">
+            <span class="progress-text" id="progressText">Question 1 of 10</span>
+            <span class="progress-stars" id="progressStars">⭐ 0</span>
+          </div>
+          <div class="progress-bar"><div class="progress-bar-fill" id="progressBarFill"></div></div>
+
+          <div class="question-card" id="questionCard">
+            <div class="question-prompt" id="questionPrompt" aria-hidden="true">🪐</div>
+            <p class="question-text" id="questionText"></p>
+          </div>
+
+          <div class="options" id="optionsGrid" role="group" aria-label="Answer choices"></div>
+
+          <p class="feedback" id="feedback" aria-live="polite"></p>
+
+          <div class="collection-wrap">
+            <div class="collection-label">
+              <span>🪐 Solar System Collection</span>
+              <span id="collectionCount">0 / 10</span>
+            </div>
+            <div class="rocket-track" aria-hidden="true">
+              <div class="rocket-line"></div>
+              <div class="rocket" id="rocket">🚀</div>
+            </div>
+            <div class="collection-row" id="collectionRow"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== CELEBRATION ============== -->
+      <section class="screen" id="celebrationScreen" aria-label="Round complete">
+        <div class="celebration">
+          <div class="trophy">🚀</div>
+          <h2>You built your own Solar System!</h2>
+          <p class="subtitle" id="celebrationSubtitle">Out of this world, space explorer!</p>
+          <div class="stars-line" id="starsLine">⭐ 0 / 10 stars</div>
+
+          <div class="celebration-collection">
+            <h3>✨ Your Solar System Collection ✨</h3>
+            <div class="row" id="celebrationRow"></div>
+          </div>
+
+          <div class="celebration-buttons">
+            <button class="btn btn-yellow" id="playAgainBtn">Play Again ↺</button>
+            <button class="btn btn-purple" id="switchModeBtn">Switch Mode 🔁</button>
+            <a class="btn btn-blue" href="../index.html">Back to Games 🏠</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  // ====================================================================
+  // Real planet/body images (public-domain NASA imagery via Wikimedia)
+  // ====================================================================
+  const PLANET_IMAGES = {
+    Mercury: 'images/mercury.jpg',
+    Venus:   'images/venus.jpg',
+    Earth:   'images/earth.jpg',
+    Mars:    'images/mars.jpg',
+    Jupiter: 'images/jupiter.jpg',
+    Saturn:  'images/saturn.jpg',
+    Uranus:  'images/uranus.jpg',
+    Neptune: 'images/neptune.jpg',
+    Pluto:   'images/pluto.jpg',
+    Sun:     'images/sun.jpg',
+    Moon:    'images/moon.jpg'
+  };
+  // Map decorative emojis used in prompts/options to a planet so we can show
+  // its real photo when one exists. Anything not in here keeps its emoji.
+  const EMOJI_TO_BODY = {
+    '🔴': 'Mars',
+    '🪐': 'Saturn',
+    '🌍': 'Earth',
+    '🌎': 'Earth',
+    '🌏': 'Earth',
+    '🟠': 'Jupiter',
+    '🪨': 'Mercury',
+    '☀️': 'Sun',
+    '🌙': 'Moon',
+    '🟡': 'Venus',
+    '🔵': 'Neptune',
+    '🟦': 'Uranus',
+    '🤍': 'Pluto'
+  };
+  function bodyVisual(emoji, name, sizeClass) {
+    const body = name && PLANET_IMAGES[name] ? name : EMOJI_TO_BODY[emoji];
+    if (body && PLANET_IMAGES[body]) {
+      return '<img class="body-img ' + sizeClass + '" src="' + PLANET_IMAGES[body]
+        + '" alt="' + body + '" loading="lazy" decoding="async" />';
+    }
+    return emoji || '';
+  }
+
+  // ====================================================================
+  // Question bank
+  //
+  // Each question:
+  //   text     — the question shown to the kid
+  //   prompt   — big emoji shown above the question (decorative)
+  //   options  — array of { label, emoji, correct }
+  //   hint     — friendly hint shown after a wrong answer
+  //   reward   — { emoji, name } added to the Solar System Collection
+  // ====================================================================
+  const QUESTIONS_BASIC = [
+    {
+      text: "Which planet is the red planet?",
+      prompt: "🔴",
+      options: [
+        { label: "Mars", emoji: "🔴", correct: true },
+        { label: "Venus", emoji: "🟡" },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Jupiter", emoji: "🟠" }
+      ],
+      hint: "Mars is red because of rusty iron in its dust!",
+      reward: { emoji: "🔴", name: "Mars" }
+    },
+    {
+      text: "Which planet has beautiful rings around it?",
+      prompt: "🪐",
+      options: [
+        { label: "Saturn", emoji: "🪐", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Venus", emoji: "🟡" }
+      ],
+      hint: "Saturn's rings are made of ice and rocks!",
+      reward: { emoji: "🪐", name: "Saturn" }
+    },
+    {
+      text: "Which one is our home planet?",
+      prompt: "🌍",
+      options: [
+        { label: "Earth", emoji: "🌍", correct: true },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Venus", emoji: "🟡" },
+        { label: "Jupiter", emoji: "🟠" }
+      ],
+      hint: "Earth is where we live — the blue and green planet!",
+      reward: { emoji: "🌍", name: "Earth" }
+    },
+    {
+      text: "Which planet is the biggest in our solar system?",
+      prompt: "🟠",
+      options: [
+        { label: "Jupiter", emoji: "🟠", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Mercury", emoji: "🪨" }
+      ],
+      hint: "Jupiter is so big, 1,000 Earths could fit inside!",
+      reward: { emoji: "🟠", name: "Jupiter" }
+    },
+    {
+      text: "Which planet is closest to the Sun?",
+      prompt: "☀️",
+      options: [
+        { label: "Mercury", emoji: "🪨", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Neptune", emoji: "🔵" }
+      ],
+      hint: "Mercury is the closest planet to the Sun.",
+      reward: { emoji: "🪨", name: "Mercury" }
+    },
+    {
+      text: "Which one is the Sun?",
+      prompt: "☀️",
+      options: [
+        { label: "Sun", emoji: "☀️", correct: true },
+        { label: "Moon", emoji: "🌙" },
+        { label: "Saturn", emoji: "🪐" },
+        { label: "Earth", emoji: "🌍" }
+      ],
+      hint: "The Sun is the bright yellow star we see in the day!",
+      reward: { emoji: "☀️", name: "Sun" }
+    },
+    {
+      text: "Tap the Moon!",
+      prompt: "🌙",
+      options: [
+        { label: "Moon", emoji: "🌙", correct: true },
+        { label: "Sun", emoji: "☀️" },
+        { label: "Saturn", emoji: "🪐" },
+        { label: "Mars", emoji: "🔴" }
+      ],
+      hint: "The Moon glows softly at night and changes shape.",
+      reward: { emoji: "🌙", name: "Moon" }
+    },
+    {
+      text: "Which planet is hot and yellow, covered in thick clouds?",
+      prompt: "🟡",
+      options: [
+        { label: "Venus", emoji: "🟡", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Neptune", emoji: "🔵" }
+      ],
+      hint: "Venus is a yellow planet wrapped in clouds.",
+      reward: { emoji: "🟡", name: "Venus" }
+    },
+    {
+      text: "Which planet is deep blue and far from the Sun?",
+      prompt: "🔵",
+      options: [
+        { label: "Neptune", emoji: "🔵", correct: true },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Mercury", emoji: "🪨" },
+        { label: "Sun", emoji: "☀️" }
+      ],
+      hint: "Neptune is a deep blue planet at the edge of our solar system.",
+      reward: { emoji: "🔵", name: "Neptune" }
+    },
+    {
+      text: "Where do astronauts plant flags and bounce in low gravity?",
+      prompt: "🚀",
+      options: [
+        { label: "Moon", emoji: "🌙", correct: true },
+        { label: "Sun", emoji: "☀️" },
+        { label: "Saturn", emoji: "🪐" },
+        { label: "Jupiter", emoji: "🟠" }
+      ],
+      hint: "Astronauts visit the Moon and float in its low gravity.",
+      reward: { emoji: "🌙", name: "Moon" }
+    },
+    {
+      text: "Which planet is named after the god of war?",
+      prompt: "🔴",
+      options: [
+        { label: "Mars", emoji: "🔴", correct: true },
+        { label: "Venus", emoji: "🟡" },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Saturn", emoji: "🪐" }
+      ],
+      hint: "Mars was the Roman god of war — and it's red as fire!",
+      reward: { emoji: "🔴", name: "Mars" }
+    },
+    {
+      text: "Which one looks like a big striped orange ball?",
+      prompt: "🟠",
+      options: [
+        { label: "Jupiter", emoji: "🟠", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Venus", emoji: "🟡" },
+        { label: "Moon", emoji: "🌙" }
+      ],
+      hint: "Jupiter has stripes of orange clouds wrapped around it!",
+      reward: { emoji: "🟠", name: "Jupiter" }
+    },
+    {
+      text: "Which planet has water and clouds where we live?",
+      prompt: "🌍",
+      options: [
+        { label: "Earth", emoji: "🌍", correct: true },
+        { label: "Saturn", emoji: "🪐" },
+        { label: "Mercury", emoji: "🪨" },
+        { label: "Neptune", emoji: "🔵" }
+      ],
+      hint: "Earth has oceans, rivers, and clouds — and us!",
+      reward: { emoji: "🌍", name: "Earth" }
+    },
+    {
+      text: "Which is the smallest planet?",
+      prompt: "🪨",
+      options: [
+        { label: "Mercury", emoji: "🪨", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Jupiter", emoji: "🟠" },
+        { label: "Saturn", emoji: "🪐" }
+      ],
+      hint: "Mercury is the tiniest of all the planets.",
+      reward: { emoji: "🪨", name: "Mercury" }
+    },
+    {
+      text: "Which planet is also called the Blue Planet?",
+      prompt: "🌍",
+      options: [
+        { label: "Earth", emoji: "🌍", correct: true },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Venus", emoji: "🟡" },
+        { label: "Sun", emoji: "☀️" }
+      ],
+      hint: "Earth looks blue from space because of all the oceans!",
+      reward: { emoji: "🌍", name: "Earth" }
+    },
+    {
+      text: "Which planet is light blue and tipped on its side?",
+      prompt: "🟦",
+      options: [
+        { label: "Uranus", emoji: "🟦", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Jupiter", emoji: "🟠" }
+      ],
+      hint: "Uranus is icy blue and lies on its side — like a rolling ball!",
+      reward: { emoji: "🟦", name: "Uranus" }
+    },
+    {
+      text: "Which is the brightest thing in our daytime sky?",
+      prompt: "☀️",
+      options: [
+        { label: "Sun", emoji: "☀️", correct: true },
+        { label: "Moon", emoji: "🌙" },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Mars", emoji: "🔴" }
+      ],
+      hint: "The Sun lights up our daytime sky!",
+      reward: { emoji: "☀️", name: "Sun" }
+    },
+    {
+      text: "Which planet is right next to Earth and looks red?",
+      prompt: "🔴",
+      options: [
+        { label: "Mars", emoji: "🔴", correct: true },
+        { label: "Pluto", emoji: "🤍" },
+        { label: "Mercury", emoji: "🪨" },
+        { label: "Saturn", emoji: "🪐" }
+      ],
+      hint: "Mars is Earth's red neighbor!",
+      reward: { emoji: "🔴", name: "Mars" }
+    },
+    {
+      text: "Which planet has rings made of ice and rocks?",
+      prompt: "🪐",
+      options: [
+        { label: "Saturn", emoji: "🪐", correct: true },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Venus", emoji: "🟡" }
+      ],
+      hint: "Saturn's icy rings are famous!",
+      reward: { emoji: "🪐", name: "Saturn" }
+    },
+    {
+      text: "Which one shines at night and changes shape?",
+      prompt: "🌙",
+      options: [
+        { label: "Moon", emoji: "🌙", correct: true },
+        { label: "Sun", emoji: "☀️" },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Jupiter", emoji: "🟠" }
+      ],
+      hint: "The Moon goes from a full circle to a tiny sliver — and back!",
+      reward: { emoji: "🌙", name: "Moon" }
+    },
+    {
+      text: "Which is the biggest thing in our solar system?",
+      prompt: "☀️",
+      options: [
+        { label: "Sun", emoji: "☀️", correct: true },
+        { label: "Jupiter", emoji: "🟠" },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Saturn", emoji: "🪐" }
+      ],
+      hint: "The Sun is HUGE — over 100 Earths wide!",
+      reward: { emoji: "☀️", name: "Sun" }
+    },
+    {
+      text: "Which planet glows yellow-white in the morning sky?",
+      prompt: "🟡",
+      options: [
+        { label: "Venus", emoji: "🟡", correct: true },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Saturn", emoji: "🪐" },
+        { label: "Moon", emoji: "🌙" }
+      ],
+      hint: "Venus shines bright as the 'morning star'!",
+      reward: { emoji: "🟡", name: "Venus" }
+    }
+  ];
+
+  const QUESTIONS_ADVANCED = [
+    {
+      text: "About how many moons does Jupiter have?",
+      prompt: "🟠",
+      options: [
+        { label: "More than 90", correct: true },
+        { label: "Just 1" },
+        { label: "About 12" },
+        { label: "Exactly 8" }
+      ],
+      hint: "Jupiter has more than 90 moons! The biggest is Ganymede.",
+      reward: { emoji: "🟠", name: "Jupiter" }
+    },
+    {
+      text: "Which planet is the hottest? 🌡️",
+      prompt: "🟡",
+      options: [
+        { label: "Venus", emoji: "🟡", correct: true },
+        { label: "Mercury", emoji: "🪨" },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Sun", emoji: "☀️" }
+      ],
+      hint: "Venus is even hotter than Mercury — its thick clouds trap heat like an oven!",
+      reward: { emoji: "🟡", name: "Venus" }
+    },
+    {
+      text: "Which planet spins backwards compared to the others?",
+      prompt: "🔄",
+      options: [
+        { label: "Venus", emoji: "🟡", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Jupiter", emoji: "🟠" }
+      ],
+      hint: "Venus spins clockwise — opposite to almost every other planet!",
+      reward: { emoji: "🟡", name: "Venus" }
+    },
+    {
+      text: "What is the largest planet in our solar system?",
+      prompt: "🟠",
+      options: [
+        { label: "Jupiter", emoji: "🟠", correct: true },
+        { label: "Saturn", emoji: "🪐" },
+        { label: "Neptune", emoji: "🔵" },
+        { label: "Earth", emoji: "🌍" }
+      ],
+      hint: "Jupiter is the giant of our solar system!",
+      reward: { emoji: "🟠", name: "Jupiter" }
+    },
+    {
+      text: "What is the Great Red Spot on Jupiter?",
+      prompt: "🟠",
+      options: [
+        { label: "A giant storm", correct: true },
+        { label: "A volcano" },
+        { label: "A red lake" },
+        { label: "A red moon" }
+      ],
+      hint: "The Great Red Spot is a giant storm bigger than Earth — and it's been spinning for hundreds of years!",
+      reward: { emoji: "🟠", name: "Jupiter" }
+    },
+    {
+      text: "Which planet has the biggest volcano in the solar system?",
+      prompt: "🔴",
+      options: [
+        { label: "Mars", emoji: "🔴", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Venus", emoji: "🟡" },
+        { label: "Jupiter", emoji: "🟠" }
+      ],
+      hint: "Mars has Olympus Mons — three times taller than Mount Everest!",
+      reward: { emoji: "🔴", name: "Mars" }
+    },
+    {
+      text: "How long is one day on Mercury (the time it takes to spin once)?",
+      prompt: "🪨",
+      options: [
+        { label: "59 Earth days", correct: true },
+        { label: "24 hours" },
+        { label: "1 year" },
+        { label: "5 minutes" }
+      ],
+      hint: "A day on Mercury lasts 59 Earth days — it spins very slowly!",
+      reward: { emoji: "🪨", name: "Mercury" }
+    },
+    {
+      text: "Which planet could float in water (if you found a big enough bathtub)?",
+      prompt: "🪐",
+      options: [
+        { label: "Saturn", emoji: "🪐", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Jupiter", emoji: "🟠" }
+      ],
+      hint: "Saturn is so light it would actually float on water!",
+      reward: { emoji: "🪐", name: "Saturn" }
+    },
+    {
+      text: "Which planet is tipped on its side, rolling like a ball?",
+      prompt: "🟦",
+      options: [
+        { label: "Uranus", emoji: "🟦", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Venus", emoji: "🟡" }
+      ],
+      hint: "Uranus spins on its side — scientists think a giant rock knocked it over!",
+      reward: { emoji: "🟦", name: "Uranus" }
+    },
+    {
+      text: "How long does it take Earth to go around the Sun once?",
+      prompt: "🌍",
+      options: [
+        { label: "365 days", correct: true },
+        { label: "24 hours" },
+        { label: "100 years" },
+        { label: "30 days" }
+      ],
+      hint: "Earth takes one year — 365 days — to circle the Sun.",
+      reward: { emoji: "🌍", name: "Earth" }
+    },
+    {
+      text: "Which dwarf planet was once called the 9th planet?",
+      prompt: "🤍",
+      options: [
+        { label: "Pluto", emoji: "🤍", correct: true },
+        { label: "Ceres" },
+        { label: "Eris" },
+        { label: "Mercury", emoji: "🪨" }
+      ],
+      hint: "Pluto used to be the 9th planet — now it's called a dwarf planet.",
+      reward: { emoji: "🤍", name: "Pluto" }
+    },
+    {
+      text: "Who was the first person to walk on the Moon?",
+      prompt: "👨‍🚀",
+      options: [
+        { label: "Neil Armstrong", correct: true },
+        { label: "Albert Einstein" },
+        { label: "Galileo Galilei" },
+        { label: "Buzz Lightyear" }
+      ],
+      hint: "Neil Armstrong walked on the Moon in 1969 and said 'one small step for man'!",
+      reward: { emoji: "👨‍🚀", name: "Astronaut" }
+    },
+    {
+      text: "What do we call icy space rocks with long glowing tails?",
+      prompt: "☄️",
+      options: [
+        { label: "Comets", emoji: "☄️", correct: true },
+        { label: "Asteroids", emoji: "🌑" },
+        { label: "Moons", emoji: "🌙" },
+        { label: "Planets", emoji: "🪐" }
+      ],
+      hint: "Comets are icy travelers whose tails glow when they zoom past the Sun.",
+      reward: { emoji: "☄️", name: "Comet" }
+    },
+    {
+      text: "Where do most asteroids in our solar system live?",
+      prompt: "🌑",
+      options: [
+        { label: "Between Mars and Jupiter", correct: true },
+        { label: "Inside the Sun" },
+        { label: "On Earth" },
+        { label: "Around the Moon" }
+      ],
+      hint: "Most asteroids float in a giant belt between Mars and Jupiter.",
+      reward: { emoji: "🌑", name: "Asteroid" }
+    },
+    {
+      text: "What does ISS stand for?",
+      prompt: "🛰️",
+      options: [
+        { label: "International Space Station", correct: true },
+        { label: "Icy Star System" },
+        { label: "Inner Sun Satellite" },
+        { label: "Inside Saturn's Sky" }
+      ],
+      hint: "The ISS is the International Space Station — a giant lab orbiting Earth!",
+      reward: { emoji: "🛰️", name: "ISS" }
+    },
+    {
+      text: "Which planet has the strongest, fastest winds?",
+      prompt: "🔵",
+      options: [
+        { label: "Neptune", emoji: "🔵", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Mercury", emoji: "🪨" }
+      ],
+      hint: "Neptune's winds blow over 1,200 mph — faster than a jet plane!",
+      reward: { emoji: "🔵", name: "Neptune" }
+    },
+    {
+      text: "What is the Sun mostly made of?",
+      prompt: "☀️",
+      options: [
+        { label: "Hydrogen and helium gas", correct: true },
+        { label: "Rocks and dirt" },
+        { label: "Water" },
+        { label: "Fire and lava" }
+      ],
+      hint: "The Sun is a huge ball of glowing hydrogen and helium gas.",
+      reward: { emoji: "☀️", name: "Sun" }
+    },
+    {
+      text: "How many planets are in our solar system?",
+      prompt: "🪐",
+      options: [
+        { label: "8", correct: true },
+        { label: "9" },
+        { label: "7" },
+        { label: "100" }
+      ],
+      hint: "There are 8 planets — Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune.",
+      reward: { emoji: "🪐", name: "Planet" }
+    },
+    {
+      text: "Which is the only planet known to have life?",
+      prompt: "🌍",
+      options: [
+        { label: "Earth", emoji: "🌍", correct: true },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Venus", emoji: "🟡" },
+        { label: "Jupiter", emoji: "🟠" }
+      ],
+      hint: "So far, Earth is the only planet we know has life!",
+      reward: { emoji: "🌍", name: "Earth" }
+    },
+    {
+      text: "What is a galaxy?",
+      prompt: "🌌",
+      options: [
+        { label: "A huge group of stars", correct: true },
+        { label: "A small moon" },
+        { label: "A planet's ring" },
+        { label: "A type of comet" }
+      ],
+      hint: "A galaxy is a giant family of billions of stars — we live in the Milky Way!",
+      reward: { emoji: "🌌", name: "Galaxy" }
+    },
+    {
+      text: "How long does sunlight take to reach Earth?",
+      prompt: "☀️",
+      options: [
+        { label: "About 8 minutes", correct: true },
+        { label: "1 second" },
+        { label: "1 hour" },
+        { label: "1 whole day" }
+      ],
+      hint: "Sunlight travels for about 8 minutes before it reaches your eyes!",
+      reward: { emoji: "☀️", name: "Sun" }
+    },
+    {
+      text: "Which planet has a day longer than its year?",
+      prompt: "🟡",
+      options: [
+        { label: "Venus", emoji: "🟡", correct: true },
+        { label: "Mercury", emoji: "🪨" },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Jupiter", emoji: "🟠" }
+      ],
+      hint: "Venus spins so slowly that one day there lasts longer than one year!",
+      reward: { emoji: "🟡", name: "Venus" }
+    },
+    {
+      text: "Which planet has two tiny potato-shaped moons named Phobos and Deimos?",
+      prompt: "🔴",
+      options: [
+        { label: "Mars", emoji: "🔴", correct: true },
+        { label: "Earth", emoji: "🌍" },
+        { label: "Venus", emoji: "🟡" },
+        { label: "Mercury", emoji: "🪨" }
+      ],
+      hint: "Mars has two lumpy little moons — Phobos and Deimos!",
+      reward: { emoji: "🔴", name: "Mars" }
+    },
+    {
+      text: "What is a 'shooting star' really?",
+      prompt: "💫",
+      options: [
+        { label: "A space rock burning up in our air", correct: true },
+        { label: "A real star falling" },
+        { label: "A firework" },
+        { label: "A flying bird" }
+      ],
+      hint: "Shooting stars are tiny space rocks (meteors) burning bright as they hit Earth's air.",
+      reward: { emoji: "💫", name: "Meteor" }
+    },
+    {
+      text: "Which planet is named after the king of the Roman gods?",
+      prompt: "🟠",
+      options: [
+        { label: "Jupiter", emoji: "🟠", correct: true },
+        { label: "Mars", emoji: "🔴" },
+        { label: "Saturn", emoji: "🪐" },
+        { label: "Earth", emoji: "🌍" }
+      ],
+      hint: "Jupiter was the Roman king of the gods — and it's the king of the planets, too!",
+      reward: { emoji: "🟠", name: "Jupiter" }
+    },
+    {
+      text: "How many rings does Saturn have (the main groups we can see)?",
+      prompt: "🪐",
+      options: [
+        { label: "Many rings, in groups of 7 main bands", correct: true },
+        { label: "Just 1" },
+        { label: "None" },
+        { label: "Exactly 100" }
+      ],
+      hint: "Saturn has thousands of rings, but they're sorted into 7 main groups!",
+      reward: { emoji: "🪐", name: "Saturn" }
+    }
+  ];
+
+  // ====================================================================
+  // Praise & gentle phrases (kept generous and bouncy)
+  // ====================================================================
+  const PRAISE = [
+    "Stellar! 🌟",
+    "Out of this world! 🚀",
+    "Cosmic! 🌌",
+    "You're a space genius!",
+    "Brain power! ⚡",
+    "Amazing! 🎉",
+    "Yes! 🎯",
+    "Great work! 👏",
+    "Astronaut-level smart!",
+    "Galactic! 🌠",
+    "Super star! ⭐",
+    "Sky-high smarts!",
+    "Rocket brain! 🚀",
+    "Nailed it! 🎯",
+    "Boom! 💥",
+    "Way to go! 🪐",
+    "Spaced-out smart!"
+  ];
+  const GENTLE_OPENERS = [
+    "Almost!",
+    "Not quite!",
+    "So close!",
+    "Hmm!",
+    "Try once more!"
+  ];
+
+  // ====================================================================
+  // State
+  // ====================================================================
+  const state = {
+    mode: 'basic',          // 'basic' | 'advanced'
+    questionList: [],       // shuffled list of 10 questions for this round
+    questionIndex: 0,
+    stars: 0,
+    triedThisQuestion: false, // true once they've answered wrong on current question
+    collection: []           // [{emoji, name}] in order earned
+  };
+
+  // ====================================================================
+  // DOM helpers
+  // ====================================================================
+  const $ = (id) => document.getElementById(id);
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const s = $(id);
+    s.classList.add('active');
+    const spaceScreens = id === 'gameScreen' || id === 'celebrationScreen';
+    document.body.classList.toggle('space-mode', spaceScreens);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // ====================================================================
+  // Starfield (decorative twinkling dots, ~50)
+  // ====================================================================
+  (function buildStarfield() {
+    const field = $('starfield');
+    for (let i = 0; i < 55; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const size = 1 + Math.random() * 2.4;
+      star.style.width = size + 'px';
+      star.style.height = size + 'px';
+      star.style.left = (Math.random() * 100) + '%';
+      star.style.top = (Math.random() * 100) + '%';
+      star.style.animationDelay = (Math.random() * 3.2) + 's';
+      star.style.opacity = 0.4 + Math.random() * 0.5;
+      field.appendChild(star);
+    }
+  })();
+
+  // ====================================================================
+  // Confetti
+  // ====================================================================
+  const CONFETTI_COLORS = ['#FFD93D', '#FF6FB5', '#4FC3F7', '#6BE6A8', '#B073FF', '#FF9F45'];
+  function burstConfetti(x, y, count) {
+    const n = count || 28;
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = x + 'px';
+      c.style.top = y + 'px';
+      c.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      document.body.appendChild(c);
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = 80 + Math.random() * 140;
+      const dx = Math.cos(angle) * velocity;
+      const dy = Math.sin(angle) * velocity - 80;
+      c.animate([
+        { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+        { transform: 'translate(' + dx + 'px, ' + (dy + 320) + 'px) rotate(' + (Math.random() * 720) + 'deg)', opacity: 0 }
+      ], { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(.2,.6,.4,1)' });
+      setTimeout(() => c.remove(), 1700);
+    }
+  }
+  function bigConfetti() {
+    const w = window.innerWidth, h = window.innerHeight;
+    burstConfetti(w * 0.25, h * 0.35, 38);
+    setTimeout(() => burstConfetti(w * 0.75, h * 0.35, 38), 180);
+    setTimeout(() => burstConfetti(w * 0.5,  h * 0.25, 48), 360);
+  }
+
+  // ====================================================================
+  // Sound (Web Audio API — no external files)
+  // ====================================================================
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { audioCtx = null; }
+    }
+    return audioCtx;
+  }
+  function tone(freq, start, dur, vol, type) {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type || 'sine';
+    o.frequency.value = freq;
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime + start;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + dur);
+    o.start(t0);
+    o.stop(t0 + dur + 0.05);
+  }
+  function playHappy() {
+    // Bright rising arpeggio
+    tone(523.25, 0,    0.18, 0.18); // C5
+    tone(659.25, 0.08, 0.18, 0.18); // E5
+    tone(783.99, 0.16, 0.28, 0.2);  // G5
+  }
+  function playGentle() {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime;
+    o.frequency.setValueAtTime(392, t0);                  // G4
+    o.frequency.linearRampToValueAtTime(330, t0 + 0.32);  // E4 (gentle dip)
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.13, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + 0.4);
+    o.start(t0);
+    o.stop(t0 + 0.45);
+  }
+  function playFanfare() {
+    tone(523.25, 0,    0.18, 0.2);
+    tone(659.25, 0.12, 0.18, 0.2);
+    tone(783.99, 0.24, 0.18, 0.2);
+    tone(1046.5, 0.36, 0.45, 0.22);
+  }
+  function playLaunch() {
+    // Quick "swoosh up" for blast off
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sawtooth';
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime;
+    o.frequency.setValueAtTime(220, t0);
+    o.frequency.exponentialRampToValueAtTime(880, t0 + 0.5);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.12, t0 + 0.04);
+    g.gain.linearRampToValueAtTime(0, t0 + 0.55);
+    o.start(t0);
+    o.stop(t0 + 0.6);
+  }
+
+  // ====================================================================
+  // Mode toggle
+  // ====================================================================
+  function setMode(mode) {
+    state.mode = mode;
+    const basic = $('modeBasic');
+    const adv = $('modeAdvanced');
+    basic.classList.toggle('active', mode === 'basic');
+    adv.classList.toggle('active', mode === 'advanced');
+    basic.setAttribute('aria-selected', mode === 'basic');
+    adv.setAttribute('aria-selected', mode === 'advanced');
+    $('modeLabel').textContent = mode === 'basic'
+      ? 'Basic Mode — see and name the planets. Great for ages 6–7!'
+      : 'Advanced Mode — fun space facts and trickier questions. Ages 8 and up!';
+  }
+  $('modeBasic').addEventListener('click', () => setMode('basic'));
+  $('modeAdvanced').addEventListener('click', () => setMode('advanced'));
+
+  // ====================================================================
+  // Welcome / Rules flow
+  // ====================================================================
+  $('startBtn').addEventListener('click', (e) => {
+    ensureAudio();
+    playLaunch();
+    burstConfetti(e.clientX || (window.innerWidth/2), e.clientY || 200, 22);
+    showScreen('rulesScreen');
+  });
+
+  $('rulesNextBtn').addEventListener('click', () => {
+    startRound();
+  });
+
+  $('mascot').addEventListener('click', (e) => {
+    ensureAudio();
+    burstConfetti(e.clientX, e.clientY, 18);
+    playHappy();
+  });
+
+  // ====================================================================
+  // Round flow
+  // ====================================================================
+  function pickRoundQuestions() {
+    const bank = state.mode === 'advanced' ? QUESTIONS_ADVANCED : QUESTIONS_BASIC;
+    // No-repeat-within-round: shuffle and take first 10
+    return shuffle(bank).slice(0, 10);
+  }
+
+  function startRound() {
+    state.questionList = pickRoundQuestions();
+    state.questionIndex = 0;
+    state.stars = 0;
+    state.collection = [];
+    state.triedThisQuestion = false;
+    renderCollection();
+    updateProgress();
+    renderQuestion();
+    showScreen('gameScreen');
+  }
+
+  function updateProgress() {
+    $('progressText').textContent = 'Question ' + (state.questionIndex + 1) + ' of ' + state.questionList.length;
+    $('progressStars').textContent = '⭐ ' + state.stars;
+    const pct = (state.questionIndex / state.questionList.length) * 100;
+    $('progressBarFill').style.width = pct + '%';
+    // Move the rocket along the track based on collection progress
+    const collectionPct = (state.collection.length / state.questionList.length) * 100;
+    $('rocket').style.left = collectionPct + '%';
+    $('collectionCount').textContent = state.collection.length + ' / ' + state.questionList.length;
+  }
+
+  function renderQuestion() {
+    state.triedThisQuestion = false;
+    const q = state.questionList[state.questionIndex];
+
+    $('questionPrompt').innerHTML = bodyVisual(q.prompt, null, 'size-prompt') || '🪐';
+    $('questionText').textContent = q.text;
+    $('feedback').textContent = '';
+    $('feedback').className = 'feedback';
+
+    const grid = $('optionsGrid');
+    grid.innerHTML = '';
+    const options = shuffle(q.options);
+    // Answers are text-only: the planet picture lives in the question prompt,
+    // never on the options, so kids must read the question instead of just
+    // matching the same image.
+    options.forEach((opt) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'option-btn';
+      b.innerHTML = '<span class="opt-label">' + opt.label + '</span>';
+      b.addEventListener('click', (e) => handleAnswer(e, b, opt, q));
+      grid.appendChild(b);
+    });
+    updateProgress();
+  }
+
+  function handleAnswer(e, button, opt, q) {
+    ensureAudio();
+    const buttons = button.parentElement.querySelectorAll('.option-btn');
+    const fb = $('feedback');
+
+    if (opt.correct) {
+      // Lock all buttons, mark correct
+      buttons.forEach(b => { b.disabled = true; });
+      button.classList.add('correct');
+      fb.className = 'feedback good';
+      fb.textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+      playHappy();
+      burstConfetti(e.clientX || (window.innerWidth / 2), e.clientY || 220, 22);
+
+      if (!state.triedThisQuestion) state.stars++;
+      // Add to collection
+      state.collection.push(q.reward);
+      renderCollection();
+      updateProgress();
+
+      setTimeout(() => {
+        state.questionIndex++;
+        if (state.questionIndex >= state.questionList.length) {
+          goToCelebration();
+        } else {
+          renderQuestion();
+        }
+      }, 1100);
+    } else {
+      // Gentle shake, hint with alien, let them try again
+      state.triedThisQuestion = true;
+      button.classList.add('wrong');
+      button.disabled = true;
+      const opener = GENTLE_OPENERS[Math.floor(Math.random() * GENTLE_OPENERS.length)];
+      fb.className = 'feedback gentle';
+      fb.innerHTML = '<span class="alien" aria-hidden="true">👽</span>' + opener + ' ' + q.hint + ' 🌟';
+      playGentle();
+      // Clear the wrong style after a moment, leave it disabled so they pick another
+      setTimeout(() => button.classList.remove('wrong'), 700);
+    }
+  }
+
+  function renderCollection() {
+    const row = $('collectionRow');
+    row.innerHTML = '';
+    const total = state.questionList.length || 10;
+    for (let i = 0; i < total; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'collection-slot';
+      if (state.collection[i]) {
+        const item = state.collection[i];
+        slot.classList.add('filled');
+        slot.innerHTML = bodyVisual(item.emoji, item.name, 'size-slot');
+        slot.setAttribute('aria-label', item.name);
+        slot.setAttribute('title', item.name);
+      }
+      row.appendChild(slot);
+    }
+  }
+
+  // ====================================================================
+  // Celebration
+  // ====================================================================
+  function goToCelebration() {
+    $('starsLine').textContent = '⭐ ' + state.stars + ' / ' + state.questionList.length + ' stars';
+    let subtitle;
+    if (state.stars === state.questionList.length) subtitle = 'Perfect round, space explorer! You aced every question! 🚀';
+    else if (state.stars >= 7) subtitle = 'Out of this world! Your space brain is super strong! 🌟';
+    else subtitle = 'You built your Solar System! Every astronaut keeps learning. 🌠';
+    $('celebrationSubtitle').textContent = subtitle;
+
+    // Unique-by-name collection in the order earned (don't double up if Earth appeared 3x)
+    const seen = new Set();
+    const unique = [];
+    state.collection.forEach(item => {
+      if (!seen.has(item.name)) { seen.add(item.name); unique.push(item); }
+    });
+
+    const row = $('celebrationRow');
+    row.innerHTML = '';
+    unique.forEach((item, idx) => {
+      const cell = document.createElement('div');
+      cell.className = 'planet-item';
+      const visual = bodyVisual(item.emoji, item.name, 'size-celebration');
+      const isImage = visual && visual.indexOf('<img') === 0;
+      const inner = isImage
+        ? visual.replace('<img ', '<img style="animation-delay:' + (idx * 0.12) + 's" ')
+        : '<span class="planet-emoji" style="animation-delay:' + (idx * 0.12) + 's">' + (visual || item.emoji) + '</span>';
+      cell.innerHTML = inner + '<span class="planet-name">' + item.name + '</span>';
+      row.appendChild(cell);
+    });
+
+    showScreen('celebrationScreen');
+    setTimeout(() => { bigConfetti(); playFanfare(); }, 180);
+  }
+
+  $('playAgainBtn').addEventListener('click', () => startRound());
+  $('switchModeBtn').addEventListener('click', () => {
+    setMode(state.mode === 'basic' ? 'advanced' : 'basic');
+    showScreen('welcomeScreen');
+  });
+
+  // ====================================================================
+  // Init
+  // ====================================================================
+  setMode('basic');
+  </script>
+</body>
+</html>

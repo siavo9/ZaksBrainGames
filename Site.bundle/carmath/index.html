@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Math</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', cursive, sans-serif;
+    background: linear-gradient(180deg, #87CEEB 0%, #B0E0E6 60%, #98D8C8 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+    color: #2c2c2c;
+  }
+
+  /* Decorative sky */
+  .sun {
+    position: fixed; top: 30px; right: 50px;
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, #FFEB3B 50%, #FFD700 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 50px rgba(255, 215, 0, 0.6);
+    z-index: 1;
+    animation: spin 30s linear infinite;
+  }
+  @keyframes spin { from { transform: rotate(0deg);} to { transform: rotate(360deg);} }
+  .cloud {
+    position: fixed; background: white; border-radius: 50px; opacity: 0.85; z-index: 1;
+  }
+  .cloud::before, .cloud::after {
+    content: ''; position: absolute; background: white; border-radius: 50%;
+  }
+  .cloud1 { width: 110px; height: 30px; top: 60px; left: 8%; }
+  .cloud1::before { width: 45px; height: 45px; top: -22px; left: 18px; }
+  .cloud1::after  { width: 35px; height: 35px; top: -18px; right: 22px; }
+  .cloud2 { width: 90px; height: 26px; top: 140px; right: 22%; }
+  .cloud2::before { width: 38px; height: 38px; top: -19px; left: 14px; }
+  .cloud2::after  { width: 28px; height: 28px; top: -14px; right: 14px; }
+  .cloud3 { width: 80px; height: 22px; top: 90px; left: 60%; }
+  .cloud3::before { width: 32px; height: 32px; top: -16px; left: 12px; }
+
+  .screen { display: none; min-height: 100vh; padding: 20px; position: relative; z-index: 10; }
+  .screen.active { display: block; }
+
+  /* ===== HOME ===== */
+  #home { text-align: center; padding-top: 70px; }
+  #home h1 {
+    font-size: clamp(3em, 8vw, 6em);
+    color: #FF6B35;
+    text-shadow: 4px 4px 0 #fff, 7px 7px 0 #333;
+    margin-bottom: 10px;
+    animation: bounce 2s ease-in-out infinite;
+  }
+  @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-18px);} }
+  .tagline { font-size: 1.6em; color: #2c2c2c; margin-bottom: 30px; }
+  #home-truck-svg { margin: 20px auto; display: inline-block; transform: scale(1.6); }
+  .play-btn {
+    font-family: inherit;
+    font-size: 2.4em;
+    padding: 18px 60px;
+    background: #4CAF50;
+    color: white;
+    border: 6px solid #2E7D32;
+    border-radius: 60px;
+    cursor: pointer;
+    box-shadow: 0 9px 0 #2E7D32;
+    transition: transform 0.1s, box-shadow 0.1s;
+    margin-top: 20px;
+  }
+  .play-btn:hover  { transform: translateY(3px); box-shadow: 0 6px 0 #2E7D32; }
+  .play-btn:active { transform: translateY(9px); box-shadow: 0 0 0 #2E7D32; }
+
+  /* ===== GAME ===== */
+  #game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;
+  }
+  #game-title {
+    font-size: 2.4em; color: #FF6B35;
+    text-shadow: 3px 3px 0 #fff, 4px 4px 0 #333;
+  }
+  #hearts { font-size: 2.4em; }
+  .heart { display: inline-block; transition: all 0.3s; margin: 0 3px; }
+  .heart.lost { filter: grayscale(1) brightness(0.6); transform: scale(0.7); opacity: 0.5; }
+  #mute-btn {
+    font-size: 1.6em; background: white; border: 4px solid #333;
+    border-radius: 50%; width: 55px; height: 55px; cursor: pointer;
+  }
+
+  #chain-area {
+    background: rgba(255,255,255,0.7);
+    border-radius: 24px;
+    padding: 16px;
+    margin-bottom: 14px;
+    border: 5px dashed #FF6B35;
+    overflow-x: auto;
+    min-height: 170px;
+  }
+  #chain {
+    display: flex; align-items: flex-end; gap: 6px; min-width: max-content;
+    padding: 5px;
+  }
+  .chain-cell { animation: dropIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  @keyframes dropIn {
+    0% { transform: translateY(-120px) rotate(-15deg); opacity: 0; }
+    60% { transform: translateY(8px) rotate(2deg); opacity: 1; }
+    100% { transform: translateY(0) rotate(0); opacity: 1; }
+  }
+
+  #wheel-counter-label {
+    text-align: center; font-size: 1.4em; margin: 6px 0; color: #2c2c2c;
+  }
+  #wheel-counter {
+    background: #FFF9C4;
+    border-radius: 20px;
+    padding: 14px;
+    margin-bottom: 16px;
+    min-height: 70px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center; align-items: center;
+    border: 5px solid #FBC02D;
+  }
+  .wheel-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #888 30%, #333 32%, #222 100%);
+    border: 3px solid #111;
+    animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+  .wheel-icon::after {
+    content: ''; position: absolute; inset: 8px;
+    border-radius: 50%; background: #888;
+    box-shadow: inset 0 0 0 2px #555;
+  }
+  @keyframes pop {
+    0% { transform: scale(0) rotate(-180deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  #answer-area { text-align: center; margin: 12px 0 16px; }
+  #answer-prompt {
+    font-size: 1.5em; color: #2c2c2c; margin-bottom: 10px; font-weight: bold;
+  }
+  #answer-input {
+    font-family: inherit; font-size: 2.4em;
+    padding: 8px 16px; width: 140px; text-align: center;
+    border: 5px solid #2196F3; border-radius: 16px;
+    background: white;
+  }
+  #answer-input:focus { outline: none; border-color: #FF6B35; }
+  #submit-btn {
+    font-family: inherit; font-size: 1.5em;
+    padding: 14px 32px; margin-left: 8px;
+    background: #2196F3; color: white;
+    border: 4px solid #0D47A1; border-radius: 16px;
+    cursor: pointer; box-shadow: 0 6px 0 #0D47A1;
+  }
+  #submit-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #0D47A1; }
+  #feedback {
+    font-size: 1.6em; min-height: 50px; margin-top: 12px;
+    font-weight: bold;
+  }
+  .correct { color: #2E7D32; animation: pop 0.4s; }
+  .wrong { color: #C62828; animation: shake 0.4s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+
+  #vehicle-buttons {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 10px;
+  }
+  @media (max-width: 900px) { #vehicle-buttons { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 480px) { #vehicle-buttons { grid-template-columns: repeat(2, 1fr); } }
+
+  .vehicle-btn {
+    font-family: inherit;
+    background: white;
+    border: 4px solid #333;
+    border-radius: 18px;
+    padding: 10px 8px 12px;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: 0 6px 0 #333;
+    text-align: center;
+  }
+  .vehicle-btn:hover:not(:disabled) { transform: translateY(2px); box-shadow: 0 4px 0 #333; }
+  .vehicle-btn:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 0 0 #333; }
+  .vehicle-btn:disabled { opacity: 0.4; cursor: not-allowed; background: #d8d8d8; }
+  .vehicle-btn svg { width: 100%; height: 55px; }
+  .vehicle-btn .label { font-size: 1em; font-weight: bold; margin-top: 4px; }
+  .vehicle-btn .wheels-info { font-size: 0.85em; color: #555; }
+  .vehicle-btn .uses {
+    display: flex; justify-content: center; gap: 5px; margin-top: 6px;
+  }
+  .use-dot {
+    width: 13px; height: 13px; border-radius: 50%;
+    background: #4CAF50; border: 2px solid #2E7D32;
+  }
+  .use-dot.used { background: #ccc; border-color: #888; }
+
+  /* ===== WIN / LOSE ===== */
+  #win, #lose { text-align: center; padding-top: 90px; }
+  #win h1 {
+    font-size: 5em; color: #FFD700;
+    text-shadow: 4px 4px 0 #FF6B35, 7px 7px 0 #333;
+    animation: bounce 1s infinite;
+  }
+  #lose h1 {
+    font-size: 4em; color: #C62828;
+    text-shadow: 3px 3px 0 #fff, 5px 5px 0 #333;
+  }
+  .end-msg { font-size: 1.6em; margin-top: 20px; color: #2c2c2c; }
+  .restart-btn {
+    font-family: inherit;
+    font-size: 2em; padding: 16px 50px;
+    background: #FF6B35; color: white;
+    border: 5px solid #BF360C; border-radius: 60px;
+    cursor: pointer; margin-top: 36px;
+    box-shadow: 0 8px 0 #BF360C;
+  }
+  .restart-btn:active { transform: translateY(5px); box-shadow: 0 3px 0 #BF360C; }
+
+  /* Confetti */
+  .confetti {
+    position: fixed; width: 12px; height: 12px;
+    pointer-events: none; z-index: 20;
+    animation: fall 3s linear forwards;
+  }
+  @keyframes fall {
+    0% { transform: translateY(-100vh) rotate(0); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<a href="../index.html" class="zbg-home" aria-label="Back to Zak's Brain Games">🏠</a>
+<style>.zbg-home{position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:46px;height:46px;background:#fff;border:2px solid #FFD93D;border-radius:50%;font-size:22px;text-decoration:none;box-shadow:0 3px 8px rgba(0,0,0,.25);line-height:1}.zbg-home:active{transform:scale(.92)}</style>
+
+<div class="sun"></div>
+<div class="cloud cloud1"></div>
+<div class="cloud cloud2"></div>
+<div class="cloud cloud3"></div>
+
+<!-- ========== HOME SCREEN ========== -->
+<div id="home" class="screen active">
+  <h1>Car Math</h1>
+  <div class="tagline">🚛 Help the tow truck count wheels! 🛞</div>
+  <div id="home-truck-svg"></div>
+  <br>
+  <button class="play-btn" onclick="startGame()">Play Now!</button>
+</div>
+
+<!-- ========== GAME SCREEN ========== -->
+<div id="game" class="screen">
+  <div id="game-header">
+    <div id="game-title">Car Math</div>
+    <div id="hearts">
+      <span class="heart">❤️</span>
+      <span class="heart">❤️</span>
+      <span class="heart">❤️</span>
+    </div>
+    <button id="mute-btn" onclick="toggleMute()" title="Mute/Unmute">🔊</button>
+  </div>
+
+  <div id="chain-area"><div id="chain"></div></div>
+
+  <div id="wheel-counter-label">Count the wheels! 🛞</div>
+  <div id="wheel-counter"></div>
+
+  <div id="answer-area">
+    <div id="answer-prompt">How many wheels is the tow truck carrying?</div>
+    <input id="answer-input" type="number" min="0" placeholder="?" inputmode="numeric"/>
+    <button id="submit-btn" onclick="checkAnswer()">Check!</button>
+    <div id="feedback"></div>
+  </div>
+
+  <div id="vehicle-buttons"></div>
+</div>
+
+<!-- ========== WIN SCREEN ========== -->
+<div id="win" class="screen">
+  <h1>🎉 You Win! 🎉</h1>
+  <div class="end-msg">You chained all 18 vehicles!<br>You're a Wheel-Counting Champion! 🏆</div>
+  <button class="restart-btn" onclick="restart()">Play Again</button>
+</div>
+
+<!-- ========== LOSE SCREEN ========== -->
+<div id="lose" class="screen">
+  <h1>Game Over!</h1>
+  <div class="end-msg">Don't give up — you've got this! 💪</div>
+  <button class="restart-btn" onclick="restart()">Try Again</button>
+</div>
+
+<script>
+/* =========================================================
+   CAR MATH — game logic, SVG vehicle art, and Web Audio sound
+   ========================================================= */
+
+const VEHICLES = {
+  motorcycle: { name: 'Motorcycle',    wheels: 2,  length: 80  },
+  car:        { name: 'Car',           wheels: 4,  length: 130 },
+  pickup:     { name: 'Pickup Truck',  wheels: 6,  length: 170 },
+  monster:    { name: 'Monster Truck', wheels: 8,  length: 200 },
+  bus:        { name: 'Coach Bus',     wheels: 10, length: 240 },
+  bigrig:     { name: 'Big Rig',       wheels: 12, length: 280 }
+};
+
+const COLORS = ['#E53935','#1E88E5','#43A047','#FDD835','#8E24AA','#FB8C00',
+                '#EC407A','#26A69A','#5E35B1','#00ACC1','#7CB342','#F4511E'];
+
+const state = {
+  chain: [],
+  uses: { motorcycle: 0, car: 0, pickup: 0, monster: 0, bus: 0, bigrig: 0 },
+  strikes: 0,
+  muted: false,
+  total: 0,
+  awaitingAnswer: false
+};
+
+/* ---------- SVG: TOW TRUCK ---------- */
+function towTruckSVG() {
+  return `
+  <svg width="150" height="100" viewBox="0 0 150 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- Crane arm -->
+    <rect x="95" y="20" width="40" height="8" fill="#555" stroke="#222" stroke-width="2"/>
+    <rect x="125" y="20" width="8" height="40" fill="#555" stroke="#222" stroke-width="2"/>
+    <line x1="129" y1="60" x2="129" y2="70" stroke="#222" stroke-width="2"/>
+    <path d="M 124 70 Q 129 80 134 70 Z" fill="none" stroke="#222" stroke-width="2"/>
+    <!-- Cab -->
+    <rect x="8" y="42" width="55" height="36" rx="6" fill="#FF6B35" stroke="#222" stroke-width="3"/>
+    <!-- Truck bed -->
+    <rect x="63" y="52" width="50" height="26" fill="#FF6B35" stroke="#222" stroke-width="3"/>
+    <!-- Windows -->
+    <rect x="14" y="48" width="20" height="18" fill="#B3E5FC" stroke="#222" stroke-width="2" rx="2"/>
+    <rect x="38" y="48" width="22" height="18" fill="#B3E5FC" stroke="#222" stroke-width="2" rx="2"/>
+    <!-- Headlight -->
+    <circle cx="11" cy="60" r="3.5" fill="#FFEB3B" stroke="#222" stroke-width="1"/>
+    <!-- Stripe -->
+    <rect x="63" y="62" width="50" height="6" fill="#FFEB3B" opacity="0.7"/>
+    <!-- Wheels -->
+    <circle cx="22" cy="84" r="12" fill="#222" stroke="#444" stroke-width="2"/>
+    <circle cx="22" cy="84" r="4" fill="#999"/>
+    <circle cx="90" cy="84" r="12" fill="#222" stroke="#444" stroke-width="2"/>
+    <circle cx="90" cy="84" r="4" fill="#999"/>
+  </svg>`;
+}
+
+/* ---------- SVG: VEHICLES ---------- */
+function vehicleSVG(type, color) {
+  const v = VEHICLES[type];
+  const w = v.length;
+  const h = type === 'monster' ? 110 : 80;
+  const wheelR = type === 'monster' ? 18 : 11;
+  const wheelY = h - (type === 'monster' ? 22 : 14);
+
+  let body = '';
+
+  switch (type) {
+    case 'motorcycle':
+      body = `
+        <path d="M ${w*0.15} ${h*0.62} Q ${w*0.5} ${h*0.4} ${w*0.85} ${h*0.62} L ${w*0.78} ${h*0.74} L ${w*0.22} ${h*0.74} Z"
+              fill="${color}" stroke="#222" stroke-width="2.5"/>
+        <rect x="${w*0.35}" y="${h*0.46}" width="${w*0.28}" height="${h*0.12}" rx="3" fill="#222"/>
+        <line x1="${w*0.72}" y1="${h*0.58}" x2="${w*0.82}" y2="${h*0.32}" stroke="#222" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="${w*0.78}" y1="${h*0.32}" x2="${w*0.95}" y2="${h*0.32}" stroke="#222" stroke-width="3.5" stroke-linecap="round"/>
+        <circle cx="${w*0.5}" cy="${h*0.5}" r="${w*0.08}" fill="${color}" stroke="#222" stroke-width="2"/>
+      `;
+      break;
+    case 'car':
+      body = `
+        <path d="M ${w*0.22} ${h*0.4} Q ${w*0.28} ${h*0.18} ${w*0.5} ${h*0.18}
+                 L ${w*0.7} ${h*0.18} Q ${w*0.82} ${h*0.18} ${w*0.88} ${h*0.4} Z"
+              fill="${color}" stroke="#222" stroke-width="2.5"/>
+        <rect x="${w*0.06}" y="${h*0.4}" width="${w*0.88}" height="${h*0.35}" rx="8"
+              fill="${color}" stroke="#222" stroke-width="2.5"/>
+        <rect x="${w*0.31}" y="${h*0.24}" width="${w*0.16}" height="${h*0.14}"
+              fill="#B3E5FC" stroke="#222" stroke-width="1.5" rx="2"/>
+        <rect x="${w*0.53}" y="${h*0.24}" width="${w*0.16}" height="${h*0.14}"
+              fill="#B3E5FC" stroke="#222" stroke-width="1.5" rx="2"/>
+        <circle cx="${w*0.93}" cy="${h*0.55}" r="3" fill="#FFEB3B" stroke="#222" stroke-width="1"/>
+      `;
+      break;
+    case 'pickup':
+      body = `
+        <rect x="${w*0.06}" y="${h*0.26}" width="${w*0.32}" height="${h*0.24}" rx="5"
+              fill="${color}" stroke="#222" stroke-width="2.5"/>
+        <rect x="${w*0.04}" y="${h*0.48}" width="${w*0.92}" height="${h*0.28}" rx="5"
+              fill="${color}" stroke="#222" stroke-width="2.5"/>
+        <rect x="${w*0.4}" y="${h*0.32}" width="${w*0.56}" height="${h*0.36}"
+              fill="${color}" stroke="#222" stroke-width="2.5"/>
+        <rect x="${w*0.43}" y="${h*0.36}" width="${w*0.5}" height="${h*0.28}"
+              fill="#A1887F" stroke="#222" stroke-width="1.5"/>
+        <rect x="${w*0.1}" y="${h*0.3}" width="${w*0.25}" height="${h*0.16}"
+              fill="#B3E5FC" stroke="#222" stroke-width="1.5" rx="2"/>
+      `;
+      break;
+    case 'monster':
+      body = `
+        <rect x="${w*0.05}" y="${h*0.38}" width="${w*0.9}" height="${h*0.28}" rx="8"
+              fill="${color}" stroke="#222" stroke-width="3"/>
+        <rect x="${w*0.18}" y="${h*0.18}" width="${w*0.64}" height="${h*0.22}" rx="6"
+              fill="${color}" stroke="#222" stroke-width="3"/>
+        <rect x="${w*0.24}" y="${h*0.22}" width="${w*0.52}" height="${h*0.14}"
+              fill="#B3E5FC" stroke="#222" stroke-width="2" rx="2"/>
+        <!-- flame stripe -->
+        <path d="M ${w*0.1} ${h*0.5} L ${w*0.3} ${h*0.5} L ${w*0.2} ${h*0.56} L ${w*0.32} ${h*0.56} Z"
+              fill="#FFEB3B" opacity="0.8"/>
+      `;
+      break;
+    case 'bus':
+      body = `
+        <rect x="${w*0.02}" y="${h*0.2}" width="${w*0.96}" height="${h*0.55}" rx="12"
+              fill="${color}" stroke="#222" stroke-width="2.5"/>
+        ${[0.06,0.2,0.34,0.48,0.62,0.78].map(p =>
+          `<rect x="${w*p}" y="${h*0.28}" width="${w*0.1}" height="${h*0.18}"
+                 fill="#B3E5FC" stroke="#222" stroke-width="1.5" rx="2"/>`).join('')}
+        <rect x="${w*0.02}" y="${h*0.5}" width="${w*0.96}" height="${h*0.06}"
+              fill="white" opacity="0.5"/>
+      `;
+      break;
+    case 'bigrig':
+      body = `
+        <!-- Cab -->
+        <rect x="${w*0.02}" y="${h*0.32}" width="${w*0.18}" height="${h*0.42}" rx="5"
+              fill="${color}" stroke="#222" stroke-width="2.5"/>
+        <rect x="${w*0.04}" y="${h*0.38}" width="${w*0.14}" height="${h*0.16}"
+              fill="#B3E5FC" stroke="#222" stroke-width="1.5" rx="2"/>
+        <!-- Smoke stack -->
+        <rect x="${w*0.18}" y="${h*0.16}" width="${w*0.03}" height="${h*0.18}" fill="#666"/>
+        <!-- Trailer -->
+        <rect x="${w*0.22}" y="${h*0.16}" width="${w*0.76}" height="${h*0.58}" rx="4"
+              fill="#ECEFF1" stroke="#222" stroke-width="2.5"/>
+        <line x1="${w*0.4}" y1="${h*0.16}" x2="${w*0.4}" y2="${h*0.74}" stroke="#999" stroke-width="1"/>
+        <line x1="${w*0.58}" y1="${h*0.16}" x2="${w*0.58}" y2="${h*0.74}" stroke="#999" stroke-width="1"/>
+        <line x1="${w*0.76}" y1="${h*0.16}" x2="${w*0.76}" y2="${h*0.74}" stroke="#999" stroke-width="1"/>
+        <line x1="${w*0.92}" y1="${h*0.16}" x2="${w*0.92}" y2="${h*0.74}" stroke="#999" stroke-width="1"/>
+        <rect x="${w*0.02}" y="${h*0.55}" width="${w*0.18}" height="${h*0.06}" fill="#FFEB3B"/>
+      `;
+      break;
+  }
+
+  // Wheels evenly spaced across the vehicle
+  let wheels = '';
+  const margin = 0.08;
+  const span = 1 - 2 * margin;
+  for (let i = 0; i < v.wheels; i++) {
+    const x = w * (margin + span * (i / (v.wheels - 1)));
+    wheels += `
+      <circle cx="${x}" cy="${wheelY}" r="${wheelR}" fill="#222" stroke="#444" stroke-width="2"/>
+      <circle cx="${x}" cy="${wheelY}" r="${wheelR*0.42}" fill="#999"/>
+    `;
+  }
+
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${body}${wheels}</svg>`;
+}
+
+/* ---------- SCREEN HELPERS ---------- */
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+}
+
+/* ---------- GAME FLOW ---------- */
+function startGame() {
+  // Reset state for a fresh game start
+  state.chain = [];
+  state.uses = { motorcycle: 0, car: 0, pickup: 0, monster: 0, bus: 0, bigrig: 0 };
+  state.strikes = 0;
+  state.total = 0;
+  state.awaitingAnswer = false;
+
+  updateHearts();
+  renderChain();
+  renderWheelCounter();
+  renderVehicleButtons();
+  document.getElementById('answer-input').value = '';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = '';
+  switchScreen('game');
+}
+
+function restart() { startGame(); }
+
+function addVehicle(type) {
+  if (state.awaitingAnswer) {
+    showFeedback('Answer first!', 'wrong');
+    return;
+  }
+  if (state.uses[type] >= 3) return;
+
+  state.uses[type]++;
+  const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+  state.chain.push({ type, color });
+  state.total += VEHICLES[type].wheels;
+  state.awaitingAnswer = true;
+
+  playEngine();
+  renderChain();
+  renderWheelCounter();
+  renderVehicleButtons();
+
+  const input = document.getElementById('answer-input');
+  input.value = '';
+  input.focus();
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = '';
+}
+
+function checkAnswer() {
+  if (!state.awaitingAnswer) {
+    showFeedback('Pick a vehicle first!', 'wrong');
+    return;
+  }
+  const input = document.getElementById('answer-input');
+  const guess = parseInt(input.value, 10);
+  if (isNaN(guess)) {
+    showFeedback('Type a number!', 'wrong');
+    return;
+  }
+
+  if (guess === state.total) {
+    state.awaitingAnswer = false;
+    playCorrect();
+    renderVehicleButtons();
+    if (state.chain.length >= 18) {
+      showFeedback('🎉 YOU DID IT! 🎉', 'correct');
+      setTimeout(() => {
+        playWin();
+        switchScreen('win');
+        showConfetti();
+      }, 900);
+    } else {
+      showFeedback('🎉 Correct! Add another!', 'correct');
+    }
+  } else {
+    state.strikes++;
+    updateHearts();
+    playWrong();
+    if (state.strikes >= 3) {
+      showFeedback('Oh no!', 'wrong');
+      setTimeout(() => switchScreen('lose'), 1100);
+    } else {
+      const remaining = 3 - state.strikes;
+      showFeedback(`Oops! Try again — ${remaining} ${remaining === 1 ? 'try' : 'tries'} left`, 'wrong');
+    }
+  }
+}
+
+function showFeedback(msg, cls) {
+  const fb = document.getElementById('feedback');
+  fb.textContent = msg;
+  fb.className = cls;
+}
+
+function updateHearts() {
+  const hearts = document.querySelectorAll('#hearts .heart');
+  hearts.forEach((h, i) => h.classList.toggle('lost', i < state.strikes));
+}
+
+/* ---------- RENDERING ---------- */
+function renderChain() {
+  const chain = document.getElementById('chain');
+  let html = `<div class="chain-cell">${towTruckSVG()}</div>`;
+  state.chain.forEach(v => {
+    html += `<div class="chain-cell">${vehicleSVG(v.type, v.color)}</div>`;
+  });
+  chain.innerHTML = html;
+  // auto-scroll the chain to the right so the newest vehicle is visible
+  const area = document.getElementById('chain-area');
+  setTimeout(() => { area.scrollLeft = area.scrollWidth; }, 50);
+}
+
+function renderWheelCounter() {
+  const wc = document.getElementById('wheel-counter');
+  if (state.total === 0) {
+    wc.innerHTML = '<div style="color:#666; font-size: 1.1em;">No wheels yet — pick a vehicle!</div>';
+    return;
+  }
+  let html = '';
+  for (let i = 0; i < state.total; i++) html += '<div class="wheel-icon"></div>';
+  wc.innerHTML = html;
+}
+
+function renderVehicleButtons() {
+  const container = document.getElementById('vehicle-buttons');
+  let html = '';
+  for (const [type, v] of Object.entries(VEHICLES)) {
+    const used = state.uses[type];
+    const exhausted = used >= 3;
+    const disabled = exhausted || state.awaitingAnswer;
+    let dots = '';
+    for (let i = 0; i < 3; i++) {
+      dots += `<div class="use-dot${i < used ? ' used' : ''}"></div>`;
+    }
+    html += `
+      <button class="vehicle-btn" onclick="addVehicle('${type}')" ${disabled ? 'disabled' : ''}>
+        ${vehicleSVG(type, '#888')}
+        <div class="label">${v.name}</div>
+        <div class="wheels-info">${v.wheels} wheels</div>
+        <div class="uses">${dots}</div>
+      </button>
+    `;
+  }
+  container.innerHTML = html;
+}
+
+/* ---------- SOUND (Web Audio API) ---------- */
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { return null; }
+  }
+  return audioCtx;
+}
+function playTone(freq, duration, type = 'sine', vol = 0.25, delay = 0) {
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  const t0 = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  gain.gain.setValueAtTime(vol, t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+  osc.start(t0);
+  osc.stop(t0 + duration);
+}
+function playEngine() {
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  const t0 = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(70, t0);
+  osc.frequency.exponentialRampToValueAtTime(180, t0 + 0.25);
+  osc.frequency.exponentialRampToValueAtTime(90, t0 + 0.55);
+  gain.gain.setValueAtTime(0.18, t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.55);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(t0);
+  osc.stop(t0 + 0.55);
+}
+function playCorrect() {
+  playTone(659, 0.12, 'triangle', 0.3, 0);     // E5
+  playTone(880, 0.18, 'triangle', 0.3, 0.12);  // A5
+  playTone(1175, 0.25, 'triangle', 0.3, 0.28); // D6
+}
+function playWrong() {
+  playTone(220, 0.18, 'sawtooth', 0.18, 0);
+  playTone(160, 0.28, 'sawtooth', 0.18, 0.16);
+}
+function playWin() {
+  const tune = [523, 659, 784, 1047, 784, 1047];
+  tune.forEach((n, i) => playTone(n, 0.25, 'triangle', 0.3, i * 0.2));
+}
+
+function toggleMute() {
+  state.muted = !state.muted;
+  document.getElementById('mute-btn').textContent = state.muted ? '🔇' : '🔊';
+  // Resume audio context on first user gesture (browser autoplay rules)
+  const ctx = getAudio();
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+}
+
+/* ---------- CONFETTI ---------- */
+function showConfetti() {
+  const colors = ['#FF6B35','#FFD700','#4CAF50','#2196F3','#E91E63','#9C27B0','#00BCD4'];
+  for (let i = 0; i < 100; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = (Math.random() * 100) + 'vw';
+    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+    c.style.animationDelay = (Math.random() * 1.5) + 's';
+    c.style.animationDuration = (2 + Math.random() * 2) + 's';
+    c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 5000);
+  }
+}
+
+/* ---------- INIT ---------- */
+document.getElementById('home-truck-svg').innerHTML = towTruckSVG();
+
+document.getElementById('answer-input').addEventListener('keypress', e => {
+  if (e.key === 'Enter') checkAnswer();
+});
+
+// Resume audio on any first click (browsers require user gesture)
+document.addEventListener('click', () => {
+  const ctx = getAudio();
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+}, { once: true });
+</script>
+
+</body>
+</html>

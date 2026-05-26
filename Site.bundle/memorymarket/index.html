@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Market — Zak's Brain Games</title>
+  <meta name="description" content="Memory Market is a kid-friendly memory game! Run your own shop, remember each customer's order, and fill their basket. Ages 6+." />
+  <meta name="theme-color" content="#FFD93D" />
+  <link rel="canonical" href="https://zaksbraingames.app/memorymarket/" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%92%3C/text%3E%3C/svg%3E" />
+
+
+    <!-- Self-hosted fonts (offline; no external requests) -->
+  <style>
+  @font-face { font-family:'Fredoka'; font-style:normal; font-weight:300 700; font-display:swap; src:url('../fonts/fredoka.woff2') format('woff2'); }
+  @font-face { font-family:'Bubblegum Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('../fonts/bubblegum-sans-400.woff2') format('woff2'); }
+  </style>
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --yellow: #FFD93D;
+      --yellow-dark: #C99700;
+      --pink: #FF6FB5;
+      --blue: #4FC3F7;
+      --mint: #6BE6A8;
+      --mint-dark: #1FB97A;
+      --purple: #B073FF;
+      --orange: #FF9F45;
+      --coral: #FF6B6B;
+      --dark: #2D2D5F;
+      --cream: #FFF8E7;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Fredoka', system-ui, sans-serif;
+      color: var(--dark);
+      background: linear-gradient(135deg, #FFF8E7 0%, #E5FBF0 45%, #E5F4FF 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Floating shapes */
+    .shape {
+      position: fixed; border-radius: 50%; opacity: 0.32; z-index: 0;
+      animation: float 8s ease-in-out infinite; pointer-events: none;
+    }
+    .shape.s1 { width: 120px; height: 120px; background: var(--yellow); top: 10%; left: 5%; animation-delay: 0s; }
+    .shape.s2 { width: 80px;  height: 80px;  background: var(--pink);   top: 62%; left: 92%; animation-delay: 2s; }
+    .shape.s3 { width: 100px; height: 100px; background: var(--blue);   top: 82%; left: 8%;  animation-delay: 4s; }
+    .shape.s4 { width: 60px;  height: 60px;  background: var(--purple); top: 22%; left: 88%; animation-delay: 1s; }
+    .shape.s5 { width: 90px;  height: 90px;  background: var(--mint);   top: 45%; left: 3%;  animation-delay: 3s; }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-26px) rotate(12deg); }
+    }
+
+    .container {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 0 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ---------- Top nav ---------- */
+    .topnav { padding: 20px 0 8px; display: flex; justify-content: flex-start; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--purple); font-weight: 600; text-decoration: none;
+      padding: 10px 16px; border-radius: 24px; background: white;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.12);
+      transition: transform 0.18s, box-shadow 0.18s;
+      font-size: 0.98rem; min-height: 44px;
+    }
+    .back-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 rgba(45, 45, 95, 0.14); }
+    .back-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 rgba(45, 45, 95, 0.14); }
+
+    /* ---------- Screens ---------- */
+    .screen { display: none; padding: 14px 0 48px; }
+    .screen.active { display: block; animation: screenIn 0.3s ease; }
+    @keyframes screenIn {
+      from { transform: translateY(8px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* ---------- Welcome ---------- */
+    .welcome { text-align: center; padding: 10px 14px 30px; }
+    .mascot {
+      font-size: 92px; display: inline-block;
+      animation: wiggle 3s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.12));
+      user-select: none; cursor: pointer;
+    }
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-6deg) translateY(0); }
+      50% { transform: rotate(6deg) translateY(-10px); }
+    }
+    h1.title {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: clamp(2.6rem, 7vw, 4.2rem);
+      margin: 8px 0 4px;
+      background: linear-gradient(135deg, var(--mint-dark), var(--blue), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      text-shadow: 4px 4px 0 rgba(255, 217, 61, 0.35);
+      letter-spacing: 1px;
+    }
+    .tagline {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--dark); font-weight: 500;
+      margin: 4px auto 18px; max-width: 540px; line-height: 1.45;
+    }
+    .tagline span { color: var(--pink); font-weight: 700; }
+
+    /* ---------- Big buttons ---------- */
+    .btn {
+      display: inline-block; padding: 16px 32px; border-radius: 50px;
+      font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 1.15rem;
+      border: none; cursor: pointer; color: white; text-decoration: none; text-align: center;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, box-shadow 0.15s; min-height: 52px; line-height: 1.2;
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 9px 0 rgba(0, 0, 0, 0.15); }
+    .btn:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15); }
+    .btn-primary { background: var(--mint-dark); }
+    .btn-yellow  { background: var(--yellow); color: var(--dark); }
+    .btn-purple  { background: var(--purple); }
+    .btn-blue    { background: var(--blue); }
+    .btn-pink    { background: var(--pink); }
+    .big-cta { font-size: 1.35rem; padding: 18px 40px; animation: pulseGlow 2.2s ease-in-out infinite; }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 0 rgba(31, 185, 122, 0.35); }
+      50% { box-shadow: 0 6px 0 rgba(0,0,0,0.15), 0 0 0 18px rgba(31, 185, 122, 0); }
+    }
+
+    /* ---------- Card panels ---------- */
+    .panel {
+      background: white; border-radius: 26px; padding: 24px 24px 26px;
+      box-shadow: 0 8px 0 rgba(45, 45, 95, 0.1), 0 14px 30px rgba(45, 45, 95, 0.08);
+      margin-bottom: 18px;
+    }
+    .panel h2 {
+      font-family: 'Bubblegum Sans', cursive; color: var(--mint-dark);
+      font-size: clamp(1.5rem, 4vw, 2rem); text-align: center; margin-bottom: 14px;
+    }
+
+    /* ---------- Rules ---------- */
+    .rules-list { list-style: none; max-width: 520px; margin: 0 auto; padding: 0; }
+    .rules-list li {
+      background: var(--cream); border-radius: 18px; padding: 14px 18px;
+      margin-bottom: 12px; font-size: 1.08rem; line-height: 1.45; font-weight: 500;
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.08);
+    }
+    .rules-actions { text-align: center; margin-top: 8px; }
+
+    /* ---------- Scoreboard ---------- */
+    .scorebar {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 10px; flex-wrap: wrap; margin-bottom: 14px;
+    }
+    .score-chip {
+      background: var(--cream); border-radius: 50px; padding: 8px 16px;
+      font-weight: 700; font-size: 1.02rem; color: var(--dark);
+      box-shadow: 0 3px 0 rgba(45, 45, 95, 0.08);
+    }
+    .score-chip .big { font-family: 'Bubblegum Sans', cursive; color: var(--yellow-dark); font-size: 1.2rem; }
+
+    /* ---------- Customer ---------- */
+    .customer-row {
+      display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px;
+    }
+    .customer-emoji {
+      font-size: clamp(3rem, 11vw, 4.4rem); line-height: 1; flex-shrink: 0;
+      filter: drop-shadow(2px 4px 0 rgba(0,0,0,0.12));
+      animation: bobble 3s ease-in-out infinite;
+    }
+    @keyframes bobble {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-7px) rotate(3deg); }
+    }
+    .bubble {
+      position: relative; background: var(--cream); border-radius: 20px;
+      padding: 16px 18px; flex: 1; min-height: 84px;
+      box-shadow: 0 4px 0 rgba(201, 151, 0, 0.18) inset, 0 4px 10px rgba(45,45,95,0.06);
+      font-size: clamp(1.05rem, 2.6vw, 1.25rem); font-weight: 600; line-height: 1.5;
+    }
+    .bubble::before {
+      content: ''; position: absolute; left: -14px; top: 26px;
+      border: 9px solid transparent; border-right-color: var(--cream); border-left: 0;
+    }
+    .bubble .order-emojis { font-size: 1.4em; letter-spacing: 2px; }
+    .bubble .hint-line { display: block; margin-top: 8px; font-size: 0.92rem; font-weight: 600; color: var(--purple); }
+
+    /* ---------- Basket ---------- */
+    .basket-area { margin-bottom: 14px; }
+    .basket-label {
+      text-align: center; font-family: 'Bubblegum Sans', cursive;
+      color: var(--mint-dark); font-size: 1.15rem; margin-bottom: 6px;
+    }
+    .basket {
+      min-height: 56px; background: #F4FBF7; border: 3px dashed var(--mint);
+      border-radius: 18px; padding: 10px 12px; display: flex; flex-wrap: wrap;
+      gap: 8px; align-items: center; justify-content: center;
+    }
+    .basket .empty-hint { color: #9aa; font-weight: 500; font-size: 0.95rem; }
+    .basket .b-item {
+      font-size: 1.9rem; line-height: 1;
+      animation: dropIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes dropIn {
+      0% { transform: translateY(-18px) scale(0.4); opacity: 0; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .helper-row { text-align: center; margin-bottom: 14px; }
+    .helper-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--blue); color: white; font-family: 'Fredoka', sans-serif;
+      font-weight: 700; font-size: 1rem; padding: 11px 20px; border-radius: 50px;
+      border: none; cursor: pointer; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+      transition: transform 0.15s, box-shadow 0.15s; min-height: 44px;
+    }
+    .helper-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 0 rgba(0,0,0,0.15); }
+    .helper-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+    .helper-btn:disabled { opacity: 0.5; cursor: default; }
+
+    /* ---------- Shelf ---------- */
+    .shelf-label {
+      text-align: center; font-family: 'Bubblegum Sans', cursive;
+      color: var(--purple); font-size: 1.2rem; margin: 4px 0 10px;
+    }
+    .shelf {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+      transition: opacity 0.25s;
+    }
+    @media (max-width: 420px) { .shelf { grid-template-columns: repeat(3, 1fr); } }
+    .shelf.locked { opacity: 0.45; pointer-events: none; }
+    .food-btn {
+      background: white; border: 3px solid #EFEFF7; border-radius: 18px;
+      padding: 10px 4px 6px; cursor: pointer; font-family: 'Fredoka', sans-serif;
+      box-shadow: 0 4px 0 rgba(45, 45, 95, 0.08);
+      transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s, background 0.12s;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      min-height: 78px;
+    }
+    .food-btn:hover { transform: translateY(-3px); border-color: var(--mint); box-shadow: 0 7px 0 rgba(45, 45, 95, 0.1); }
+    .food-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(45, 45, 95, 0.08); }
+    .food-btn .f-emoji { font-size: 2.1rem; line-height: 1; }
+    .food-btn .f-name { font-size: 0.78rem; font-weight: 600; color: #666; }
+    .food-btn.good { animation: popCorrect 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); border-color: var(--mint-dark); background: #E9FBF1; }
+    .food-btn.bad { animation: shake 0.45s ease-in-out; border-color: var(--coral); background: #FFECEC; }
+    @keyframes popCorrect {
+      0% { transform: scale(1); } 50% { transform: scale(1.12); } 100% { transform: scale(1); }
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-7px); } 40% { transform: translateX(7px); }
+      60% { transform: translateX(-5px); } 80% { transform: translateX(5px); }
+    }
+
+    .feedback {
+      min-height: 30px; text-align: center; font-weight: 700;
+      font-size: 1.08rem; margin-top: 12px; line-height: 1.3;
+    }
+    .feedback.good { color: var(--mint-dark); animation: bouncePraise 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .feedback.gentle { color: var(--purple); }
+    @keyframes bouncePraise {
+      0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ---------- Celebration ---------- */
+    .celebrate { text-align: center; }
+    .celebrate .trophy {
+      font-size: 5.2rem; display: inline-block;
+      animation: trophyBounce 1.4s ease-in-out infinite;
+      filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.15));
+    }
+    @keyframes trophyBounce {
+      0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-14px) rotate(6deg); }
+    }
+    .celebrate h2 {
+      font-family: 'Bubblegum Sans', cursive; font-size: clamp(2rem, 5vw, 2.6rem);
+      background: linear-gradient(135deg, var(--mint-dark), var(--blue), var(--purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+      margin: 8px 0;
+    }
+    .celebrate .coins-total {
+      font-size: 1.3rem; line-height: 1.5; color: var(--dark);
+      background: var(--cream); padding: 16px 18px; border-radius: 18px;
+      margin: 14px auto; max-width: 460px; font-weight: 600;
+    }
+    .celebrate .coins-total .big { font-family: 'Bubblegum Sans', cursive; color: var(--yellow-dark); font-size: 2rem; display: block; }
+    .celebrate-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+
+    .confetti { position: fixed; width: 10px; height: 10px; pointer-events: none; z-index: 9999; border-radius: 2px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+    @media (max-width: 480px) {
+      .panel { padding: 18px 16px 22px; }
+      .btn { padding: 14px 26px; font-size: 1.05rem; }
+      .big-cta { font-size: 1.2rem; padding: 16px 30px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shape s1"></div>
+  <div class="shape s2"></div>
+  <div class="shape s3"></div>
+  <div class="shape s4"></div>
+  <div class="shape s5"></div>
+
+  <div class="container">
+    <header class="topnav">
+      <a class="back-btn" href="../index.html" aria-label="Back to Zak's Brain Games">← Back to Zak's Brain Games</a>
+    </header>
+
+    <main>
+      <!-- ============== WELCOME / RULES ============== -->
+      <section class="screen active" id="startScreen" aria-label="How to play">
+        <div class="welcome">
+          <div class="mascot" id="mascot" role="img" aria-label="Shopping cart mascot">🛒</div>
+          <h1 class="title">Memory Market</h1>
+          <p class="tagline">Run your own little shop and <span>remember every order!</span></p>
+        </div>
+        <div class="panel">
+          <h2>How to Play</h2>
+          <ul class="rules-list">
+            <li>🐻 A customer tells you what they want to buy.</li>
+            <li>👀 Look carefully and <strong>remember</strong> the order — then it hides!</li>
+            <li>🛒 Tap the food on the shelf to fill their basket.</li>
+            <li>🌟 Forgot something? Tap <strong>"Show me again"</strong> for a peek.</li>
+            <li>🪙 Fill the basket right and earn shiny coins!</li>
+          </ul>
+          <div class="rules-actions">
+            <button class="btn btn-primary big-cta" id="startBtn">Open the shop! ▶</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============== GAME ============== -->
+      <section class="screen" id="gameScreen" aria-label="Fill the order">
+        <div class="panel">
+          <div class="scorebar">
+            <span class="score-chip">🧑‍🤝‍🧑 Customer <span class="big" id="custNum">1</span> of 8</span>
+            <span class="score-chip">🪙 Coins: <span class="big" id="coinNum">0</span></span>
+          </div>
+
+          <div class="customer-row">
+            <div class="customer-emoji" id="customerEmoji" aria-hidden="true">🐻</div>
+            <div class="bubble" id="bubble" aria-live="polite"></div>
+          </div>
+
+          <div class="basket-area">
+            <div class="basket-label">🧺 Your Basket</div>
+            <div class="basket" id="basket"><span class="empty-hint">Tap food to add it here!</span></div>
+          </div>
+
+          <div class="helper-row">
+            <button class="helper-btn" id="showAgainBtn" type="button">👀 Show me again</button>
+          </div>
+
+          <div class="shelf-label">🏪 The Shelf</div>
+          <div class="shelf locked" id="shelf"></div>
+
+          <p class="feedback" id="feedback" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <!-- ============== CELEBRATION ============== -->
+      <section class="screen" id="celebrateScreen" aria-label="Shop closed - great job">
+        <div class="panel celebrate">
+          <div class="trophy">🏆</div>
+          <h2>Best Shopkeeper Ever!</h2>
+          <p class="coins-total">You served every customer and earned
+            <span class="big" id="finalCoins">0</span> shiny coins! 🪙</p>
+          <div class="celebrate-buttons">
+            <button class="btn btn-yellow" id="playAgainBtn">Play Again ↺</button>
+            <a class="btn btn-purple" href="../index.html">← Back to Zak's Brain Games</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+  // ====================================================================
+  // Data
+  // ====================================================================
+  const FOODS = [
+    { emoji: '🍎', name: 'apple' },
+    { emoji: '🍌', name: 'banana' },
+    { emoji: '🥛', name: 'milk' },
+    { emoji: '🍞', name: 'bread' },
+    { emoji: '🧀', name: 'cheese' },
+    { emoji: '🥚', name: 'egg' },
+    { emoji: '🥕', name: 'carrot' },
+    { emoji: '🍪', name: 'cookie' },
+    { emoji: '🍇', name: 'grapes' },
+    { emoji: '🍊', name: 'orange' },
+    { emoji: '🍓', name: 'strawberry' },
+    { emoji: '🥦', name: 'broccoli' }
+  ];
+
+  const CUSTOMERS = [
+    { emoji: '🐻', thanks: 'Thank you! Bear-y nice! 🐻' },
+    { emoji: '🐰', thanks: 'Hooray! Thank you! 🐰' },
+    { emoji: '🦊', thanks: 'Perfect! You\'re the best! 🦊' },
+    { emoji: '🐶', thanks: 'Woof! Thank you! 🐶' },
+    { emoji: '🐱', thanks: 'Purr-fect! Thank you! 🐱' },
+    { emoji: '🐼', thanks: 'Yay! Just right! 🐼' },
+    { emoji: '🐸', thanks: 'Hop hooray! Thanks! 🐸' },
+    { emoji: '🦁', thanks: 'Roarsome! Thank you! 🦁' },
+    { emoji: '🐵', thanks: 'Ooh ooh! Thank you! 🐵' },
+    { emoji: '🐷', thanks: 'Oink-tastic! Thanks! 🐷' }
+  ];
+
+  const PRAISE = [
+    "Yes!", "Great memory!", "You got it!", "Amazing!", "Brain power!",
+    "Way to go!", "Smart cookie!", "Bullseye!", "Boom!", "Super star!",
+    "Fantastic!", "Nailed it!", "Memory master!", "Whoa, smart!", "You did it!",
+    "Wonderful!", "So good!"
+  ];
+  const GENTLE = [
+    "Oops, that wasn't on the list — try again 🌟",
+    "Almost! That one's not in the order — try another ✨",
+    "Hmm, not that one — give it another go 💫",
+    "Not on the list! Peek with \"Show me again\" 👀",
+    "So close! Try a different one 🌈"
+  ];
+
+  const TOTAL_CUSTOMERS = 8;
+
+  // ====================================================================
+  // State
+  // ====================================================================
+  const state = {
+    customerIndex: 0,
+    coins: 0,
+    order: [],          // [{emoji, name, qty}]
+    remaining: {},      // name -> count still needed
+    basket: [],         // emojis collected
+    phase: 'show',      // 'show' | 'fill' | 'done'
+    customerOrder: []   // shuffled customer list for this game
+  };
+
+  const $ = (id) => document.getElementById(id);
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    $(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // ====================================================================
+  // Confetti
+  // ====================================================================
+  const CONFETTI_COLORS = ['#FFD93D', '#FF6FB5', '#4FC3F7', '#6BE6A8', '#B073FF', '#FF9F45'];
+  function burstConfetti(x, y, count) {
+    const n = count || 30;
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = x + 'px';
+      c.style.top = y + 'px';
+      c.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      document.body.appendChild(c);
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = 80 + Math.random() * 140;
+      const dx = Math.cos(angle) * velocity;
+      const dy = Math.sin(angle) * velocity - 80;
+      c.animate([
+        { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+        { transform: 'translate(' + dx + 'px, ' + (dy + 320) + 'px) rotate(' + (Math.random() * 720) + 'deg)', opacity: 0 }
+      ], { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(.2,.6,.4,1)' });
+      setTimeout(() => c.remove(), 1700);
+    }
+  }
+  function bigConfetti() {
+    const w = window.innerWidth, h = window.innerHeight;
+    burstConfetti(w * 0.25, h * 0.35, 40);
+    setTimeout(() => burstConfetti(w * 0.75, h * 0.35, 40), 180);
+    setTimeout(() => burstConfetti(w * 0.5, h * 0.25, 50), 360);
+  }
+
+  // ====================================================================
+  // Sound (Web Audio API)
+  // ====================================================================
+  let audioCtx = null;
+  function ensureAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { audioCtx = null; }
+    }
+    return audioCtx;
+  }
+  function tone(freq, start, dur, vol, type) {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type || 'sine';
+    o.frequency.value = freq;
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime + start;
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + dur);
+    o.start(t0);
+    o.stop(t0 + dur + 0.05);
+  }
+  function playHappy() {
+    tone(523.25, 0, 0.16, 0.18);
+    tone(659.25, 0.07, 0.16, 0.18);
+    tone(783.99, 0.14, 0.24, 0.2);
+  }
+  function playGentle() {
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.connect(g).connect(ctx.destination);
+    const t0 = ctx.currentTime;
+    o.frequency.setValueAtTime(392, t0);
+    o.frequency.linearRampToValueAtTime(330, t0 + 0.3);
+    g.gain.setValueAtTime(0, t0);
+    g.gain.linearRampToValueAtTime(0.12, t0 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t0 + 0.38);
+    o.start(t0);
+    o.stop(t0 + 0.42);
+  }
+  function playCoin() {
+    tone(987.77, 0, 0.1, 0.16, 'triangle');
+    tone(1318.51, 0.08, 0.18, 0.16, 'triangle');
+  }
+  function playFanfare() {
+    tone(523.25, 0,    0.18, 0.2);
+    tone(659.25, 0.12, 0.18, 0.2);
+    tone(783.99, 0.24, 0.18, 0.2);
+    tone(1046.5, 0.36, 0.4, 0.22);
+  }
+
+  // ====================================================================
+  // Order generation
+  // ====================================================================
+  function orderConfigForCustomer(idx) {
+    // idx: 0..7 -> grows from 2 distinct items up to 5-6, with bigger quantities
+    if (idx <= 1) return { distinct: 2, maxQty: 2 };
+    if (idx <= 3) return { distinct: 3, maxQty: 2 };
+    if (idx <= 5) return { distinct: 4, maxQty: 3 };
+    if (idx === 6) return { distinct: 5, maxQty: 3 };
+    return { distinct: 6, maxQty: 3 };
+  }
+
+  function makeOrder(idx) {
+    const cfg = orderConfigForCustomer(idx);
+    const picks = shuffle(FOODS).slice(0, cfg.distinct);
+    return picks.map(f => ({
+      emoji: f.emoji,
+      name: f.name,
+      qty: 1 + Math.floor(Math.random() * cfg.maxQty)
+    }));
+  }
+
+  function orderToText(order) {
+    // e.g. "2 apples 🍎, a banana 🍌, and 3 cookies 🍪"
+    const parts = order.map(item => {
+      const plural = item.qty > 1 ? pluralize(item.name) : item.name;
+      const count = item.qty > 1 ? item.qty : 'a';
+      return count + ' ' + plural + ' ' + item.emoji;
+    });
+    if (parts.length === 1) return parts[0];
+    return parts.slice(0, -1).join(', ') + ', and ' + parts[parts.length - 1];
+  }
+
+  function pluralize(name) {
+    if (name === 'strawberry') return 'strawberries';
+    if (name === 'bread') return 'loaves of bread';
+    if (name === 'milk') return 'cartons of milk';
+    if (name === 'broccoli') return 'broccoli';
+    return name + 's';
+  }
+
+  function totalItems(order) {
+    return order.reduce((sum, it) => sum + it.qty, 0);
+  }
+
+  // ====================================================================
+  // Render shelf (fixed for the whole game)
+  // ====================================================================
+  function renderShelf() {
+    const shelf = $('shelf');
+    shelf.innerHTML = '';
+    FOODS.forEach(food => {
+      const b = document.createElement('button');
+      b.className = 'food-btn';
+      b.type = 'button';
+      b.dataset.name = food.name;
+      b.setAttribute('aria-label', 'Add ' + food.name);
+      b.innerHTML = '<span class="f-emoji" aria-hidden="true">' + food.emoji + '</span>' +
+                    '<span class="f-name">' + food.name + '</span>';
+      b.addEventListener('click', (e) => handleShelfTap(e, b, food));
+      shelf.appendChild(b);
+    });
+  }
+
+  // ====================================================================
+  // Game flow
+  // ====================================================================
+  function startGame() {
+    state.customerIndex = 0;
+    state.coins = 0;
+    state.customerOrder = shuffle(CUSTOMERS);
+    $('coinNum').textContent = '0';
+    renderShelf();
+    showScreen('gameScreen');
+    nextCustomer();
+  }
+
+  function nextCustomer() {
+    const idx = state.customerIndex;
+    const customer = state.customerOrder[idx % state.customerOrder.length];
+    state.order = makeOrder(idx);
+    state.remaining = {};
+    state.order.forEach(it => { state.remaining[it.name] = it.qty; });
+    state.basket = [];
+    state.phase = 'show';
+
+    $('custNum').textContent = String(idx + 1);
+    $('customerEmoji').textContent = customer.emoji;
+    $('feedback').textContent = '';
+    $('feedback').className = 'feedback';
+    renderBasket();
+    lockShelf(true);
+
+    // Show the order to memorize
+    showOrderBubble(true);
+
+    const itemCount = totalItems(state.order);
+    const memorizeMs = 2600 + itemCount * 700;
+    clearTimeout(state._memoTimer);
+    state._memoTimer = setTimeout(() => beginFill(), memorizeMs);
+  }
+
+  function showOrderBubble(initial) {
+    const bubble = $('bubble');
+    const verb = initial ? 'I would like' : 'I asked for';
+    bubble.innerHTML =
+      '"' + verb + ' <span class="order-emojis">' + orderToText(state.order) + '</span>, please!"' +
+      '<span class="hint-line">👀 Remember it…</span>';
+  }
+
+  function beginFill() {
+    if (state.phase === 'done') return;
+    state.phase = 'fill';
+    const bubble = $('bubble');
+    bubble.innerHTML = '"What did I order again? Fill my basket! 🛒"' +
+      '<span class="hint-line">Tap the food on the shelf below.</span>';
+    lockShelf(false);
+  }
+
+  function lockShelf(locked) {
+    $('shelf').classList.toggle('locked', locked);
+    $('showAgainBtn').disabled = locked || state.phase !== 'fill';
+  }
+
+  function renderBasket() {
+    const basket = $('basket');
+    if (state.basket.length === 0) {
+      basket.innerHTML = '<span class="empty-hint">Tap food to add it here!</span>';
+      return;
+    }
+    basket.innerHTML = state.basket
+      .map(e => '<span class="b-item" aria-hidden="true">' + e + '</span>')
+      .join('');
+  }
+
+  function handleShelfTap(e, button, food) {
+    ensureAudio();
+    if (state.phase !== 'fill') return;
+
+    const need = state.remaining[food.name] || 0;
+    if (need > 0) {
+      // Correct item
+      state.remaining[food.name] = need - 1;
+      state.basket.push(food.emoji);
+      renderBasket();
+      button.classList.remove('bad');
+      void button.offsetWidth;
+      button.classList.add('good');
+      setTimeout(() => button.classList.remove('good'), 460);
+      playHappy();
+      burstConfetti(e.clientX || window.innerWidth / 2, e.clientY || 200, 12);
+
+      const fb = $('feedback');
+      fb.className = 'feedback good';
+      fb.textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)];
+
+      if (isOrderComplete()) completeOrder();
+    } else {
+      // Not on the list (or already filled enough)
+      button.classList.remove('good');
+      void button.offsetWidth;
+      button.classList.add('bad');
+      setTimeout(() => button.classList.remove('bad'), 460);
+      playGentle();
+      const fb = $('feedback');
+      fb.className = 'feedback gentle';
+      fb.textContent = GENTLE[Math.floor(Math.random() * GENTLE.length)];
+    }
+  }
+
+  function isOrderComplete() {
+    return Object.keys(state.remaining).every(n => state.remaining[n] <= 0);
+  }
+
+  function completeOrder() {
+    state.phase = 'done';
+    lockShelf(true);
+    $('showAgainBtn').disabled = true;
+
+    const earned = totalItems(state.order);
+    state.coins += earned;
+    $('coinNum').textContent = String(state.coins);
+
+    const customer = state.customerOrder[state.customerIndex % state.customerOrder.length];
+    const bubble = $('bubble');
+    bubble.innerHTML = '"' + customer.thanks + '"' +
+      '<span class="hint-line">🪙 +' + earned + ' coins!</span>';
+
+    const fb = $('feedback');
+    fb.className = 'feedback good';
+    fb.textContent = '🎉 Order complete! 🎉';
+
+    playCoin();
+    setTimeout(() => { playFanfare(); }, 200);
+    bigConfetti();
+
+    state.customerIndex++;
+    setTimeout(() => {
+      if (state.customerIndex >= TOTAL_CUSTOMERS) finishGame();
+      else nextCustomer();
+    }, 1900);
+  }
+
+  function finishGame() {
+    $('finalCoins').textContent = String(state.coins);
+    showScreen('celebrateScreen');
+    setTimeout(() => { bigConfetti(); playFanfare(); }, 200);
+    setTimeout(() => { bigConfetti(); }, 900);
+  }
+
+  // ====================================================================
+  // "Show me again" helper
+  // ====================================================================
+  $('showAgainBtn').addEventListener('click', () => {
+    if (state.phase !== 'fill') return;
+    ensureAudio();
+    const bubble = $('bubble');
+    showOrderBubble(false);
+    // Re-hide after a short peek and return to fill prompt
+    clearTimeout(state._peekTimer);
+    state._peekTimer = setTimeout(() => {
+      if (state.phase === 'fill') {
+        bubble.innerHTML = '"Keep going — fill my basket! 🛒"' +
+          '<span class="hint-line">Tap the food on the shelf below.</span>';
+      }
+    }, 2600);
+  });
+
+  // ====================================================================
+  // Buttons
+  // ====================================================================
+  $('startBtn').addEventListener('click', (e) => {
+    ensureAudio();
+    burstConfetti(e.clientX, e.clientY, 18);
+    startGame();
+  });
+  $('playAgainBtn').addEventListener('click', (e) => {
+    burstConfetti(e.clientX, e.clientY, 18);
+    startGame();
+  });
+  $('mascot').addEventListener('click', (e) => {
+    burstConfetti(e.clientX, e.clientY, 18);
+    playHappy();
+  });
+  </script>
+</body>
+</html>
