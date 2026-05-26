@@ -89,6 +89,11 @@ app.get(['/spellabee', '/spellabee/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'spellabee', 'index.html'));
 });
 
+// Color Book game page (folder-based: /color-book/index.html)
+app.get(['/color-book', '/color-book/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'color-book', 'index.html'));
+});
+
 // SEO helpers
 app.get('/robots.txt', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));

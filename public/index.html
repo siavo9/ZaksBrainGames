@@ -32,6 +32,7 @@
     "description": "A friendly home for fun, brain-boosting games for kids.",
     "hasPart": [
       { "@type": "Game", "name": "Learn The Words", "url": "learnthewords/index.html", "typicalAgeRange": "3-" },
+      { "@type": "Game", "name": "Color Book", "url": "color-book/index.html", "typicalAgeRange": "3-" },
       { "@type": "Game", "name": "Car Math", "url": "carmath/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Stop the Fire", "url": "stopthefire/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "HangCar", "url": "hangcar.html", "typicalAgeRange": "4-" },
@@ -563,6 +564,48 @@
   <script>
     // ---------- Game previews (mini illustrations of each game's actual visuals) ----------
     const PREVIEWS = {
+      colorBook: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="cb-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.25"/>
+            </filter>
+          </defs>
+          <!-- Coloring sheet -->
+          <g transform="translate(104,22) rotate(-4 64 78)" filter="url(#cb-sh)">
+            <rect width="128" height="156" rx="12" fill="#fff"/>
+            <!-- Flower, partly colored -->
+            <g transform="translate(64,60)">
+              <circle cx="0" cy="-24" r="17" fill="#FFD93D" stroke="#2D2D5F" stroke-width="3"/>
+              <circle cx="23" cy="-7" r="17" fill="#FF6FB5" stroke="#2D2D5F" stroke-width="3"/>
+              <circle cx="14" cy="20" r="17" fill="#6BE6A8" stroke="#2D2D5F" stroke-width="3"/>
+              <circle cx="-14" cy="20" r="17" fill="#4FC3F7" stroke="#2D2D5F" stroke-width="3"/>
+              <circle cx="-23" cy="-7" r="17" fill="#fff" stroke="#2D2D5F" stroke-width="3"/>
+              <circle cx="0" cy="0" r="14" fill="#FF9F45" stroke="#2D2D5F" stroke-width="3"/>
+            </g>
+            <path d="M64,76 L64,128" stroke="#2D2D5F" stroke-width="3" fill="none" stroke-linecap="round"/>
+            <path d="M64,104 Q86,96 92,112 Q72,118 64,104 Z" fill="#6BE6A8" stroke="#2D2D5F" stroke-width="3" stroke-linejoin="round"/>
+          </g>
+          <!-- Crayons -->
+          <g filter="url(#cb-sh)" stroke="#2D2D5F" stroke-width="2.5" stroke-linejoin="round">
+            <g transform="translate(38,150) rotate(-22)">
+              <rect x="-8" y="-4" width="16" height="50" rx="4" fill="#FF6B6B"/>
+              <path d="M-8,-4 L0,-22 L8,-4 Z" fill="#FF6B6B"/>
+              <rect x="-8" y="8" width="16" height="6" fill="#fff" opacity="0.6" stroke="none"/>
+            </g>
+            <g transform="translate(62,156) rotate(-6)">
+              <rect x="-8" y="-4" width="16" height="50" rx="4" fill="#4FC3F7"/>
+              <path d="M-8,-4 L0,-22 L8,-4 Z" fill="#4FC3F7"/>
+              <rect x="-8" y="8" width="16" height="6" fill="#fff" opacity="0.6" stroke="none"/>
+            </g>
+            <g transform="translate(86,152) rotate(12)">
+              <rect x="-8" y="-4" width="16" height="50" rx="4" fill="#FFD93D"/>
+              <path d="M-8,-4 L0,-22 L8,-4 Z" fill="#FFD93D"/>
+              <rect x="-8" y="8" width="16" height="6" fill="#fff" opacity="0.6" stroke="none"/>
+            </g>
+          </g>
+        </svg>`,
+
       monsterTruckBuilder: `
         <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
           <rect x="0" y="152" width="320" height="48" fill="#4a4f5e"/>
@@ -1404,6 +1447,16 @@
         badge: '📖 Words & Reading',
         age: 'Ages 3+',
         theme: 'card-coral'
+      },
+      {
+        name: 'Color Book',
+        url: 'color-book/index.html',
+        emoji: '🖍️',
+        preview: PREVIEWS.colorBook,
+        desc: 'Pick a picture, choose your colors, and fill the page however you like! A calm, creative coloring playground.',
+        badge: '🎨 Color & Creativity',
+        age: 'Ages 3+',
+        theme: 'card-mint'
       },
       {
         name: 'Car Math',
