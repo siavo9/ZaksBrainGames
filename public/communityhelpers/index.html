@@ -310,6 +310,7 @@
   // ====================================================================
   // Each question: { stage (big emoji), text, options:[{emoji,label,correct}], hint }
   const BASIC_QUESTIONS = [
+    // ----- WHO helps with...? -----
     { stage: '🔥', text: "Who helps put out a fire?", options: [
       { emoji: '🧑‍🚒', label: 'Firefighter', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🏫', label: 'Teacher' } ],
       hint: "A firefighter helps with fires!" },
@@ -322,27 +323,121 @@
     { stage: '🏫', text: "Who teaches you at school?", options: [
       { emoji: '🧑‍🏫', label: 'Teacher', correct: true }, { emoji: '👮', label: 'Police Officer' }, { emoji: '🧑‍🍳', label: 'Chef' } ],
       hint: "A teacher teaches at school!" },
-    { stage: '🍳', text: "Who cooks yummy food at a restaurant?", options: [
+    { stage: '🍽️', text: "Who cooks yummy food at a restaurant?", options: [
       { emoji: '🧑‍🍳', label: 'Chef', correct: true }, { emoji: '🧑‍🏫', label: 'Teacher' }, { emoji: '👮', label: 'Police Officer' } ],
       hint: "A chef cooks the food!" },
     { stage: '🌾', text: "Who grows our food on a farm?", options: [
       { emoji: '🧑‍🌾', label: 'Farmer', correct: true }, { emoji: '🧑‍⚕️', label: 'Doctor' }, { emoji: '🧑‍🚒', label: 'Firefighter' } ],
       hint: "A farmer grows our food!" },
+    { stage: '🐶', text: "Who helps sick animals feel better?", options: [
+      { emoji: '🧑‍⚕️', label: 'Vet', correct: true }, { emoji: '🧑‍🏫', label: 'Teacher' }, { emoji: '🧑‍🍳', label: 'Chef' } ],
+      hint: "A vet takes care of animals!" },
+    { stage: '😬', text: "Who helps keep your teeth clean and healthy?", options: [
+      { emoji: '🦷', label: 'Dentist', correct: true }, { emoji: '👮', label: 'Police Officer' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
+      hint: "A dentist takes care of your teeth!" },
+    { stage: '💌', text: "Who brings letters to your house?", options: [
+      { emoji: '📬', label: 'Mail Carrier', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🏫', label: 'Teacher' } ],
+      hint: "A mail carrier brings the mail!" },
+    { stage: '🚌', text: "Who drives the school bus?", options: [
+      { emoji: '🧑‍✈️', label: 'Bus Driver', correct: true }, { emoji: '🧑‍⚕️', label: 'Doctor' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
+      hint: "A bus driver drives the bus!" },
+    { stage: '✈️', text: "Who flies an airplane in the sky?", options: [
+      { emoji: '🧑‍✈️', label: 'Pilot', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
+      hint: "A pilot flies the plane!" },
+    { stage: '🚀', text: "Who travels all the way to outer space?", options: [
+      { emoji: '🧑‍🚀', label: 'Astronaut', correct: true }, { emoji: '👮', label: 'Police Officer' }, { emoji: '🧑‍🏫', label: 'Teacher' } ],
+      hint: "An astronaut goes to space!" },
+    { stage: '💧', text: "Who fixes leaky pipes and sinks?", options: [
+      { emoji: '🔧', label: 'Plumber', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🏫', label: 'Teacher' } ],
+      hint: "A plumber fixes the pipes!" },
+    { stage: '🏗️', text: "Who builds houses and buildings?", options: [
+      { emoji: '👷', label: 'Builder', correct: true }, { emoji: '🧑‍⚕️', label: 'Doctor' }, { emoji: '🧑‍🍳', label: 'Chef' } ],
+      hint: "A builder builds houses!" },
+    { stage: '🍞', text: "Who bakes fresh bread and cakes?", options: [
+      { emoji: '🧁', label: 'Baker', correct: true }, { emoji: '👮', label: 'Police Officer' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
+      hint: "A baker bakes bread and treats!" },
+    { stage: '💇', text: "Who cuts and styles your hair?", options: [
+      { emoji: '✂️', label: 'Hairdresser', correct: true }, { emoji: '🩺', label: 'Doctor' }, { emoji: '🚜', label: 'Farmer' } ],
+      hint: "A hairdresser cuts your hair!" },
+    { stage: '🚗', text: "Who fixes cars that are broken?", options: [
+      { emoji: '🔧', label: 'Mechanic', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🏫', label: 'Teacher' } ],
+      hint: "A mechanic fixes cars!" },
+    { stage: '🏊', text: "Who keeps swimmers safe at the pool?", options: [
+      { emoji: '🛟', label: 'Lifeguard', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🏫', label: 'Teacher' } ],
+      hint: "A lifeguard keeps swimmers safe!" },
+    { stage: '🦁', text: "Who takes care of animals at the zoo?", options: [
+      { emoji: '🧑‍🌾', label: 'Zookeeper', correct: true }, { emoji: '👮', label: 'Police Officer' }, { emoji: '🧑‍🍳', label: 'Chef' } ],
+      hint: "A zookeeper cares for zoo animals!" },
+    { stage: '💡', text: "Who fixes the lights and wires?", options: [
+      { emoji: '🔌', label: 'Electrician', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
+      hint: "An electrician works with electricity!" },
+    { stage: '🗑️', text: "Who picks up the trash from your street?", options: [
+      { emoji: '🚛', label: 'Garbage Collector', correct: true }, { emoji: '🧑‍⚕️', label: 'Doctor' }, { emoji: '🧑‍🏫', label: 'Teacher' } ],
+      hint: "A garbage collector takes the trash away!" },
+    { stage: '🎨', text: "Who paints beautiful pictures?", options: [
+      { emoji: '🧑‍🎨', label: 'Artist', correct: true }, { emoji: '👮', label: 'Police Officer' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
+      hint: "An artist makes art!" },
+    { stage: '🎵', text: "Who plays music and sings songs?", options: [
+      { emoji: '🧑‍🎤', label: 'Musician', correct: true }, { emoji: '🧑‍⚕️', label: 'Doctor' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
+      hint: "A musician makes music!" },
+    { stage: '🔬', text: "Who does experiments to learn new things?", options: [
+      { emoji: '🧑‍🔬', label: 'Scientist', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '👮', label: 'Police Officer' } ],
+      hint: "A scientist explores and experiments!" },
+    { stage: '📖', text: "Who helps you find books to read?", options: [
+      { emoji: '📚', label: 'Librarian', correct: true }, { emoji: '🧑‍🚒', label: 'Firefighter' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
+      hint: "A librarian helps at the library!" },
+    { stage: '🌷', text: "Who plants flowers and trims the bushes?", options: [
+      { emoji: '🪴', label: 'Gardener', correct: true }, { emoji: '👮', label: 'Police Officer' }, { emoji: '🧑‍🍳', label: 'Chef' } ],
+      hint: "A gardener takes care of plants!" },
+    { stage: '🚸', text: "Who helps kids cross the street safely?", options: [
+      { emoji: '🛑', label: 'Crossing Guard', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
+      hint: "A crossing guard helps you cross safely!" },
+    { stage: '🐟', text: "Who catches fish out on the sea?", options: [
+      { emoji: '🎣', label: 'Fisher', correct: true }, { emoji: '🧑‍🏫', label: 'Teacher' }, { emoji: '🧑‍⚕️', label: 'Doctor' } ],
+      hint: "A fisher catches fish!" },
+    { stage: '💊', text: "Who gives you the right medicine?", options: [
+      { emoji: '💊', label: 'Pharmacist', correct: true }, { emoji: '🚜', label: 'Farmer' }, { emoji: '🧑‍🍳', label: 'Chef' } ],
+      hint: "A pharmacist gives medicine at the pharmacy!" },
+
+    // ----- WHAT does this helper use? -----
     { stage: '🩺', text: "What does a doctor use?", options: [
       { emoji: '🩺', label: 'Stethoscope', correct: true }, { emoji: '🖍️', label: 'Crayon' }, { emoji: '🍳', label: 'Frying Pan' } ],
       hint: "A doctor listens to your heart with a stethoscope!" },
-    { stage: '👨‍🚒', text: "What does a firefighter use?", options: [
+    { stage: '🧑‍🚒', text: "What does a firefighter use?", options: [
       { emoji: '🧯', label: 'Fire Extinguisher', correct: true }, { emoji: '📚', label: 'Book' }, { emoji: '🪥', label: 'Toothbrush' } ],
       hint: "A firefighter uses a fire extinguisher!" },
-    { stage: '👨‍🍳', text: "What does a chef use to cook?", options: [
+    { stage: '🧑‍🍳', text: "What does a chef use to cook?", options: [
       { emoji: '🍳', label: 'Frying Pan', correct: true }, { emoji: '🩺', label: 'Stethoscope' }, { emoji: '✏️', label: 'Pencil' } ],
       hint: "A chef cooks with a frying pan!" },
-    { stage: '👩‍🏫', text: "What does a teacher use?", options: [
+    { stage: '🧑‍🏫', text: "What does a teacher use?", options: [
       { emoji: '✏️', label: 'Pencil', correct: true }, { emoji: '🧯', label: 'Extinguisher' }, { emoji: '🚜', label: 'Tractor' } ],
       hint: "A teacher writes with a pencil!" },
-    { stage: '👨‍🌾', text: "What does a farmer use?", options: [
+    { stage: '🧑‍🌾', text: "What does a farmer use?", options: [
       { emoji: '🚜', label: 'Tractor', correct: true }, { emoji: '🩺', label: 'Stethoscope' }, { emoji: '📚', label: 'Book' } ],
       hint: "A farmer drives a tractor!" },
+    { stage: '👮', text: "What does a police officer use?", options: [
+      { emoji: '🚓', label: 'Police Car', correct: true }, { emoji: '🍳', label: 'Frying Pan' }, { emoji: '🪥', label: 'Toothbrush' } ],
+      hint: "A police officer drives a police car!" },
+    { stage: '🧑‍🚒', text: "What does a firefighter ride to a fire?", options: [
+      { emoji: '🚒', label: 'Fire Truck', correct: true }, { emoji: '🚜', label: 'Tractor' }, { emoji: '✈️', label: 'Airplane' } ],
+      hint: "A firefighter rides a fire truck!" },
+    { stage: '🦷', text: "What does a dentist use to clean teeth?", options: [
+      { emoji: '🪥', label: 'Toothbrush', correct: true }, { emoji: '🚜', label: 'Tractor' }, { emoji: '🍳', label: 'Frying Pan' } ],
+      hint: "A dentist uses a brush to clean teeth!" },
+    { stage: '🔬', text: "What does a scientist look through?", options: [
+      { emoji: '🔬', label: 'Microscope', correct: true }, { emoji: '🍳', label: 'Frying Pan' }, { emoji: '🧯', label: 'Extinguisher' } ],
+      hint: "A scientist uses a microscope!" },
+    { stage: '🎨', text: "What does an artist paint with?", options: [
+      { emoji: '🖌️', label: 'Paintbrush', correct: true }, { emoji: '🩺', label: 'Stethoscope' }, { emoji: '🚜', label: 'Tractor' } ],
+      hint: "An artist paints with a paintbrush!" },
+    { stage: '👨‍🚀', text: "What does an astronaut fly in?", options: [
+      { emoji: '🚀', label: 'Rocket', correct: true }, { emoji: '🚌', label: 'Bus' }, { emoji: '🚜', label: 'Tractor' } ],
+      hint: "An astronaut flies in a rocket!" },
+    { stage: '🧑‍🌾', text: "What does a baker make in the oven?", options: [
+      { emoji: '🍞', label: 'Bread', correct: true }, { emoji: '🩺', label: 'Stethoscope' }, { emoji: '🧯', label: 'Extinguisher' } ],
+      hint: "A baker bakes bread!" },
+
+    // ----- WHERE does this helper work? -----
     { stage: '🧑‍🏫', text: "Where does a teacher work?", options: [
       { emoji: '🏫', label: 'School', correct: true }, { emoji: '🏥', label: 'Hospital' }, { emoji: '🚒', label: 'Fire Station' } ],
       hint: "A teacher works at school!" },
@@ -356,14 +451,20 @@
       { emoji: '🍽️', label: 'Restaurant', correct: true }, { emoji: '🏫', label: 'School' }, { emoji: '🚜', label: 'Farm' } ],
       hint: "A chef works at a restaurant!" },
     { stage: '📚', text: "Where can you borrow books?", options: [
-      { emoji: '📚', label: 'Library', correct: true }, { emoji: '🏥', label: 'Hospital' }, { emoji: '🚒', label: 'Fire Station' } ],
+      { emoji: '🏛️', label: 'Library', correct: true }, { emoji: '🏥', label: 'Hospital' }, { emoji: '🚒', label: 'Fire Station' } ],
       hint: "A librarian helps you at the library!" },
-    { stage: '✉️', text: "Who brings letters to your house?", options: [
-      { emoji: '📬', label: 'Mail Carrier', correct: true }, { emoji: '🧑‍🍳', label: 'Chef' }, { emoji: '🧑‍🏫', label: 'Teacher' } ],
-      hint: "A mail carrier brings the mail!" },
-    { stage: '🚌', text: "Who drives the school bus?", options: [
-      { emoji: '🚌', label: 'Bus Driver', correct: true }, { emoji: '🧑‍⚕️', label: 'Doctor' }, { emoji: '🧑‍🌾', label: 'Farmer' } ],
-      hint: "A bus driver drives the bus!" }
+    { stage: '🧑‍🌾', text: "Where does a farmer work?", options: [
+      { emoji: '🚜', label: 'Farm', correct: true }, { emoji: '🏥', label: 'Hospital' }, { emoji: '🏫', label: 'School' } ],
+      hint: "A farmer works on a farm!" },
+    { stage: '🦷', text: "Where does a dentist work?", options: [
+      { emoji: '🦷', label: 'Dentist Office', correct: true }, { emoji: '🚒', label: 'Fire Station' }, { emoji: '🚜', label: 'Farm' } ],
+      hint: "A dentist works at the dentist office!" },
+    { stage: '🦁', text: "Where does a zookeeper work?", options: [
+      { emoji: '🦓', label: 'Zoo', correct: true }, { emoji: '🏥', label: 'Hospital' }, { emoji: '🏫', label: 'School' } ],
+      hint: "A zookeeper works at the zoo!" },
+    { stage: '💊', text: "Where does a pharmacist work?", options: [
+      { emoji: '💊', label: 'Pharmacy', correct: true }, { emoji: '🚜', label: 'Farm' }, { emoji: '🚒', label: 'Fire Station' } ],
+      hint: "A pharmacist works at the pharmacy!" }
   ];
 
   const ADVANCED_QUESTIONS = [
@@ -476,10 +577,38 @@
   }
 
   // ---------- Game ----------
+  // Anti-repeat across game sessions: we remember the questions shown most
+  // recently (saved in localStorage) and never repeat one until at least 50
+  // other questions have appeared. With 50+ questions in the pool that means
+  // you won't see a repeat until you've worked through them all.
+  const RECENT_KEY = 'communityhelpers_recent_v1';
+  function loadRecent() {
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY)) || {}; } catch (e) { return {}; }
+  }
+  function saveRecent(r) {
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(r)); } catch (e) {}
+  }
+
   function buildList() {
-    let pool = BASIC_QUESTIONS.slice();
-    if (state.advanced) pool = pool.concat(ADVANCED_QUESTIONS);
-    return shuffle(pool).slice(0, TARGET);
+    const pool = state.advanced ? BASIC_QUESTIONS.concat(ADVANCED_QUESTIONS) : BASIC_QUESTIONS;
+    const modeKey = state.advanced ? 'adv' : 'basic';
+    const windowSize = Math.min(50, pool.length - 1);
+    const store = loadRecent();
+    // Recent question indices for this mode; drop any that are out of range.
+    let recent = (Array.isArray(store[modeKey]) ? store[modeKey] : []).filter(i => i < pool.length);
+
+    const list = [];
+    while (list.length < TARGET) {
+      let candidates = [];
+      for (let i = 0; i < pool.length; i++) if (!recent.includes(i)) candidates.push(i);
+      const idx = candidates[Math.floor(Math.random() * candidates.length)];
+      recent.push(idx);
+      while (recent.length > windowSize) recent.shift();
+      list.push(pool[idx]);
+    }
+    store[modeKey] = recent;
+    saveRecent(store);
+    return list;
   }
 
   function startGame() {

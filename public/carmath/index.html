@@ -11,13 +11,14 @@
     background: linear-gradient(180deg, #87CEEB 0%, #B0E0E6 60%, #98D8C8 100%);
     min-height: 100vh;
     overflow-x: hidden;
+    overflow-y: auto;
     user-select: none;
     color: #2c2c2c;
   }
 
-  /* Decorative sky */
+  /* Decorative sky (pushed down so the fixed top nav doesn't cover them) */
   .sun {
-    position: fixed; top: 30px; right: 50px;
+    position: fixed; top: 100px; right: 50px;
     width: 80px; height: 80px;
     background: radial-gradient(circle, #FFEB3B 50%, #FFD700 100%);
     border-radius: 50%;
@@ -32,20 +33,142 @@
   .cloud::before, .cloud::after {
     content: ''; position: absolute; background: white; border-radius: 50%;
   }
-  .cloud1 { width: 110px; height: 30px; top: 60px; left: 8%; }
+  .cloud1 { width: 110px; height: 30px; top: 140px; left: 8%; }
   .cloud1::before { width: 45px; height: 45px; top: -22px; left: 18px; }
   .cloud1::after  { width: 35px; height: 35px; top: -18px; right: 22px; }
-  .cloud2 { width: 90px; height: 26px; top: 140px; right: 22%; }
+  .cloud2 { width: 90px; height: 26px; top: 220px; right: 22%; }
   .cloud2::before { width: 38px; height: 38px; top: -19px; left: 14px; }
   .cloud2::after  { width: 28px; height: 28px; top: -14px; right: 14px; }
-  .cloud3 { width: 80px; height: 22px; top: 90px; left: 60%; }
+  .cloud3 { width: 80px; height: 22px; top: 170px; left: 60%; }
   .cloud3::before { width: 32px; height: 32px; top: -16px; left: 12px; }
 
-  .screen { display: none; min-height: 100vh; padding: 20px; position: relative; z-index: 10; }
+  .screen { display: none; min-height: 100vh; padding: 110px 20px 20px; position: relative; z-index: 10; }
   .screen.active { display: block; }
 
+  /* ===== TOP NAV (persistent across all screens) ===== */
+  #top-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 40;
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 4px solid #333;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #top-nav .nav-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .nav-btn {
+    font-family: inherit;
+    font-size: 1em;
+    padding: 8px 16px;
+    background: white;
+    color: #2c2c2c;
+    border: 3px solid #333;
+    border-radius: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #333;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .nav-btn:hover  { transform: translateY(2px); box-shadow: 0 2px 0 #333; }
+  .nav-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #333; }
+  .nav-btn.home {
+    background: #4CAF50; color: white;
+    border-color: #2E7D32; box-shadow: 0 4px 0 #2E7D32;
+  }
+  .nav-btn.home:hover  { box-shadow: 0 2px 0 #2E7D32; }
+  .nav-btn.home:active { box-shadow: 0 0 0 #2E7D32; }
+  .nav-btn.parent {
+    background: #2196F3; color: white;
+    border-color: #0D47A1; box-shadow: 0 4px 0 #0D47A1;
+  }
+  .nav-btn.parent:hover  { box-shadow: 0 2px 0 #0D47A1; }
+  .nav-btn.parent:active { box-shadow: 0 0 0 #0D47A1; }
+  .nav-btn.help {
+    background: #FF6B35; color: white;
+    border-color: #B33E10; box-shadow: 0 4px 0 #B33E10;
+  }
+  .nav-btn.help:hover  { box-shadow: 0 2px 0 #B33E10; }
+  .nav-btn.help:active { box-shadow: 0 0 0 #B33E10; }
+
+  /* ===== HOW TO PLAY modal ===== */
+  #how-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  #how-modal.open { display: flex; }
+  .modal-card {
+    background: white;
+    border: 5px solid #333;
+    border-radius: 24px;
+    padding: 24px 28px 22px;
+    max-width: 540px;
+    width: 100%;
+    box-shadow: 0 9px 0 #333;
+    text-align: left;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-card h2 {
+    font-size: 2em;
+    color: #FF6B35;
+    text-shadow: 2px 2px 0 #fff, 3px 3px 0 #333;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .modal-card p {
+    font-size: 1.15em;
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  .modal-card ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 8px 0 16px;
+  }
+  .modal-card li {
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    background: #FFF8E1;
+    border-left: 5px solid #FFEB3B;
+    border-radius: 8px;
+    font-size: 1.05em;
+  }
+  .modal-close {
+    display: block;
+    margin: 4px auto 0;
+    font-family: inherit;
+    font-size: 1.25em;
+    padding: 10px 28px;
+    background: #4CAF50;
+    color: white;
+    border: 4px solid #2E7D32;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #2E7D32;
+    font-weight: bold;
+  }
+  .modal-close:active { transform: translateY(3px); box-shadow: 0 2px 0 #2E7D32; }
+
   /* ===== HOME ===== */
-  #home { text-align: center; padding-top: 70px; }
+  #home { text-align: center; padding-top: 130px; }
   #home h1 {
     font-size: clamp(3em, 8vw, 6em);
     color: #FF6B35;
@@ -55,7 +178,7 @@
   }
   @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-18px);} }
   .tagline { font-size: 1.6em; color: #2c2c2c; margin-bottom: 30px; }
-  #home-truck-svg { margin: 20px auto; display: inline-block; transform: scale(1.6); }
+  #home-cars-svg { margin: 20px auto; display: inline-block; transform: scale(1.2); }
   .play-btn {
     font-family: inherit;
     font-size: 2.4em;
@@ -71,6 +194,23 @@
   }
   .play-btn:hover  { transform: translateY(3px); box-shadow: 0 6px 0 #2E7D32; }
   .play-btn:active { transform: translateY(9px); box-shadow: 0 0 0 #2E7D32; }
+  .more-games {
+    margin-top: 36px;
+    font-size: 1.2em;
+    color: #2c2c2c;
+  }
+  .more-games a {
+    color: #1565C0;
+    font-weight: bold;
+    text-decoration: none;
+    border-bottom: 3px dashed #1565C0;
+    padding-bottom: 2px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .more-games a:hover {
+    color: #FF6B35;
+    border-bottom-color: #FF6B35;
+  }
 
   /* ===== GAME ===== */
   #game-header {
@@ -81,69 +221,296 @@
     font-size: 2.4em; color: #FF6B35;
     text-shadow: 3px 3px 0 #fff, 4px 4px 0 #333;
   }
-  #hearts { font-size: 2.4em; }
-  .heart { display: inline-block; transition: all 0.3s; margin: 0 3px; }
-  .heart.lost { filter: grayscale(1) brightness(0.6); transform: scale(0.7); opacity: 0.5; }
+  .header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  #stats-bar {
+    display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .stat-card {
+    background: white;
+    border: 4px solid #333;
+    border-radius: 18px;
+    padding: 8px 18px;
+    box-shadow: 0 5px 0 #333;
+    min-width: 110px;
+    text-align: center;
+  }
+  .stat-card .stat-label {
+    font-size: 0.95em; color: #555; font-weight: bold;
+  }
+  .stat-card .stat-value {
+    font-size: 1.8em; font-weight: bold; color: #2c2c2c;
+  }
+  .stat-card.right .stat-value { color: #2E7D32; }
+  .stat-card.wrong .stat-value { color: #C62828; }
+  .stat-card.acc .stat-value { color: #1565C0; }
+
+  .toggle-btn, .round-btn {
+    font-family: inherit;
+    font-size: 1em;
+    padding: 10px 18px;
+    background: white;
+    color: #2c2c2c;
+    border: 4px solid #333;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #333;
+    font-weight: bold;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .toggle-btn.on {
+    background: #4CAF50;
+    color: white;
+    border-color: #2E7D32;
+    box-shadow: 0 5px 0 #2E7D32;
+  }
+  .toggle-btn:active, .round-btn:active {
+    transform: translateY(3px); box-shadow: 0 2px 0 #333;
+  }
+  .toggle-btn.on:active { box-shadow: 0 2px 0 #2E7D32; }
+
   #mute-btn {
     font-size: 1.6em; background: white; border: 4px solid #333;
     border-radius: 50%; width: 55px; height: 55px; cursor: pointer;
+    box-shadow: 0 5px 0 #333;
   }
+  #mute-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #333; }
 
-  #chain-area {
+  /* ===== STAGE (where cars live) ===== */
+  #stage-area {
     background: rgba(255,255,255,0.7);
     border-radius: 24px;
     padding: 16px;
     margin-bottom: 14px;
     border: 5px dashed #FF6B35;
-    overflow-x: auto;
-    min-height: 170px;
-  }
-  #chain {
-    display: flex; align-items: flex-end; gap: 6px; min-width: max-content;
-    padding: 5px;
-  }
-  .chain-cell { animation: dropIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
-  @keyframes dropIn {
-    0% { transform: translateY(-120px) rotate(-15deg); opacity: 0; }
-    60% { transform: translateY(8px) rotate(2deg); opacity: 1; }
-    100% { transform: translateY(0) rotate(0); opacity: 1; }
-  }
-
-  #wheel-counter-label {
-    text-align: center; font-size: 1.4em; margin: 6px 0; color: #2c2c2c;
-  }
-  #wheel-counter {
-    background: #FFF9C4;
-    border-radius: 20px;
-    padding: 14px;
-    margin-bottom: 16px;
-    min-height: 70px;
-    display: flex; flex-wrap: wrap; gap: 8px;
-    justify-content: center; align-items: center;
-    border: 5px solid #FBC02D;
-  }
-  .wheel-icon {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: radial-gradient(circle, #888 30%, #333 32%, #222 100%);
-    border: 3px solid #111;
-    animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
+    overflow: hidden;
+    min-height: 230px;
   }
-  .wheel-icon::after {
-    content: ''; position: absolute; inset: 8px;
-    border-radius: 50%; background: #888;
-    box-shadow: inset 0 0 0 2px #555;
+  /* Ground line */
+  #stage-area::after {
+    content: '';
+    position: absolute;
+    left: 5%; right: 5%; bottom: 18px;
+    height: 4px;
+    background: repeating-linear-gradient(90deg, #555 0 18px, transparent 18px 30px);
+    border-radius: 2px;
+    pointer-events: none;
   }
-  @keyframes pop {
-    0% { transform: scale(0) rotate(-180deg); }
-    100% { transform: scale(1) rotate(0); }
+  #stage {
+    display: flex; justify-content: center; align-items: flex-end;
+    gap: 30px;
+    min-height: 180px;
+    position: relative;
+    padding-bottom: 10px;
+  }
+  @media (max-width: 600px) { #stage { gap: 12px; } }
+
+  .car-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    position: relative;
+    transition: transform 0.3s;
+  }
+  .car-badge {
+    background: #FFEB3B;
+    border: 3px solid #333;
+    border-radius: 50%;
+    width: 56px; height: 56px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8em; font-weight: bold; color: #2c2c2c;
+    box-shadow: 0 4px 0 #333;
+  }
+  .car-svg-wrap { display: block; }
+  .car-svg-wrap svg { display: block; }
+
+  /* roll-in animation: from right offscreen to center */
+  .roll-in {
+    animation: rollIn 0.9s cubic-bezier(0.34, 1.1, 0.5, 1) both;
+  }
+  @keyframes rollIn {
+    0%   { transform: translateX(140vw); }
+    70%  { transform: translateX(-12px); }
+    100% { transform: translateX(0); }
   }
 
-  #answer-area { text-align: center; margin: 12px 0 16px; }
-  #answer-prompt {
-    font-size: 1.5em; color: #2c2c2c; margin-bottom: 10px; font-weight: bold;
+  /* CRASH: car A drives right toward center */
+  .crash-left {
+    animation: crashLeft 0.7s cubic-bezier(0.45, 0, 0.55, 1) forwards;
   }
+  @keyframes crashLeft {
+    0%   { transform: translateX(0) rotate(0); }
+    85%  { transform: translateX(var(--crash-dx, 60px)) rotate(0); }
+    92%  { transform: translateX(calc(var(--crash-dx, 60px) - 6px)) rotate(-3deg); }
+    100% { transform: translateX(var(--crash-dx, 60px)) rotate(-1deg); }
+  }
+  /* CRASH: car B drives left toward center */
+  .crash-right {
+    animation: crashRight 0.7s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+  }
+  @keyframes crashRight {
+    0%   { transform: translateX(0) rotate(0); }
+    85%  { transform: translateX(var(--crash-dx, -60px)) rotate(0); }
+    92%  { transform: translateX(calc(var(--crash-dx, -60px) + 6px)) rotate(3deg); }
+    100% { transform: translateX(var(--crash-dx, -60px)) rotate(1deg); }
+  }
+  /* Impact flash + shake on the stage */
+  .impact-shake {
+    animation: impactShake 0.5s ease-out;
+  }
+  @keyframes impactShake {
+    0%,100% { transform: translate(0,0); }
+    20%     { transform: translate(-6px, 2px); }
+    40%     { transform: translate(7px, -3px); }
+    60%     { transform: translate(-4px, 2px); }
+    80%     { transform: translate(3px, -1px); }
+  }
+  /* Crash flash burst */
+  .crash-flash {
+    position: absolute;
+    pointer-events: none;
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #FFEB3B 0%, #FF6B35 45%, rgba(255,107,53,0) 70%);
+    opacity: 0;
+    z-index: 6;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  .crash-flash.bang {
+    animation: flashBang 0.55s ease-out forwards;
+  }
+  @keyframes flashBang {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+    25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.7); }
+  }
+  /* Merged car appears with a small pop */
+  .merged-car {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    animation: mergedPop 0.45s cubic-bezier(0.34, 1.4, 0.6, 1) both;
+  }
+  @keyframes mergedPop {
+    0%   { transform: scale(0.6); opacity: 0; }
+    60%  { transform: scale(1.12); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  /* hidden helper for crashed/removed elements */
+  .hidden { visibility: hidden; }
+
+  /* tow-away animation: merged car drifts left offscreen with the truck.
+     Must use the SAME duration, easing, and delta as truckDriveOut so the
+     truck appears to be pulling the car — not racing ahead of it. */
+  .tow-away {
+    animation: towAway 2.5s cubic-bezier(0.45, 0, 0.6, 0.45) forwards;
+  }
+  @keyframes towAway {
+    0%   { transform: translateX(0) rotate(-1deg); }
+    100% { transform: translateX(-160vw) rotate(-1deg); }
+  }
+  /* wrong-guess wiggle */
+  .wiggle { animation: wiggle 0.5s ease-in-out; }
+  @keyframes wiggle {
+    0%,100% { transform: translateX(0) rotate(0); }
+    20%     { transform: translateX(-8px) rotate(-2deg); }
+    50%     { transform: translateX(8px) rotate(2deg); }
+    80%     { transform: translateX(-4px) rotate(-1deg); }
+  }
+  /* tire highlight pulse */
+  .tire-highlight {
+    animation: tirePulse 1.4s ease-in-out;
+  }
+  @keyframes tirePulse {
+    0%,100% { filter: none; }
+    25%     { filter: drop-shadow(0 0 8px #FFEB3B) brightness(1.3); }
+    50%     { filter: drop-shadow(0 0 12px #FF6B35) brightness(1.5); }
+    75%     { filter: drop-shadow(0 0 8px #FFEB3B) brightness(1.3); }
+  }
+
+  /* ===== TOW TRUCK animation overlay ===== */
+  .tow-truck {
+    position: absolute;
+    left: 0;
+    bottom: 22px;
+    transform: translateX(-260px);
+    z-index: 5;
+    pointer-events: none;
+  }
+  /* Truck drives in from the left and stops to the LEFT of the crashed car */
+  .tow-truck.driving-in {
+    animation: truckDriveIn 1.1s cubic-bezier(0.3, 0.8, 0.4, 1) forwards;
+  }
+  /* Then truck nudges forward a bit to connect the hook */
+  .tow-truck.connecting {
+    animation: truckConnect 0.5s ease-out forwards;
+  }
+  /* Finally truck drives away off-screen to the left, pulling the car.
+     Must match towAway's duration, easing, and delta — see truckDriveOut keyframes. */
+  .tow-truck.driving-out {
+    animation: truckDriveOut 2.5s cubic-bezier(0.45, 0, 0.6, 0.45) forwards;
+  }
+  @keyframes truckDriveIn {
+    0%   { transform: translateX(-260px); }
+    85%  { transform: translateX(var(--truck-stop, 30%)); }
+    100% { transform: translateX(var(--truck-stop, 30%)); }
+  }
+  @keyframes truckConnect {
+    0%   { transform: translateX(var(--truck-stop, 30%)); }
+    100% { transform: translateX(var(--truck-hook, 34%)); }
+  }
+  /* End delta matches towAway exactly (-160vw) so truck and car move in lockstep. */
+  @keyframes truckDriveOut {
+    0%   { transform: translateX(var(--truck-hook, 34%)); }
+    100% { transform: translateX(calc(var(--truck-hook, 34%) - 160vw)); }
+  }
+  /* Hook rope: a line that grows from the truck's crane toward the car */
+  .tow-rope {
+    position: absolute;
+    bottom: 90px;
+    height: 3px;
+    background: #222;
+    z-index: 6;
+    transform-origin: left center;
+    transform: scaleX(0);
+    pointer-events: none;
+  }
+  .tow-rope.connecting {
+    animation: ropeExtend 0.45s ease-out forwards;
+  }
+  /* Must come AFTER .tow-rope.connecting — same specificity, later rule wins,
+     so the rope follows the truck/car off-screen instead of being stuck at
+     its connect-time position. */
+  .tow-rope.tow-away {
+    animation: towAway 2.5s cubic-bezier(0.45, 0, 0.6, 0.45) forwards;
+  }
+  @keyframes ropeExtend {
+    0%   { transform: scaleX(0); }
+    100% { transform: scaleX(1); }
+  }
+
+  /* ===== EQUATION & INPUT ===== */
+  #equation {
+    font-family: inherit;
+    font-size: clamp(2.2em, 6vw, 3.5em);
+    color: #1565C0;
+    background: white;
+    border: 5px solid #2196F3;
+    border-radius: 20px;
+    padding: 14px 28px;
+    margin: 4px auto 18px;
+    display: inline-block;
+    font-weight: bold;
+    letter-spacing: 2px;
+    box-shadow: 0 6px 0 #0D47A1;
+    text-align: center;
+  }
+  #equation .plus   { color: #FF6B35; margin: 0 10px; }
+  #equation .equals { color: #2c2c2c; margin: 0 12px; }
+  #equation .qmark  { color: #FF6B35; }
+
+  #equation-wrap { text-align: center; }
+
+  #answer-area { text-align: center; margin: 8px 0 16px; }
   #answer-input {
     font-family: inherit; font-size: 2.4em;
     padding: 8px 16px; width: 140px; text-align: center;
@@ -157,73 +524,28 @@
     background: #2196F3; color: white;
     border: 4px solid #0D47A1; border-radius: 16px;
     cursor: pointer; box-shadow: 0 6px 0 #0D47A1;
+    transition: transform 0.1s, box-shadow 0.1s;
   }
-  #submit-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #0D47A1; }
+  #submit-btn:hover { transform: translateY(2px); box-shadow: 0 4px 0 #0D47A1; }
+  #submit-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #0D47A1; }
+  #submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
   #feedback {
-    font-size: 1.6em; min-height: 50px; margin-top: 12px;
+    font-size: 1.6em; min-height: 50px; margin-top: 14px;
     font-weight: bold;
   }
   .correct { color: #2E7D32; animation: pop 0.4s; }
-  .wrong { color: #C62828; animation: shake 0.4s; }
+  .wrong   { color: #C62828; animation: shake 0.4s; }
+  @keyframes pop {
+    0%   { transform: scale(0.6); }
+    60%  { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
   @keyframes shake {
     0%,100% { transform: translateX(0); }
     25% { transform: translateX(-10px); }
     75% { transform: translateX(10px); }
   }
-
-  #vehicle-buttons {
-    display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 10px;
-  }
-  @media (max-width: 900px) { #vehicle-buttons { grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 480px) { #vehicle-buttons { grid-template-columns: repeat(2, 1fr); } }
-
-  .vehicle-btn {
-    font-family: inherit;
-    background: white;
-    border: 4px solid #333;
-    border-radius: 18px;
-    padding: 10px 8px 12px;
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
-    box-shadow: 0 6px 0 #333;
-    text-align: center;
-  }
-  .vehicle-btn:hover:not(:disabled) { transform: translateY(2px); box-shadow: 0 4px 0 #333; }
-  .vehicle-btn:active:not(:disabled) { transform: translateY(6px); box-shadow: 0 0 0 #333; }
-  .vehicle-btn:disabled { opacity: 0.4; cursor: not-allowed; background: #d8d8d8; }
-  .vehicle-btn svg { width: 100%; height: 55px; }
-  .vehicle-btn .label { font-size: 1em; font-weight: bold; margin-top: 4px; }
-  .vehicle-btn .wheels-info { font-size: 0.85em; color: #555; }
-  .vehicle-btn .uses {
-    display: flex; justify-content: center; gap: 5px; margin-top: 6px;
-  }
-  .use-dot {
-    width: 13px; height: 13px; border-radius: 50%;
-    background: #4CAF50; border: 2px solid #2E7D32;
-  }
-  .use-dot.used { background: #ccc; border-color: #888; }
-
-  /* ===== WIN / LOSE ===== */
-  #win, #lose { text-align: center; padding-top: 90px; }
-  #win h1 {
-    font-size: 5em; color: #FFD700;
-    text-shadow: 4px 4px 0 #FF6B35, 7px 7px 0 #333;
-    animation: bounce 1s infinite;
-  }
-  #lose h1 {
-    font-size: 4em; color: #C62828;
-    text-shadow: 3px 3px 0 #fff, 5px 5px 0 #333;
-  }
-  .end-msg { font-size: 1.6em; margin-top: 20px; color: #2c2c2c; }
-  .restart-btn {
-    font-family: inherit;
-    font-size: 2em; padding: 16px 50px;
-    background: #FF6B35; color: white;
-    border: 5px solid #BF360C; border-radius: 60px;
-    cursor: pointer; margin-top: 36px;
-    box-shadow: 0 8px 0 #BF360C;
-  }
-  .restart-btn:active { transform: translateY(5px); box-shadow: 0 3px 0 #BF360C; }
 
   /* Confetti */
   .confetti {
@@ -235,11 +557,87 @@
     0% { transform: translateY(-100vh) rotate(0); opacity: 1; }
     100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
   }
+
+  /* ===== POSITIVE-REINFORCEMENT EFFECTS ===== */
+  .praise-pop {
+    position: fixed;
+    top: 35%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: inherit;
+    font-size: clamp(2.6em, 8vw, 5em);
+    color: #FF6B35;
+    text-shadow: 3px 3px 0 #fff, 6px 6px 0 #333;
+    font-weight: bold;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0;
+    white-space: nowrap;
+    animation: praisePop 1.7s cubic-bezier(0.34, 1.5, 0.6, 1) forwards;
+  }
+  @keyframes praisePop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(-12deg); }
+    20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(4deg); }
+    40%  { transform: translate(-50%, -50%) scale(0.95) rotate(-2deg); }
+    60%  { transform: translate(-50%, -50%) scale(1.05) rotate(1deg); }
+    80%  { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+    100% { opacity: 0; transform: translate(-50%, -75%) scale(0.9); }
+  }
+  .firework-particle {
+    position: fixed;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 55;
+    animation: fwExplode 1.2s ease-out forwards;
+  }
+  @keyframes fwExplode {
+    0%   { transform: translate(0, 0) scale(1);   opacity: 1; }
+    70%  { opacity: 1; }
+    100% { transform: translate(var(--fx, 0), calc(var(--fy, 0) + 30px)) scale(0.4); opacity: 0; }
+  }
+  .star-rise {
+    position: fixed;
+    font-size: 2.2em;
+    pointer-events: none;
+    z-index: 55;
+    animation: starRise 1.8s ease-out forwards;
+  }
+  @keyframes starRise {
+    0%   { transform: translateY(0) scale(0.6) rotate(0); opacity: 0; }
+    20%  { opacity: 1; transform: translateY(-30px) scale(1.1) rotate(15deg); }
+    100% { transform: translateY(-220px) scale(0.7) rotate(360deg); opacity: 0; }
+  }
 </style>
 </head>
 <body>
-<a href="../index.html" class="zbg-home" aria-label="Back to Zak's Brain Games">🏠</a>
-<style>.zbg-home{position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:46px;height:46px;background:#fff;border:2px solid #FFD93D;border-radius:50%;font-size:22px;text-decoration:none;box-shadow:0 3px 8px rgba(0,0,0,.25);line-height:1}.zbg-home:active{transform:scale(.92)}</style>
+
+<!-- ========== PERSISTENT TOP NAV (shows on every screen) ========== -->
+<nav id="top-nav" aria-label="Game navigation">
+  <div class="nav-group">
+    <a href="#" class="nav-btn home" onclick="goHome(); return false;" aria-label="Go to Car Math home page">🏠 Game Home</a>
+    <a href="../index.html" class="nav-btn parent" aria-label="Go to Zak's Brain Games">🧠 More Brain Games</a>
+  </div>
+  <div class="nav-group">
+    <button type="button" class="nav-btn help" onclick="openHowTo()" aria-label="Open How to Play instructions">❓ How to Play</button>
+  </div>
+</nav>
+
+<!-- ========== HOW TO PLAY modal (available from every screen) ========== -->
+<div id="how-modal" role="dialog" aria-modal="true" aria-labelledby="how-title" onclick="if(event.target===this) closeHowTo()">
+  <div class="modal-card">
+    <h2 id="how-title">How to Play 🚗🛞</h2>
+    <p>Two cars roll up and you count their tires! Add the two numbers together and type your answer. Get it right and watch the tow truck zoom in to haul the cars away!</p>
+    <ul>
+      <li>🔍 Look at the tires on both cars</li>
+      <li>➕ Add the two tire numbers together</li>
+      <li>⌨️ Type your answer in the box (or use the number on each car as a hint)</li>
+      <li>🚀 Hit <strong>Submit</strong> or press <strong>Enter</strong></li>
+      <li>😊 Tap <strong>Easy Mode</strong> for smaller numbers</li>
+      <li>🔊 Tap the speaker to mute or unmute sounds</li>
+    </ul>
+    <button type="button" class="modal-close" onclick="closeHowTo()">Got it! Let's play!</button>
+  </div>
+</div>
 
 <div class="sun"></div>
 <div class="cloud cloud1"></div>
@@ -249,214 +647,209 @@
 <!-- ========== HOME SCREEN ========== -->
 <div id="home" class="screen active">
   <h1>Car Math</h1>
-  <div class="tagline">🚛 Help the tow truck count wheels! 🛞</div>
-  <div id="home-truck-svg"></div>
+  <div class="tagline">🚗 Count the tires, add them up! 🛞</div>
+  <div id="home-cars-svg"></div>
   <br>
   <button class="play-btn" onclick="startGame()">Play Now!</button>
+  <div class="more-games">
+    🧠 Try more brain games at
+    <a href="https://zaksbraingames.com/">zaksbraingames.com</a>
+  </div>
 </div>
 
 <!-- ========== GAME SCREEN ========== -->
 <div id="game" class="screen">
   <div id="game-header">
     <div id="game-title">Car Math</div>
-    <div id="hearts">
-      <span class="heart">❤️</span>
-      <span class="heart">❤️</span>
-      <span class="heart">❤️</span>
+    <div class="header-controls">
+      <button id="easy-btn" class="toggle-btn" onclick="toggleEasy()">😊 Easy Mode: OFF</button>
+      <button id="mute-btn" onclick="toggleMute()" title="Mute/Unmute">🔊</button>
     </div>
-    <button id="mute-btn" onclick="toggleMute()" title="Mute/Unmute">🔊</button>
   </div>
 
-  <div id="chain-area"><div id="chain"></div></div>
+  <div id="stats-bar">
+    <div class="stat-card right">
+      <div class="stat-label">First-Try ✅</div>
+      <div class="stat-value" id="stat-right">0</div>
+    </div>
+    <div class="stat-card wrong">
+      <div class="stat-label">Wrong ❌</div>
+      <div class="stat-value" id="stat-wrong">0</div>
+    </div>
+    <div class="stat-card acc">
+      <div class="stat-label">Accuracy</div>
+      <div class="stat-value" id="stat-acc">—</div>
+    </div>
+  </div>
 
-  <div id="wheel-counter-label">Count the wheels! 🛞</div>
-  <div id="wheel-counter"></div>
+  <div id="stage-area">
+    <div id="stage"></div>
+  </div>
+
+  <div id="equation-wrap">
+    <div id="equation"></div>
+  </div>
 
   <div id="answer-area">
-    <div id="answer-prompt">How many wheels is the tow truck carrying?</div>
-    <input id="answer-input" type="number" min="0" placeholder="?" inputmode="numeric"/>
-    <button id="submit-btn" onclick="checkAnswer()">Check!</button>
+    <div>
+      <input id="answer-input" type="number" min="0" placeholder="?" inputmode="numeric"/>
+      <button id="submit-btn" onclick="checkAnswer()">Submit</button>
+    </div>
     <div id="feedback"></div>
   </div>
-
-  <div id="vehicle-buttons"></div>
-</div>
-
-<!-- ========== WIN SCREEN ========== -->
-<div id="win" class="screen">
-  <h1>🎉 You Win! 🎉</h1>
-  <div class="end-msg">You chained all 18 vehicles!<br>You're a Wheel-Counting Champion! 🏆</div>
-  <button class="restart-btn" onclick="restart()">Play Again</button>
-</div>
-
-<!-- ========== LOSE SCREEN ========== -->
-<div id="lose" class="screen">
-  <h1>Game Over!</h1>
-  <div class="end-msg">Don't give up — you've got this! 💪</div>
-  <button class="restart-btn" onclick="restart()">Try Again</button>
 </div>
 
 <script>
 /* =========================================================
-   CAR MATH — game logic, SVG vehicle art, and Web Audio sound
+   CAR MATH — two-car tire-addition game
    ========================================================= */
-
-const VEHICLES = {
-  motorcycle: { name: 'Motorcycle',    wheels: 2,  length: 80  },
-  car:        { name: 'Car',           wheels: 4,  length: 130 },
-  pickup:     { name: 'Pickup Truck',  wheels: 6,  length: 170 },
-  monster:    { name: 'Monster Truck', wheels: 8,  length: 200 },
-  bus:        { name: 'Coach Bus',     wheels: 10, length: 240 },
-  bigrig:     { name: 'Big Rig',       wheels: 12, length: 280 }
-};
 
 const COLORS = ['#E53935','#1E88E5','#43A047','#FDD835','#8E24AA','#FB8C00',
                 '#EC407A','#26A69A','#5E35B1','#00ACC1','#7CB342','#F4511E'];
 
 const state = {
-  chain: [],
-  uses: { motorcycle: 0, car: 0, pickup: 0, monster: 0, bus: 0, bigrig: 0 },
-  strikes: 0,
+  easy: false,
   muted: false,
-  total: 0,
-  awaitingAnswer: false
+  firstTryRight: 0,
+  wrongGuesses: 0,
+  totalProblems: 0,
+  triedThisProblem: false, // tracks if user already guessed wrong on the current problem
+  awaiting: false,
+  busy: false,             // true during tow-away animation, to block input
+  carA: null,
+  carB: null,
+  sequenceTimers: [],      // ids of in-flight setTimeouts for the tow sequence
 };
 
-/* ---------- SVG: TOW TRUCK ---------- */
-function towTruckSVG() {
-  return `
-  <svg width="150" height="100" viewBox="0 0 150 100" xmlns="http://www.w3.org/2000/svg">
-    <!-- Crane arm -->
-    <rect x="95" y="20" width="40" height="8" fill="#555" stroke="#222" stroke-width="2"/>
-    <rect x="125" y="20" width="8" height="40" fill="#555" stroke="#222" stroke-width="2"/>
-    <line x1="129" y1="60" x2="129" y2="70" stroke="#222" stroke-width="2"/>
-    <path d="M 124 70 Q 129 80 134 70 Z" fill="none" stroke="#222" stroke-width="2"/>
-    <!-- Cab -->
-    <rect x="8" y="42" width="55" height="36" rx="6" fill="#FF6B35" stroke="#222" stroke-width="3"/>
-    <!-- Truck bed -->
-    <rect x="63" y="52" width="50" height="26" fill="#FF6B35" stroke="#222" stroke-width="3"/>
-    <!-- Windows -->
-    <rect x="14" y="48" width="20" height="18" fill="#B3E5FC" stroke="#222" stroke-width="2" rx="2"/>
-    <rect x="38" y="48" width="22" height="18" fill="#B3E5FC" stroke="#222" stroke-width="2" rx="2"/>
-    <!-- Headlight -->
-    <circle cx="11" cy="60" r="3.5" fill="#FFEB3B" stroke="#222" stroke-width="1"/>
-    <!-- Stripe -->
-    <rect x="63" y="62" width="50" height="6" fill="#FFEB3B" opacity="0.7"/>
-    <!-- Wheels -->
-    <circle cx="22" cy="84" r="12" fill="#222" stroke="#444" stroke-width="2"/>
-    <circle cx="22" cy="84" r="4" fill="#999"/>
-    <circle cx="90" cy="84" r="12" fill="#222" stroke="#444" stroke-width="2"/>
-    <circle cx="90" cy="84" r="4" fill="#999"/>
-  </svg>`;
+const PRAISE_MESSAGES = [
+  'Great job!',
+  'Awesome!',
+  'Way to go!',
+  'Math star!',
+  'Brilliant!',
+  'Fantastic!',
+  'Bullseye!',
+  'Nailed it!',
+  'Woohoo!',
+  'You got it!',
+  'Excellent!',
+  'Math whiz!',
+  'Spot on!',
+  'Amazing!',
+  'Super!',
+];
+function pickPraise() {
+  return PRAISE_MESSAGES[Math.floor(Math.random() * PRAISE_MESSAGES.length)];
 }
 
-/* ---------- SVG: VEHICLES ---------- */
-function vehicleSVG(type, color) {
-  const v = VEHICLES[type];
-  const w = v.length;
-  const h = type === 'monster' ? 110 : 80;
-  const wheelR = type === 'monster' ? 18 : 11;
-  const wheelY = h - (type === 'monster' ? 22 : 14);
+// Track tow-sequence timeouts so we can cancel them on home/restart.
+function seqTimeout(fn, ms) {
+  const id = setTimeout(() => {
+    state.sequenceTimers = state.sequenceTimers.filter(t => t !== id);
+    fn();
+  }, ms);
+  state.sequenceTimers.push(id);
+  return id;
+}
+function cancelSequence() {
+  state.sequenceTimers.forEach(t => clearTimeout(t));
+  state.sequenceTimers = [];
+  // Clean up any lingering tow truck/rope/effects from a cancelled run.
+  document.querySelectorAll('.tow-truck, .tow-rope, .crash-flash, .praise-pop, .firework-particle, .star-rise')
+    .forEach(el => el.remove());
+}
 
-  let body = '';
+/* ---------- SVG: CAR (with configurable tire count) ---------- */
+function carSVG(tires, color, idPrefix) {
+  // Body length scales with tire count so tires are clearly spaced.
+  const spacing = 28;
+  const margin = 24;
+  const w = margin * 2 + Math.max(1, tires - 1) * spacing;
+  const h = 100;
+  const wheelR = 12;
+  const wheelY = h - 18;
+  const bodyTop = 36;
+  const bodyBottom = wheelY - 2;
+  const roofTop = 14;
 
-  switch (type) {
-    case 'motorcycle':
-      body = `
-        <path d="M ${w*0.15} ${h*0.62} Q ${w*0.5} ${h*0.4} ${w*0.85} ${h*0.62} L ${w*0.78} ${h*0.74} L ${w*0.22} ${h*0.74} Z"
-              fill="${color}" stroke="#222" stroke-width="2.5"/>
-        <rect x="${w*0.35}" y="${h*0.46}" width="${w*0.28}" height="${h*0.12}" rx="3" fill="#222"/>
-        <line x1="${w*0.72}" y1="${h*0.58}" x2="${w*0.82}" y2="${h*0.32}" stroke="#222" stroke-width="3.5" stroke-linecap="round"/>
-        <line x1="${w*0.78}" y1="${h*0.32}" x2="${w*0.95}" y2="${h*0.32}" stroke="#222" stroke-width="3.5" stroke-linecap="round"/>
-        <circle cx="${w*0.5}" cy="${h*0.5}" r="${w*0.08}" fill="${color}" stroke="#222" stroke-width="2"/>
-      `;
-      break;
-    case 'car':
-      body = `
-        <path d="M ${w*0.22} ${h*0.4} Q ${w*0.28} ${h*0.18} ${w*0.5} ${h*0.18}
-                 L ${w*0.7} ${h*0.18} Q ${w*0.82} ${h*0.18} ${w*0.88} ${h*0.4} Z"
-              fill="${color}" stroke="#222" stroke-width="2.5"/>
-        <rect x="${w*0.06}" y="${h*0.4}" width="${w*0.88}" height="${h*0.35}" rx="8"
-              fill="${color}" stroke="#222" stroke-width="2.5"/>
-        <rect x="${w*0.31}" y="${h*0.24}" width="${w*0.16}" height="${h*0.14}"
-              fill="#B3E5FC" stroke="#222" stroke-width="1.5" rx="2"/>
-        <rect x="${w*0.53}" y="${h*0.24}" width="${w*0.16}" height="${h*0.14}"
-              fill="#B3E5FC" stroke="#222" stroke-width="1.5" rx="2"/>
-        <circle cx="${w*0.93}" cy="${h*0.55}" r="3" fill="#FFEB3B" stroke="#222" stroke-width="1"/>
-      `;
-      break;
-    case 'pickup':
-      body = `
-        <rect x="${w*0.06}" y="${h*0.26}" width="${w*0.32}" height="${h*0.24}" rx="5"
-              fill="${color}" stroke="#222" stroke-width="2.5"/>
-        <rect x="${w*0.04}" y="${h*0.48}" width="${w*0.92}" height="${h*0.28}" rx="5"
-              fill="${color}" stroke="#222" stroke-width="2.5"/>
-        <rect x="${w*0.4}" y="${h*0.32}" width="${w*0.56}" height="${h*0.36}"
-              fill="${color}" stroke="#222" stroke-width="2.5"/>
-        <rect x="${w*0.43}" y="${h*0.36}" width="${w*0.5}" height="${h*0.28}"
-              fill="#A1887F" stroke="#222" stroke-width="1.5"/>
-        <rect x="${w*0.1}" y="${h*0.3}" width="${w*0.25}" height="${h*0.16}"
-              fill="#B3E5FC" stroke="#222" stroke-width="1.5" rx="2"/>
-      `;
-      break;
-    case 'monster':
-      body = `
-        <rect x="${w*0.05}" y="${h*0.38}" width="${w*0.9}" height="${h*0.28}" rx="8"
-              fill="${color}" stroke="#222" stroke-width="3"/>
-        <rect x="${w*0.18}" y="${h*0.18}" width="${w*0.64}" height="${h*0.22}" rx="6"
-              fill="${color}" stroke="#222" stroke-width="3"/>
-        <rect x="${w*0.24}" y="${h*0.22}" width="${w*0.52}" height="${h*0.14}"
-              fill="#B3E5FC" stroke="#222" stroke-width="2" rx="2"/>
-        <!-- flame stripe -->
-        <path d="M ${w*0.1} ${h*0.5} L ${w*0.3} ${h*0.5} L ${w*0.2} ${h*0.56} L ${w*0.32} ${h*0.56} Z"
-              fill="#FFEB3B" opacity="0.8"/>
-      `;
-      break;
-    case 'bus':
-      body = `
-        <rect x="${w*0.02}" y="${h*0.2}" width="${w*0.96}" height="${h*0.55}" rx="12"
-              fill="${color}" stroke="#222" stroke-width="2.5"/>
-        ${[0.06,0.2,0.34,0.48,0.62,0.78].map(p =>
-          `<rect x="${w*p}" y="${h*0.28}" width="${w*0.1}" height="${h*0.18}"
-                 fill="#B3E5FC" stroke="#222" stroke-width="1.5" rx="2"/>`).join('')}
-        <rect x="${w*0.02}" y="${h*0.5}" width="${w*0.96}" height="${h*0.06}"
-              fill="white" opacity="0.5"/>
-      `;
-      break;
-    case 'bigrig':
-      body = `
-        <!-- Cab -->
-        <rect x="${w*0.02}" y="${h*0.32}" width="${w*0.18}" height="${h*0.42}" rx="5"
-              fill="${color}" stroke="#222" stroke-width="2.5"/>
-        <rect x="${w*0.04}" y="${h*0.38}" width="${w*0.14}" height="${h*0.16}"
-              fill="#B3E5FC" stroke="#222" stroke-width="1.5" rx="2"/>
-        <!-- Smoke stack -->
-        <rect x="${w*0.18}" y="${h*0.16}" width="${w*0.03}" height="${h*0.18}" fill="#666"/>
-        <!-- Trailer -->
-        <rect x="${w*0.22}" y="${h*0.16}" width="${w*0.76}" height="${h*0.58}" rx="4"
-              fill="#ECEFF1" stroke="#222" stroke-width="2.5"/>
-        <line x1="${w*0.4}" y1="${h*0.16}" x2="${w*0.4}" y2="${h*0.74}" stroke="#999" stroke-width="1"/>
-        <line x1="${w*0.58}" y1="${h*0.16}" x2="${w*0.58}" y2="${h*0.74}" stroke="#999" stroke-width="1"/>
-        <line x1="${w*0.76}" y1="${h*0.16}" x2="${w*0.76}" y2="${h*0.74}" stroke="#999" stroke-width="1"/>
-        <line x1="${w*0.92}" y1="${h*0.16}" x2="${w*0.92}" y2="${h*0.74}" stroke="#999" stroke-width="1"/>
-        <rect x="${w*0.02}" y="${h*0.55}" width="${w*0.18}" height="${h*0.06}" fill="#FFEB3B"/>
-      `;
-      break;
-  }
+  // Body and roof
+  let body = `
+    <path d="M ${margin - 6} ${bodyBottom}
+             L ${margin - 6} ${bodyTop + 8}
+             Q ${margin - 6} ${bodyTop} ${margin + 6} ${bodyTop}
+             L ${w * 0.3} ${bodyTop}
+             Q ${w * 0.36} ${roofTop} ${w * 0.5} ${roofTop}
+             L ${w * 0.72} ${roofTop}
+             Q ${w * 0.82} ${roofTop} ${w * 0.86} ${bodyTop}
+             L ${w - margin + 6} ${bodyTop}
+             Q ${w - margin + 12} ${bodyTop + 4} ${w - margin + 14} ${bodyBottom}
+             Z"
+          fill="${color}" stroke="#222" stroke-width="3" stroke-linejoin="round"/>
+    <!-- windows -->
+    <path d="M ${w * 0.34} ${bodyTop - 2}
+             Q ${w * 0.38} ${roofTop + 4} ${w * 0.5} ${roofTop + 4}
+             L ${w * 0.5} ${bodyTop - 2} Z"
+          fill="#B3E5FC" stroke="#222" stroke-width="1.5"/>
+    <path d="M ${w * 0.52} ${bodyTop - 2}
+             L ${w * 0.7} ${bodyTop - 2}
+             Q ${w * 0.78} ${roofTop + 4} ${w * 0.7} ${roofTop + 4}
+             L ${w * 0.54} ${roofTop + 4} Z"
+          fill="#B3E5FC" stroke="#222" stroke-width="1.5"/>
+    <!-- door line -->
+    <line x1="${w * 0.5}" y1="${bodyTop}" x2="${w * 0.5}" y2="${bodyBottom - 4}"
+          stroke="#222" stroke-width="1.5" opacity="0.4"/>
+    <!-- headlight -->
+    <circle cx="${w - margin + 8}" cy="${bodyTop + 14}" r="4"
+            fill="#FFEB3B" stroke="#222" stroke-width="1.5"/>
+    <!-- bumper stripe -->
+    <rect x="${margin - 4}" y="${bodyBottom - 8}" width="${w - 2 * margin + 8}" height="4"
+          fill="#222" opacity="0.25"/>
+  `;
 
-  // Wheels evenly spaced across the vehicle
+  // Tires, evenly spaced under the body
   let wheels = '';
-  const margin = 0.08;
-  const span = 1 - 2 * margin;
-  for (let i = 0; i < v.wheels; i++) {
-    const x = w * (margin + span * (i / (v.wheels - 1)));
+  for (let i = 0; i < tires; i++) {
+    const x = margin + i * spacing;
     wheels += `
-      <circle cx="${x}" cy="${wheelY}" r="${wheelR}" fill="#222" stroke="#444" stroke-width="2"/>
-      <circle cx="${x}" cy="${wheelY}" r="${wheelR*0.42}" fill="#999"/>
+      <g class="tire" data-tire-idx="${i}">
+        <circle cx="${x}" cy="${wheelY}" r="${wheelR}" fill="#222" stroke="#444" stroke-width="2"/>
+        <circle cx="${x}" cy="${wheelY}" r="${wheelR * 0.42}" fill="#bbb"/>
+        <circle cx="${x}" cy="${wheelY}" r="${wheelR * 0.18}" fill="#444"/>
+      </g>
     `;
   }
 
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${body}${wheels}</svg>`;
+}
+
+/* ---------- SVG: TOW TRUCK ---------- */
+function towTruckSVG() {
+  return `
+  <svg width="170" height="110" viewBox="0 0 170 110" xmlns="http://www.w3.org/2000/svg">
+    <!-- Crane arm pointing back/right -->
+    <rect x="100" y="30" width="55" height="10" fill="#555" stroke="#222" stroke-width="2"/>
+    <rect x="146" y="30" width="9" height="44" fill="#555" stroke="#222" stroke-width="2"/>
+    <line x1="150" y1="74" x2="150" y2="86" stroke="#222" stroke-width="2"/>
+    <path d="M 144 86 Q 150 96 156 86 Z" fill="none" stroke="#222" stroke-width="2.5"/>
+    <!-- Cab -->
+    <rect x="8" y="48" width="60" height="40" rx="6" fill="#FF6B35" stroke="#222" stroke-width="3"/>
+    <!-- Truck bed -->
+    <rect x="68" y="58" width="55" height="30" fill="#FF6B35" stroke="#222" stroke-width="3"/>
+    <!-- Windows -->
+    <rect x="14" y="54" width="22" height="20" fill="#B3E5FC" stroke="#222" stroke-width="2" rx="2"/>
+    <rect x="40" y="54" width="24" height="20" fill="#B3E5FC" stroke="#222" stroke-width="2" rx="2"/>
+    <!-- Headlight -->
+    <circle cx="11" cy="68" r="4" fill="#FFEB3B" stroke="#222" stroke-width="1"/>
+    <!-- Stripe -->
+    <rect x="68" y="70" width="55" height="6" fill="#FFEB3B" opacity="0.8"/>
+    <!-- Light bar -->
+    <rect x="26" y="44" width="12" height="6" rx="2" fill="#2196F3" stroke="#222" stroke-width="1"/>
+    <!-- Wheels -->
+    <circle cx="24" cy="94" r="13" fill="#222" stroke="#444" stroke-width="2"/>
+    <circle cx="24" cy="94" r="5" fill="#bbb"/>
+    <circle cx="96" cy="94" r="13" fill="#222" stroke="#444" stroke-width="2"/>
+    <circle cx="96" cy="94" r="5" fill="#bbb"/>
+  </svg>`;
 }
 
 /* ---------- SCREEN HELPERS ---------- */
@@ -465,57 +858,149 @@ function switchScreen(name) {
   document.getElementById(name).classList.add('active');
 }
 
-/* ---------- GAME FLOW ---------- */
-function startGame() {
-  // Reset state for a fresh game start
-  state.chain = [];
-  state.uses = { motorcycle: 0, car: 0, pickup: 0, monster: 0, bus: 0, bigrig: 0 };
-  state.strikes = 0;
-  state.total = 0;
-  state.awaitingAnswer = false;
-
-  updateHearts();
-  renderChain();
-  renderWheelCounter();
-  renderVehicleButtons();
-  document.getElementById('answer-input').value = '';
-  document.getElementById('feedback').textContent = '';
-  document.getElementById('feedback').className = '';
-  switchScreen('game');
+/* ---------- NAVIGATION ---------- */
+function goHome() {
+  cancelSequence();
+  state.busy = false;
+  state.awaiting = false;
+  switchScreen('home');
+  const fb = document.getElementById('feedback');
+  if (fb) { fb.textContent = ''; fb.className = ''; }
+}
+function openHowTo() {
+  document.getElementById('how-modal').classList.add('open');
+}
+function closeHowTo() {
+  document.getElementById('how-modal').classList.remove('open');
 }
 
-function restart() { startGame(); }
+/* ---------- POSITIVE REINFORCEMENT EFFECTS ---------- */
+function showPraisePop(msg) {
+  const el = document.createElement('div');
+  el.className = 'praise-pop';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { if (el.parentNode) el.remove(); }, 1800);
+}
 
-function addVehicle(type) {
-  if (state.awaitingAnswer) {
-    showFeedback('Answer first!', 'wrong');
-    return;
+function launchFireworks(burstCount = 3) {
+  const colors = ['#FFEB3B', '#FF6B35', '#4CAF50', '#2196F3', '#E91E63', '#9C27B0', '#00BCD4'];
+  for (let b = 0; b < burstCount; b++) {
+    setTimeout(() => {
+      const cx = 80 + Math.random() * Math.max(40, window.innerWidth - 160);
+      const cy = 100 + Math.random() * Math.max(40, window.innerHeight * 0.55);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      playFireworkBoom();
+      const particles = 20;
+      for (let i = 0; i < particles; i++) {
+        const p = document.createElement('div');
+        p.className = 'firework-particle';
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        p.style.background = color;
+        p.style.boxShadow = `0 0 10px ${color}`;
+        const angle = (i / particles) * Math.PI * 2 + Math.random() * 0.2;
+        const dist = 70 + Math.random() * 70;
+        p.style.setProperty('--fx', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--fy', Math.sin(angle) * dist + 'px');
+        document.body.appendChild(p);
+        setTimeout(() => { if (p.parentNode) p.remove(); }, 1300);
+      }
+    }, b * 280);
   }
-  if (state.uses[type] >= 3) return;
+}
 
-  state.uses[type]++;
-  const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-  state.chain.push({ type, color });
-  state.total += VEHICLES[type].wheels;
-  state.awaitingAnswer = true;
+function launchStarRise(count = 8) {
+  const stars = ['⭐','🌟','✨','💫','🎉','🎊'];
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const s = document.createElement('div');
+      s.className = 'star-rise';
+      s.textContent = stars[Math.floor(Math.random() * stars.length)];
+      s.style.left = (Math.random() * (window.innerWidth - 40)) + 'px';
+      s.style.top = (window.innerHeight - 60) + 'px';
+      document.body.appendChild(s);
+      setTimeout(() => { if (s.parentNode) s.remove(); }, 1900);
+    }, i * 90);
+  }
+}
 
-  playEngine();
-  renderChain();
-  renderWheelCounter();
-  renderVehicleButtons();
+/* ---------- GAME FLOW ---------- */
+function startGame() {
+  cancelSequence();
+  state.firstTryRight = 0;
+  state.wrongGuesses = 0;
+  state.totalProblems = 0;
+  state.triedThisProblem = false;
+  state.busy = false;
+  updateStats();
+  switchScreen('game');
+  newProblem(true);
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = '';
+  document.getElementById('answer-input').focus();
+}
+
+function randTires() {
+  const max = state.easy ? 5 : 10;
+  return 1 + Math.floor(Math.random() * max);
+}
+
+function pickColor(exclude) {
+  let c = COLORS[Math.floor(Math.random() * COLORS.length)];
+  let tries = 0;
+  while (c === exclude && tries < 8) {
+    c = COLORS[Math.floor(Math.random() * COLORS.length)];
+    tries++;
+  }
+  return c;
+}
+
+function newProblem(initial) {
+  state.carA = { tires: randTires(), color: pickColor(null) };
+  state.carB = { tires: randTires(), color: pickColor(state.carA.color) };
+  state.triedThisProblem = false;
+  state.awaiting = true;
+  state.totalProblems++;
+
+  renderStage(initial ? 'roll-in' : 'roll-in');
+  renderEquation();
 
   const input = document.getElementById('answer-input');
   input.value = '';
+  input.disabled = false;
+  document.getElementById('submit-btn').disabled = false;
   input.focus();
-  document.getElementById('feedback').textContent = '';
-  document.getElementById('feedback').className = '';
+}
+
+function renderStage(animationClass) {
+  const stage = document.getElementById('stage');
+  const aHTML = carSVG(state.carA.tires, state.carA.color, 'a');
+  const bHTML = carSVG(state.carB.tires, state.carB.color, 'b');
+  stage.innerHTML = `
+    <div class="car-wrap ${animationClass || ''}" id="car-a">
+      <div class="car-badge">${state.carA.tires}</div>
+      <div class="car-svg-wrap">${aHTML}</div>
+    </div>
+    <div class="car-wrap ${animationClass || ''}" id="car-b" style="animation-delay:0.15s">
+      <div class="car-badge">${state.carB.tires}</div>
+      <div class="car-svg-wrap">${bHTML}</div>
+    </div>
+  `;
+}
+
+function renderEquation() {
+  const eq = document.getElementById('equation');
+  eq.innerHTML =
+    `<span class="num">${state.carA.tires}</span>` +
+    `<span class="plus">+</span>` +
+    `<span class="num">${state.carB.tires}</span>` +
+    `<span class="equals">=</span>` +
+    `<span class="qmark">?</span>`;
 }
 
 function checkAnswer() {
-  if (!state.awaitingAnswer) {
-    showFeedback('Pick a vehicle first!', 'wrong');
-    return;
-  }
+  if (!state.awaiting || state.busy) return;
   const input = document.getElementById('answer-input');
   const guess = parseInt(input.value, 10);
   if (isNaN(guess)) {
@@ -523,90 +1008,233 @@ function checkAnswer() {
     return;
   }
 
-  if (guess === state.total) {
-    state.awaitingAnswer = false;
+  const answer = state.carA.tires + state.carB.tires;
+
+  if (guess === answer) {
+    state.awaiting = false;
+    if (!state.triedThisProblem) state.firstTryRight++;
+    updateStats();
     playCorrect();
-    renderVehicleButtons();
-    if (state.chain.length >= 18) {
-      showFeedback('🎉 YOU DID IT! 🎉', 'correct');
-      setTimeout(() => {
-        playWin();
-        switchScreen('win');
-        showConfetti();
-      }, 900);
-    } else {
-      showFeedback('🎉 Correct! Add another!', 'correct');
-    }
+
+    // Show solved equation briefly
+    document.getElementById('equation').innerHTML =
+      `<span class="num">${state.carA.tires}</span>` +
+      `<span class="plus">+</span>` +
+      `<span class="num">${state.carB.tires}</span>` +
+      `<span class="equals">=</span>` +
+      `<span class="num" style="color:#2E7D32">${answer}</span>`;
+
+    const praise = pickPraise();
+    showFeedback('🎉 ' + praise + ' Here comes the tow truck!', 'correct');
+    showPraisePop(praise);
+    launchFireworks(3);
+    launchStarRise(8);
+    input.disabled = true;
+    document.getElementById('submit-btn').disabled = true;
+    runCrashAndTowSequence(answer);
   } else {
-    state.strikes++;
-    updateHearts();
+    state.wrongGuesses++;
+    state.triedThisProblem = true;
+    updateStats();
     playWrong();
-    if (state.strikes >= 3) {
-      showFeedback('Oh no!', 'wrong');
-      setTimeout(() => switchScreen('lose'), 1100);
-    } else {
-      const remaining = 3 - state.strikes;
-      showFeedback(`Oops! Try again — ${remaining} ${remaining === 1 ? 'try' : 'tries'} left`, 'wrong');
-    }
+    wiggleCars();
+    highlightTires();
+    showFeedback('Try again! Count the tires.', 'wrong');
+    input.select();
   }
+}
+
+function wiggleCars() {
+  ['car-a', 'car-b'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('wiggle');
+    void el.offsetWidth; // force reflow to restart animation
+    el.classList.add('wiggle');
+  });
+}
+
+function highlightTires() {
+  document.querySelectorAll('#stage .tire').forEach(t => {
+    t.classList.remove('tire-highlight');
+    void t.getBoundingClientRect();
+    t.classList.add('tire-highlight');
+  });
+}
+
+/* Pick which of the two car colors the merged/crashed car should use.
+   Keep it simple: use car A's color so the result feels like a fused vehicle. */
+function mergedCarColor() {
+  return state.carA.color;
+}
+
+function runCrashAndTowSequence(answer) {
+  state.busy = true;
+  const stage = document.getElementById('stage');
+  const stageArea = document.getElementById('stage-area');
+  const a = document.getElementById('car-a');
+  const b = document.getElementById('car-b');
+  if (!a || !b) { state.busy = false; return; }
+
+  // Step 1: figure out the midpoint between the two cars, then send each car
+  // toward that midpoint so they collide visually.
+  const aRect = a.getBoundingClientRect();
+  const bRect = b.getBoundingClientRect();
+  const aCenter = aRect.left + aRect.width / 2;
+  const bCenter = bRect.left + bRect.width / 2;
+  const midpoint = (aCenter + bCenter) / 2;
+  // Stop a few pixels short of the midpoint so the cars meet bumper-to-bumper.
+  const aShift = (midpoint - aCenter) - 6;
+  const bShift = (midpoint - bCenter) + 6;
+  a.style.setProperty('--crash-dx', aShift + 'px');
+  b.style.setProperty('--crash-dx', bShift + 'px');
+
+  a.classList.add('crash-left');
+  b.classList.add('crash-right');
+  playCrashRumble();
+
+  // Step 2: at the moment of impact, flash + shake the stage, then swap in
+  // a single "merged" car at the collision point.
+  const IMPACT_MS = 600;
+  seqTimeout(() => {
+    playCrashBang();
+
+    // Impact flash centered on the collision point
+    const stageAreaRect = stageArea.getBoundingClientRect();
+    const flash = document.createElement('div');
+    flash.className = 'crash-flash bang';
+    flash.style.left = (midpoint - stageAreaRect.left) + 'px';
+    flash.style.top  = (aRect.top + aRect.height / 2 - stageAreaRect.top) + 'px';
+    stageArea.appendChild(flash);
+    setTimeout(() => { if (flash.parentNode) flash.parentNode.removeChild(flash); }, 600);
+
+    // Shake the whole stage briefly
+    stage.classList.add('impact-shake');
+    setTimeout(() => stage.classList.remove('impact-shake'), 520);
+  }, IMPACT_MS);
+
+  // Step 3: after impact settles, replace both cars with a single merged car
+  // whose tire-count equals the answer. The merged car keeps the position of
+  // car A so it sits near where the collision happened.
+  const MERGE_MS = IMPACT_MS + 480;
+  seqTimeout(() => {
+    const mergedHTML = carSVG(answer, mergedCarColor(), 'merged');
+    // Replace the stage contents with the single merged car, positioned where
+    // the collision occurred (roughly the midpoint).
+    stage.innerHTML = `
+      <div class="merged-car" id="car-merged">
+        <div class="car-badge">${answer}</div>
+        <div class="car-svg-wrap">${mergedHTML}</div>
+      </div>
+    `;
+  }, MERGE_MS);
+
+  // Step 4: tow truck drives in from the left and stops just to the left of
+  // the merged car.
+  const TRUCK_IN_MS = MERGE_MS + 350;
+  const truck = document.createElement('div');
+  truck.className = 'tow-truck';
+  truck.innerHTML = towTruckSVG();
+  stageArea.appendChild(truck);
+
+  seqTimeout(() => {
+    // Compute where the truck should stop: just left of the merged car.
+    const merged = document.getElementById('car-merged');
+    const sRect = stageArea.getBoundingClientRect();
+    let stopPx = sRect.width * 0.30;
+    if (merged) {
+      const mRect = merged.getBoundingClientRect();
+      // Truck is ~170px wide; stop so its right edge is ~20px before the car.
+      stopPx = Math.max(20, (mRect.left - sRect.left) - 170 - 12);
+    }
+    const hookPx = stopPx + 14; // a small forward nudge for "connecting"
+    truck.style.setProperty('--truck-stop', stopPx + 'px');
+    truck.style.setProperty('--truck-hook', hookPx + 'px');
+    truck.classList.add('driving-in');
+    playEngine();
+  }, TRUCK_IN_MS);
+
+  // Step 5: truck connects (rope extends from crane to car) and pulls forward.
+  const CONNECT_MS = TRUCK_IN_MS + 1100;
+  seqTimeout(() => {
+    truck.classList.remove('driving-in');
+    truck.classList.add('connecting');
+
+    // Add a rope between the truck's hook and the car
+    const merged = document.getElementById('car-merged');
+    const sRect = stageArea.getBoundingClientRect();
+    const tRect = truck.getBoundingClientRect();
+    const hookX = (tRect.right - sRect.left) - 18;
+    let carLeftX = hookX + 40;
+    if (merged) {
+      const mRect = merged.getBoundingClientRect();
+      carLeftX = mRect.left - sRect.left + 8;
+    }
+    const rope = document.createElement('div');
+    rope.className = 'tow-rope';
+    rope.style.left = hookX + 'px';
+    rope.style.width = Math.max(8, carLeftX - hookX) + 'px';
+    stageArea.appendChild(rope);
+    requestAnimationFrame(() => rope.classList.add('connecting'));
+    truck._rope = rope;
+    playClink();
+  }, CONNECT_MS);
+
+  // Step 6: drive away — truck + merged car + rope all exit left together.
+  const DRIVE_OUT_MS = CONNECT_MS + 520;
+  seqTimeout(() => {
+    truck.classList.remove('connecting');
+    truck.classList.add('driving-out');
+    const merged = document.getElementById('car-merged');
+    if (merged) merged.classList.add('tow-away');
+    if (truck._rope) truck._rope.classList.add('tow-away');
+    playEngine();
+  }, DRIVE_OUT_MS);
+
+  // Step 7: clean up and start the next problem.
+  const DONE_MS = DRIVE_OUT_MS + 2550;
+  seqTimeout(() => {
+    if (truck.parentNode) truck.parentNode.removeChild(truck);
+    if (truck._rope && truck._rope.parentNode) {
+      truck._rope.parentNode.removeChild(truck._rope);
+    }
+    state.busy = false;
+    newProblem(false);
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className = '';
+  }, DONE_MS);
 }
 
 function showFeedback(msg, cls) {
   const fb = document.getElementById('feedback');
   fb.textContent = msg;
+  fb.className = '';
+  void fb.offsetWidth;
   fb.className = cls;
 }
 
-function updateHearts() {
-  const hearts = document.querySelectorAll('#hearts .heart');
-  hearts.forEach((h, i) => h.classList.toggle('lost', i < state.strikes));
-}
-
-/* ---------- RENDERING ---------- */
-function renderChain() {
-  const chain = document.getElementById('chain');
-  let html = `<div class="chain-cell">${towTruckSVG()}</div>`;
-  state.chain.forEach(v => {
-    html += `<div class="chain-cell">${vehicleSVG(v.type, v.color)}</div>`;
-  });
-  chain.innerHTML = html;
-  // auto-scroll the chain to the right so the newest vehicle is visible
-  const area = document.getElementById('chain-area');
-  setTimeout(() => { area.scrollLeft = area.scrollWidth; }, 50);
-}
-
-function renderWheelCounter() {
-  const wc = document.getElementById('wheel-counter');
-  if (state.total === 0) {
-    wc.innerHTML = '<div style="color:#666; font-size: 1.1em;">No wheels yet — pick a vehicle!</div>';
-    return;
+function updateStats() {
+  document.getElementById('stat-right').textContent = state.firstTryRight;
+  document.getElementById('stat-wrong').textContent = state.wrongGuesses;
+  const attempts = state.firstTryRight + state.wrongGuesses;
+  const accEl = document.getElementById('stat-acc');
+  if (attempts === 0) {
+    accEl.textContent = '—';
+  } else {
+    const pct = Math.round((state.firstTryRight / attempts) * 100);
+    accEl.textContent = pct + '%';
   }
-  let html = '';
-  for (let i = 0; i < state.total; i++) html += '<div class="wheel-icon"></div>';
-  wc.innerHTML = html;
 }
 
-function renderVehicleButtons() {
-  const container = document.getElementById('vehicle-buttons');
-  let html = '';
-  for (const [type, v] of Object.entries(VEHICLES)) {
-    const used = state.uses[type];
-    const exhausted = used >= 3;
-    const disabled = exhausted || state.awaitingAnswer;
-    let dots = '';
-    for (let i = 0; i < 3; i++) {
-      dots += `<div class="use-dot${i < used ? ' used' : ''}"></div>`;
-    }
-    html += `
-      <button class="vehicle-btn" onclick="addVehicle('${type}')" ${disabled ? 'disabled' : ''}>
-        ${vehicleSVG(type, '#888')}
-        <div class="label">${v.name}</div>
-        <div class="wheels-info">${v.wheels} wheels</div>
-        <div class="uses">${dots}</div>
-      </button>
-    `;
+function toggleEasy() {
+  state.easy = !state.easy;
+  const btn = document.getElementById('easy-btn');
+  btn.textContent = state.easy ? '😊 Easy Mode: ON' : '😊 Easy Mode: OFF';
+  btn.classList.toggle('on', state.easy);
+  // If a problem is already on screen, regenerate to respect new range
+  if (state.awaiting && !state.busy) {
+    newProblem(false);
   }
-  container.innerHTML = html;
 }
 
 /* ---------- SOUND (Web Audio API) ---------- */
@@ -653,48 +1281,106 @@ function playEngine() {
   osc.stop(t0 + 0.55);
 }
 function playCorrect() {
+  // Cheerful ding
   playTone(659, 0.12, 'triangle', 0.3, 0);     // E5
   playTone(880, 0.18, 'triangle', 0.3, 0.12);  // A5
   playTone(1175, 0.25, 'triangle', 0.3, 0.28); // D6
 }
-function playWrong() {
-  playTone(220, 0.18, 'sawtooth', 0.18, 0);
-  playTone(160, 0.28, 'sawtooth', 0.18, 0.16);
+function playCrashRumble() {
+  // Low rumble as the cars accelerate toward each other
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  const t0 = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(60, t0);
+  osc.frequency.linearRampToValueAtTime(120, t0 + 0.45);
+  gain.gain.setValueAtTime(0.001, t0);
+  gain.gain.linearRampToValueAtTime(0.12, t0 + 0.3);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.55);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(t0); osc.stop(t0 + 0.6);
 }
-function playWin() {
-  const tune = [523, 659, 784, 1047, 784, 1047];
-  tune.forEach((n, i) => playTone(n, 0.25, 'triangle', 0.3, i * 0.2));
+function playCrashBang() {
+  // Noise burst for the impact
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  const t0 = ctx.currentTime;
+  const bufferSize = Math.floor(ctx.sampleRate * 0.3);
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = buffer;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.45, t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.3);
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 900;
+  noise.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+  noise.start(t0); noise.stop(t0 + 0.3);
+  // A low thud underneath
+  playTone(90, 0.18, 'sine', 0.35, 0);
+}
+function playClink() {
+  // Metallic clink when the hook connects
+  playTone(1500, 0.08, 'square', 0.18, 0);
+  playTone(2200, 0.06, 'square', 0.14, 0.06);
+}
+function playWrong() {
+  // Soft buzz
+  playTone(220, 0.18, 'sawtooth', 0.16, 0);
+  playTone(160, 0.28, 'sawtooth', 0.16, 0.14);
+}
+function playFireworkBoom() {
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  const t0 = ctx.currentTime;
+  // Quick whistle rising
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(700, t0);
+  osc.frequency.exponentialRampToValueAtTime(1700, t0 + 0.18);
+  gain.gain.setValueAtTime(0.001, t0);
+  gain.gain.linearRampToValueAtTime(0.10, t0 + 0.05);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.22);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(t0); osc.stop(t0 + 0.24);
+  // Soft thud underneath, slightly delayed
+  playTone(110, 0.18, 'sine', 0.18, 0.16);
 }
 
 function toggleMute() {
   state.muted = !state.muted;
   document.getElementById('mute-btn').textContent = state.muted ? '🔇' : '🔊';
-  // Resume audio context on first user gesture (browser autoplay rules)
   const ctx = getAudio();
   if (ctx && ctx.state === 'suspended') ctx.resume();
 }
 
-/* ---------- CONFETTI ---------- */
-function showConfetti() {
-  const colors = ['#FF6B35','#FFD700','#4CAF50','#2196F3','#E91E63','#9C27B0','#00BCD4'];
-  for (let i = 0; i < 100; i++) {
-    const c = document.createElement('div');
-    c.className = 'confetti';
-    c.style.left = (Math.random() * 100) + 'vw';
-    c.style.background = colors[Math.floor(Math.random() * colors.length)];
-    c.style.animationDelay = (Math.random() * 1.5) + 's';
-    c.style.animationDuration = (2 + Math.random() * 2) + 's';
-    c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-    document.body.appendChild(c);
-    setTimeout(() => c.remove(), 5000);
-  }
-}
-
 /* ---------- INIT ---------- */
-document.getElementById('home-truck-svg').innerHTML = towTruckSVG();
+// Home screen preview: two cars side-by-side with sample tire counts
+document.getElementById('home-cars-svg').innerHTML =
+  `<div style="display:flex; gap:24px; align-items:flex-end; justify-content:center;">
+    <div>${carSVG(3, '#E53935')}</div>
+    <div style="font-size:2.6em; color:#FF6B35; font-weight:bold; align-self:center;">+</div>
+    <div>${carSVG(5, '#1E88E5')}</div>
+  </div>`;
 
 document.getElementById('answer-input').addEventListener('keypress', e => {
   if (e.key === 'Enter') checkAnswer();
+});
+
+// Esc closes the How-to-Play modal
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeHowTo();
 });
 
 // Resume audio on any first click (browsers require user gesture)
