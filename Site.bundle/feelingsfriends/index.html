@@ -324,14 +324,23 @@
   // Feelings Friends — gentle emotional-learning game. Ages 4+.
   // ====================================================================
   const FEELINGS = {
-    happy:   { word: 'Happy',   emoji: '😄' },
-    sad:     { word: 'Sad',     emoji: '😢' },
-    angry:   { word: 'Angry',   emoji: '😠' },
-    scared:  { word: 'Scared',  emoji: '😨' },
-    excited: { word: 'Excited', emoji: '🤩' },
-    proud:   { word: 'Proud',   emoji: '😎' },
-    nervous: { word: 'Nervous', emoji: '😬' },
-    calm:    { word: 'Calm',    emoji: '😌' }
+    happy:      { word: 'Happy',      emoji: '😄' },
+    sad:        { word: 'Sad',        emoji: '😢' },
+    angry:      { word: 'Angry',      emoji: '😠' },
+    scared:     { word: 'Scared',     emoji: '😨' },
+    excited:    { word: 'Excited',    emoji: '🤩' },
+    proud:      { word: 'Proud',      emoji: '😎' },
+    nervous:    { word: 'Nervous',    emoji: '😬' },
+    calm:       { word: 'Calm',       emoji: '😌' },
+    silly:      { word: 'Silly',      emoji: '🤪' },
+    surprised:  { word: 'Surprised',  emoji: '😮' },
+    shy:        { word: 'Shy',        emoji: '😳' },
+    sleepy:     { word: 'Sleepy',     emoji: '😴' },
+    loved:      { word: 'Loved',      emoji: '🥰' },
+    curious:    { word: 'Curious',    emoji: '🤔' },
+    bored:      { word: 'Bored',      emoji: '🥱' },
+    confused:   { word: 'Confused',   emoji: '😕' },
+    frustrated: { word: 'Frustrated', emoji: '😤' }
   };
   const FEELING_KEYS = Object.keys(FEELINGS);
 
@@ -351,11 +360,69 @@
     { text: 'There is a loud thunderstorm at night.', feel: 'scared' },
     { text: 'You are taking slow, deep breaths in a quiet room.', feel: 'calm' },
     { text: 'You start at a brand new school tomorrow.', feel: 'nervous' },
-    { text: 'You got a big warm hug from Grandma.', feel: 'happy' },
+    { text: 'You got a big warm hug from Grandma.', feel: 'loved' },
     { text: 'Your friend grabbed the swing you were using.', feel: 'angry' },
-    { text: 'You hear a strange noise in the dark.', feel: 'scared' }
+    { text: 'You hear a strange noise in the dark.', feel: 'scared' },
+    { text: 'Your puppy gives you slobbery kisses.', feel: 'loved' },
+    { text: 'You made the funniest face in the mirror.', feel: 'silly' },
+    { text: 'A clown squirts water from a flower!', feel: 'silly' },
+    { text: 'A surprise present is waiting on your bed!', feel: 'surprised' },
+    { text: 'A balloon pops with a loud BANG behind you.', feel: 'surprised' },
+    { text: 'Lots of grown-ups are looking right at you.', feel: 'shy' },
+    { text: 'You meet a brand new kid and feel a little quiet.', feel: 'shy' },
+    { text: 'You yawn and your eyes feel very heavy.', feel: 'sleepy' },
+    { text: "It's way past your bedtime and you're rubbing your eyes.", feel: 'sleepy' },
+    { text: 'Your family wraps you in a big group hug.', feel: 'loved' },
+    { text: 'You wonder what is inside the closed box.', feel: 'curious' },
+    { text: 'You see a butterfly and want to know how it flies.', feel: 'curious' },
+    { text: 'There is nothing fun to do and the day feels long.', feel: 'bored' },
+    { text: 'You have waited a very long time in a quiet line.', feel: 'bored' },
+    { text: "The instructions don't make any sense to you.", feel: 'confused' },
+    { text: "You can't find your shoe and don't know where to look.", feel: 'confused' },
+    { text: "Your shoelace won't tie no matter how hard you try.", feel: 'frustrated' },
+    { text: 'The crayon keeps breaking while you color.', feel: 'frustrated' },
+    { text: 'You won a shiny gold star for your drawing.', feel: 'proud' },
+    { text: 'You scored the winning goal for your team!', feel: 'excited' },
+    { text: 'Your ice cream fell off the cone — splat!', feel: 'sad' },
+    { text: 'You are floating gently in a calm, warm pool.', feel: 'calm' },
+    { text: 'You hear a magician is coming to your party!', feel: 'excited' },
+    { text: 'Someone knocked over your sandcastle on purpose.', feel: 'angry' },
+    { text: 'You have to give a show-and-tell in front of class.', feel: 'nervous' },
+    { text: 'Your friend shares their snack with you.', feel: 'happy' },
+    { text: 'You wake up and it is the first day of summer!', feel: 'excited' }
   ];
   const SIT_CHARS = ['🙂','🧒','👧','👦','🐻','🐰','🐱','🦊'];
+
+  // ---------- Unified question pool + anti-repeat window ----------
+  // Every face question (one per feeling) and every situation becomes one
+  // entry in a single pool of 60+ questions. We remember the questions shown
+  // most recently (saved in localStorage) and never repeat one until at least
+  // 50 others have appeared, so the game stays fresh and varied for a long time.
+  const POOL = FEELING_KEYS.map(k => ({ type: 'face', feel: k }))
+    .concat(SITUATIONS.map(s => ({ type: 'situation', feel: s.feel, text: s.text })));
+  const RECENT_WINDOW = Math.min(50, POOL.length - 1);
+
+  const RECENT_KEY = 'feelingsfriends_recent_v1';
+  let recent = [];
+  function loadRecent() {
+    try {
+      const arr = JSON.parse(localStorage.getItem(RECENT_KEY));
+      if (Array.isArray(arr)) return arr.filter(i => i >= 0 && i < POOL.length);
+    } catch (e) {}
+    return null;
+  }
+  function saveRecent() {
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(recent)); } catch (e) {}
+  }
+  function drawQuestion() {
+    const candidates = [];
+    for (let i = 0; i < POOL.length; i++) if (!recent.includes(i)) candidates.push(i);
+    const idx = candidates[Math.floor(Math.random() * candidates.length)];
+    recent.push(idx);
+    while (recent.length > RECENT_WINDOW) recent.shift();
+    saveRecent();
+    return POOL[idx];
+  }
 
   const PRAISE = [
     "You really understand feelings! 💛", "Yes! 🌟", "Great job! 😊", "You're so kind! 💖",
@@ -497,32 +564,31 @@
   function nextRound() {
     state.busy = false;
     if (state.round >= TARGET) { goToCelebration(); return; }
-    state.mode = (state.round % 2 === 0) ? 'face' : 'situation';
+    const entry = drawQuestion();
+    state.mode = entry.type;
     $('qProgress').textContent = (state.round + 1) + ' of ' + TARGET;
     $('feedback').textContent = ''; $('feedback').className = 'feedback';
     updateDots();
 
-    if (state.mode === 'face') {
-      const key = pick(FEELING_KEYS);
-      state.current = { feel: key };
+    if (entry.type === 'face') {
+      state.current = { feel: entry.feel };
       const stage = $('faceStage');
       stage.hidden = false; stage.classList.remove('beam');
-      stage.textContent = FEELINGS[key].emoji;
+      stage.textContent = FEELINGS[entry.feel].emoji;
       $('situation').hidden = true;
       $('prompt').textContent = 'How does this friend feel?';
-      buildOptions(key, false);
+      buildOptions(entry.feel, false);
     } else {
-      const sit = pick(SITUATIONS);
-      state.current = sit;
+      state.current = { feel: entry.feel, text: entry.text };
       $('faceStage').hidden = true;
       const s = $('situation');
       s.hidden = false;
       const ch = $('sitChar');
       ch.classList.remove('beam'); ch.textContent = pick(SIT_CHARS);
-      $('sitText').textContent = sit.text;
+      $('sitText').textContent = entry.text;
       $('prompt').textContent = 'How do they feel?';
-      buildOptions(sit.feel, true);
-      setTimeout(() => speak(sit.text), 350);
+      buildOptions(entry.feel, true);
+      setTimeout(() => speak(entry.text), 350);
     }
   }
 
@@ -565,6 +631,9 @@
 
   function startGame() {
     state.round = 0;
+    // Resume the saved no-repeat window (across page reloads) if we don't
+    // already have one in progress this session.
+    if (!recent || recent.length === 0) { recent = loadRecent() || []; }
     buildDots();
     showScreen('gameScreen');
     nextRound();

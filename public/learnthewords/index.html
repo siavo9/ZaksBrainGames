@@ -416,6 +416,10 @@
     let streak = 0;
     let muted = false;
     let busy = false;        // disables clicks during animations
+    // Anti-repeat: remember the words shown most recently and never repeat one
+    // until at least 50 other words have appeared (or the whole pool, if a
+    // small category is chosen). With "all" selected that's 70+ words.
+    let recent = [];         // words ('w' strings) shown within the no-repeat window
 
     /* =========================================================
        AUDIO — Web Audio API generated tones (no files).
@@ -512,6 +516,7 @@
       streak = 0;
       updateStreak();
       mode = 'wordToEmoji';
+      recent = [];       // fresh no-repeat window for the new pool
       ensureAudio();
       show('game');
       nextRound();
@@ -529,8 +534,19 @@
       return out;
     }
 
+    function drawAnswer() {
+      // No-repeat window: don't pick any of the last ~50 words (capped to leave
+      // at least one choice for small pools).
+      const windowSize = Math.min(50, pool.length - 1);
+      const candidates = pool.filter(it => !recent.includes(it.w));
+      const answer = candidates[Math.floor(Math.random() * candidates.length)];
+      recent.push(answer.w);
+      while (recent.length > windowSize) recent.shift();
+      return answer;
+    }
+
     function nextRound() {
-      const answer = pool[Math.floor(Math.random()*pool.length)];
+      const answer = drawAnswer();
       const distractors = pickN(pool, 2, answer);
       const choices = shuffle([answer, ...distractors]);
       current = { answer, choices };
