@@ -3,13 +3,18 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="theme-color" content="#ff5500" />
+<meta name="theme-color" content="#1d7fd0" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="MoreFire" />
+<meta name="apple-mobile-web-app-title" content="Stop The Fire" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
 <link rel="manifest" href="manifest.json" />
-<title>MoreFire 🔥</title>
+<meta name="description" content="Stop The Fire! — a hero firefighter game. Tap to put out fires before the clock hits zero. Beat each level to unlock a tougher one!" />
+<meta name="format-detection" content="telephone=no" />
+<title>Stop The Fire! 🚒</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
   html, body {
@@ -18,10 +23,19 @@
     overflow: hidden;
     background: #0b1020;
     color: #fff;
+    /* Snappier touch — kill the 300ms double-tap delay and rubber-band scrolling on iOS */
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    overscroll-behavior: none;
   }
-  /* Full-viewport scene container — svh handles iOS dynamic toolbar without clipping */
-  .scene,
-  #app {
+  /* CSS variables for iPhone notch / home-bar safe areas */
+  :root {
+    --sa-top:    env(safe-area-inset-top, 0px);
+    --sa-bottom: env(safe-area-inset-bottom, 0px);
+    --sa-left:   env(safe-area-inset-left, 0px);
+    --sa-right:  env(safe-area-inset-right, 0px);
+  }
+  .scene, #app {
     position: relative;
     width: 100vw;
     height: 100vh;
@@ -29,30 +43,12 @@
     overflow: hidden;
   }
 
-  /* Touch-friendly tap target: ensures a 96px+ minimum hit area on mobile,
-     suppresses iOS tap highlight + double-tap zoom delay. */
-  .fire-target {
-    min-width: 96px;
-    min-height: 96px;
-    padding: 16px;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  @media (min-width: 640px) {
-    .fire-target { min-width: 120px; min-height: 120px; padding: 18px; }
-  }
-  @media (min-width: 1024px) {
-    .fire-target { min-width: 144px; min-height: 144px; padding: 20px; }
-  }
-
   /* ---------- START SCREEN ---------- */
   #start {
     position: absolute; inset: 0;
-    background: radial-gradient(circle at 50% 30%, #ff8c1a 0%, #c0392b 40%, #2c1100 100%);
+    background: radial-gradient(circle at 50% 30%, #ffae33 0%, #c0392b 40%, #2c1100 100%);
     display: flex; flex-direction: column; align-items: center; justify-content: safe center;
-    gap: 24px; padding: 30px 20px; text-align: center;
+    gap: 22px; padding: 30px 20px; text-align: center;
     overflow-y: auto;
     overscroll-behavior: contain;
     animation: flicker 3s infinite alternate;
@@ -62,12 +58,12 @@
     100% { filter: brightness(1.1) hue-rotate(-8deg); }
   }
   #start h1 {
-    font-size: clamp(50px, 10vw, 110px);
+    font-size: clamp(46px, 9vw, 100px);
     text-shadow: 0 0 20px #ffd28a, 0 0 40px #ff5500, 4px 4px 0 #6b1500;
     letter-spacing: 2px;
   }
-  #start p { font-size: clamp(16px, 2.4vw, 22px); opacity: 0.95; max-width: 600px; }
-  #start p.water-hint {
+  #start p { font-size: clamp(15px, 2.2vw, 22px); opacity: 0.95; max-width: 620px; }
+  #start p.hint {
     font-size: clamp(13px, 1.8vw, 17px);
     background: rgba(0, 60, 120, 0.45);
     border: 2px solid #6cd0ff;
@@ -77,211 +73,244 @@
     text-shadow: 1px 1px 0 #001a33;
     margin-top: -10px;
   }
-  #scene-picker {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 18px;
-    width: min(700px, 92vw);
-  }
-  .scene-btn {
+  #play-now-btn {
     cursor: pointer;
-    padding: 18px 14px;
-    border-radius: 18px;
-    border: 4px solid #fff;
-    background: rgba(0,0,0,0.35);
+    padding: 22px 56px;
+    border-radius: 999px;
+    border: 5px solid #fff;
+    background: linear-gradient(180deg, #ff7e1a 0%, #c0392b 100%);
     color: #fff;
-    font-size: 18px;
+    font-size: clamp(28px, 6vw, 44px);
     font-weight: bold;
-    text-shadow: 1px 1px 0 #000;
-    transition: transform 0.15s, background 0.15s;
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
     font-family: inherit;
+    text-shadow: 2px 2px 0 #6b1500, 0 0 14px #ffd86b;
+    box-shadow: 0 6px 24px rgba(255,80,0,0.55), 0 0 40px rgba(255,180,40,0.4);
+    transition: transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 64px;
+    animation: playPulse 1.4s ease-in-out infinite alternate;
   }
-  .scene-btn:hover { transform: scale(1.06) rotate(-1deg); background: rgba(255,140,40,0.55); }
-  .scene-btn .emoji { font-size: 42px; }
+  #play-now-btn:hover, #play-now-btn:active { transform: scale(1.06); }
+  @keyframes playPulse {
+    0%   { transform: scale(1);    box-shadow: 0 6px 24px rgba(255,80,0,0.55), 0 0 40px rgba(255,180,40,0.4); }
+    100% { transform: scale(1.04); box-shadow: 0 8px 32px rgba(255,80,0,0.85), 0 0 60px rgba(255,220,120,0.7); }
+  }
 
   /* ---------- GAME SCREEN ---------- */
   #game { position: absolute; inset: 0; display: none; }
   #scene-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
-  /* HUD */
+  /* HUD pills */
   #hud {
-    position: absolute; top: 14px; left: 14px; right: 14px;
-    display: flex; justify-content: space-between; align-items: center;
-    pointer-events: none; z-index: 10;
+    position: absolute;
+    top: calc(56px + var(--sa-top));
+    left: calc(10px + var(--sa-left));
+    right: calc(10px + var(--sa-right));
+    display: flex; justify-content: space-between; align-items: flex-start;
+    gap: 6px;
+    pointer-events: none; z-index: 12;
+    flex-wrap: wrap;
   }
-  #counter {
-    background: rgba(0,0,0,0.55); padding: 8px 14px; border-radius: 999px;
-    font-size: 18px; font-weight: bold; border: 2px solid #ffb84d;
+  .pill {
+    background: rgba(0,0,0,0.7); padding: 8px 14px; border-radius: 999px;
+    font-size: clamp(14px, 2vw, 18px); font-weight: bold;
+    border: 2px solid #ffd28a;
     text-shadow: 1px 1px 0 #000;
+    white-space: nowrap;
+  }
+  #timer.pill { border-color: #6cd0ff; color: #d8f2ff; min-width: 92px; text-align: center; }
+  #fires-counter.pill { border-color: #ffae33; color: #ffe0b3; }
+  #level-counter.pill { border-color: #ffd86b; color: #fff5b0; }
+  #timer.warn { animation: timerPulse 0.5s infinite alternate; border-color: #e63946 !important; color: #ffd0d0 !important; }
+  @keyframes timerPulse {
+    0%   { transform: scale(1); }
+    100% { transform: scale(1.12); }
   }
   #restart-btn {
     pointer-events: auto;
+    position: absolute;
+    bottom: calc(12px + var(--sa-bottom));
+    right: calc(12px + var(--sa-right));
     cursor: pointer; background: #fff; color: #c0392b;
-    border: none; padding: 8px 14px; border-radius: 999px;
-    font-weight: bold; font-family: inherit; font-size: 14px;
+    border: none; padding: 10px 16px; border-radius: 999px;
+    font-weight: bold; font-family: inherit; font-size: 15px;
+    min-height: 44px; min-width: 44px;
+    z-index: 13;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.35);
   }
   #restart-btn:hover { background: #ffe0b3; }
-
-  /* Fire click target — vertical drift driven by --fire-y (set in JS) so we
-     animate transform instead of `top`, avoiding layout work each click.
-     Baseline `top: 62%` matches the t=0 position from the original formula. */
-  #fire-wrap {
-    --fire-y: 0px;
+  #game-mute-btn {
     position: absolute;
-    left: 50%; top: 62%;
-    transform: translate(-50%, calc(-50% + var(--fire-y)));
+    bottom: calc(12px + var(--sa-bottom));
+    left: calc(12px + var(--sa-left));
+    z-index: 13;
+    pointer-events: auto;
+    padding: 10px 14px;
+    font-size: 18px;
+    min-height: 44px; min-width: 44px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  }
+
+  /* Make burnable elements look slightly scorched while on fire (subtle, not destroyed) */
+  .burnable { transition: filter 0.6s; }
+  .burnable.scorched { filter: brightness(0.78) saturate(0.85); }
+
+  /* ---------- FIRE SPOTS ---------- */
+  #fire-spots { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+  .fire-spot {
+    position: absolute;
+    width: 110px;
+    height: 150px;
+    transform: translate(-50%, -75%);
+    /* Whole spot is a tap target — easier for fingers. JS still proximity-aims
+       on misses, so even taps OUTSIDE this box hit the closest fire. */
+    pointer-events: auto;
     cursor: pointer;
-    transition: transform 0.18s ease-out;
-    z-index: 5;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
-  #fire-wrap:active { transform: translate(-50%, calc(-50% + var(--fire-y))) scale(0.92); }
-  .fire {
-    position: relative;
-    width: 80px; height: 100px;
-    transition: width 0.25s, height 0.25s;
-  }
-  #fire-canvas {
+  /* Glow halo behind each fire — kept tighter so fires read as separate */
+  .fire-spot::before {
+    content: '';
     position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    display: block;
-    pointer-events: none;
-  }
-  #fire-wrap {
-    filter: drop-shadow(0 0 32px rgba(255,100,0,0.85)) drop-shadow(0 0 80px rgba(255,40,0,0.45));
-  }
-  /* Idle ember drift */
-  .idle-ember {
-    position: absolute;
-    pointer-events: none;
-    border-radius: 50%;
-    background: radial-gradient(circle, #fff8c0 0%, #ffaa00 55%, transparent 100%);
-    animation: ember-drift 2s ease-out forwards;
-  }
-  @keyframes ember-drift {
-    0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.85; }
-    40%  { opacity: 0.7; }
-    100% { transform: translate(calc(-50% + var(--dx,0px)), calc(-50% - var(--rise,100px))) scale(0.2); opacity: 0; }
-  }
-
-  /* Smoke + sparks layer */
-  #fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 8; }
-  .smoke, .spark, .pop {
-    position: absolute; pointer-events: none;
-    border-radius: 50%;
-  }
-  .smoke {
-    background: radial-gradient(circle, rgba(80,80,80,0.7) 0%, rgba(40,40,40,0) 70%);
-    animation: rise 3s ease-out forwards;
-  }
-  @keyframes rise {
-    0%   { transform: translate(-50%, 0) scale(0.4); opacity: 0.9; }
-    100% { transform: translate(calc(-50% + var(--dx, 0px)), -120vh) scale(2.5); opacity: 0; }
-  }
-  .spark {
-    width: 6px; height: 6px;
-    background: radial-gradient(circle, #fff8a8 0%, #ff7e1a 70%, transparent 100%);
-    animation: fly 0.9s ease-out forwards;
-  }
-  @keyframes fly {
-    0%   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    100% { transform: translate(calc(-50% + var(--sx,0px)), calc(-50% + var(--sy,-100px))) scale(0.2); opacity: 0; }
-  }
-  .pop {
-    color: #fff;
-    font-weight: bold;
-    text-shadow: 2px 2px 0 #c0392b, 0 0 12px #ffae33;
-    font-size: 26px;
+    left: 50%; top: 72%;
+    width: 150px; height: 150px;
     transform: translate(-50%, -50%);
-    animation: pop 0.7s ease-out forwards;
-    background: none; border-radius: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,170,30,0.55) 0%, rgba(255,80,0,0.25) 40%, transparent 75%);
+    pointer-events: none;
+    animation: fireGlow 1.4s ease-in-out infinite alternate;
   }
-  @keyframes pop {
-    0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
-    100% { transform: translate(-50%, -180%) scale(1.6); opacity: 0; }
+  @keyframes fireGlow {
+    0%   { opacity: 0.6; transform: translate(-50%, -50%) scale(0.95); }
+    100% { opacity: 1;   transform: translate(-50%, -50%) scale(1.22); }
   }
-
-  /* Screen flash + shake helpers */
-  #flash {
-    position: absolute; inset: 0; background: #fff;
-    opacity: 0; pointer-events: none; z-index: 20;
-    transition: opacity 0.1s;
-  }
-  .shake { animation: shake 0.25s; }
-  @keyframes shake {
-    0%, 100% { transform: translate(0,0); }
-    20% { transform: translate(-6px, 4px); }
-    40% { transform: translate(7px, -3px); }
-    60% { transform: translate(-5px, -5px); }
-    80% { transform: translate(4px, 6px); }
-  }
-
-  /* GAME OVER */
-  #gameover {
-    position: absolute; inset: 0;
-    display: none; flex-direction: column; align-items: center; justify-content: safe center;
-    background: radial-gradient(circle, rgba(0,0,0,0.4), rgba(0,0,0,0.85));
-    color: #fff; z-index: 30; text-align: center; padding: 30px 20px; gap: 22px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-  #gameover h2 {
-    font-size: clamp(48px, 9vw, 100px);
-    text-shadow: 0 0 30px #ff5500, 4px 4px 0 #6b1500;
-    animation: flicker 2s infinite alternate;
-  }
-  #gameover p { font-size: clamp(16px, 2.2vw, 22px); max-width: 500px; opacity: 0.9; }
-  #gameover button {
-    cursor: pointer; padding: 14px 28px; border-radius: 999px;
-    border: 4px solid #fff; background: #ff5500; color: #fff;
-    font-size: 22px; font-weight: bold; font-family: inherit;
-    text-shadow: 1px 1px 0 #6b1500;
-    transition: transform 0.15s;
-  }
-  #gameover button:hover { transform: scale(1.08); }
-
-  /* Scene SVG element styles for burning */
-  .burnable { transition: filter 1s, opacity 1s; }
-  .charred  { filter: brightness(0.15) saturate(0.2); }
-  .gone     { opacity: 0; }
-
-  /* ---------- WATER BUCKET ---------- */
-  #bucket-wrap {
+  /* The main flame */
+  .fire-spot .flame {
     position: absolute;
-    right: 24px; top: 55%;
-    transform: translateY(-50%);
-    cursor: pointer;
-    z-index: 7;
-    transition: transform 0.12s ease-out;
-    text-align: center;
+    left: 50%; bottom: 18px;
+    width: 78%; height: 88%;
+    transform-origin: 50% 100%;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at 50% 100%,
+      #fff8a8 0%, #ffd23f 22%, #ff7e1a 55%, #c0392b 80%, transparent 100%);
+    border-radius: 50% 50% 35% 35% / 70% 70% 30% 30%;
+    filter: drop-shadow(0 0 14px rgba(255,140,40,0.95));
+    animation: flameDance 0.45s ease-in-out infinite alternate;
+    pointer-events: none;
   }
-  #bucket-wrap:hover { transform: translateY(-50%) scale(1.06) rotate(-3deg); }
-  #bucket-svg { width: 110px; height: 130px; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.5)); }
-  /* Bucket tipping animation when clicked */
-  #bucket-wrap.tipping #bucket-svg { animation: bucketTip 0.7s ease-in-out; transform-origin: 50% 90%; }
-  @keyframes bucketTip {
-    0%   { transform: rotate(0deg); }
-    25%  { transform: rotate(-70deg); }
-    55%  { transform: rotate(-70deg); }
-    100% { transform: rotate(0deg); }
+  @keyframes flameDance {
+    0%   { transform: translateX(-50%) scaleY(1)    skewX(-6deg); }
+    100% { transform: translateX(-50%) scaleY(1.22) skewX(4deg); }
   }
-  #bucket-label {
-    margin-top: 6px;
-    font-size: 14px; font-weight: bold;
-    background: rgba(0,0,0,0.55);
-    padding: 4px 10px; border-radius: 999px;
-    border: 2px solid #6cd0ff;
-    text-shadow: 1px 1px 0 #000;
-    color: #d8f2ff;
+  /* Wide, blurry back flame for that "wall of fire" depth */
+  .fire-spot .flame.back {
+    width: 110%; height: 102%;
+    bottom: 10px;
+    opacity: 0.75;
+    filter: blur(3px) drop-shadow(0 0 22px rgba(255,80,20,0.9));
+    background: radial-gradient(ellipse at 50% 100%,
+      #ffae33 0%, #ff5500 38%, #8b1500 78%, transparent 100%);
+    animation: flameDance 0.7s ease-in-out infinite alternate-reverse;
   }
-  /* Big water droplets that arc from the bucket to the fire */
+  /* Bright inner flame on the main flame */
+  .fire-spot .flame:not(.back)::after {
+    content: '';
+    position: absolute;
+    left: 50%; bottom: 0;
+    width: 58%; height: 72%;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at 50% 100%,
+      #fff8c4 0%, #fff5b0 35%, #ffae33 75%, transparent 100%);
+    border-radius: 50% 50% 35% 35% / 70% 70% 30% 30%;
+    animation: flameDance 0.32s ease-in-out infinite alternate-reverse;
+  }
+  /* Flickery front tongue of flame */
+  .fire-spot .flame.front {
+    width: 46%; height: 62%;
+    bottom: 22px;
+    background: radial-gradient(ellipse at 50% 100%,
+      #ffffff 0%, #fff5b0 40%, #ffae33 80%, transparent 100%);
+    filter: drop-shadow(0 0 10px rgba(255,220,120,0.95));
+    animation: flameDance 0.28s ease-in-out infinite alternate;
+    opacity: 0.95;
+  }
+  /* The BASE of the fire — visual hot-spot. The WHOLE fire-spot is tappable
+     now (and JS proximity-aims to the nearest fire), but this still draws
+     the eye to where the flame meets the ground. */
+  .fire-spot .flame-base {
+    position: absolute;
+    left: 50%; bottom: -4px;
+    width: 72px; height: 48px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 50%,
+      #fff8e0 0%, #ffe066 22%, #ff7e1a 58%, rgba(192,57,43,0.55) 88%, transparent 100%);
+    box-shadow: 0 0 22px rgba(255,180,40,0.95), 0 0 44px rgba(255,100,20,0.6);
+    pointer-events: none;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 2;
+    animation: baseGlow 0.7s ease-in-out infinite alternate;
+  }
+  @keyframes baseGlow {
+    0%   { transform: translateX(-50%) scale(0.94); filter: brightness(1)    drop-shadow(0 0 10px rgba(255,160,40,0.9)); }
+    100% { transform: translateX(-50%) scale(1.08); filter: brightness(1.18) drop-shadow(0 0 22px rgba(255,220,80,1)); }
+  }
+  .fire-spot .flame-base:active { transform: translateX(-50%) scale(0.85); }
+  /* Dying state: shrink + fade */
+  .fire-spot.dying { animation: fireDie 0.55s ease-out forwards; pointer-events: none; }
+  .fire-spot.dying .flame-base { pointer-events: none; animation: none; }
+  @keyframes fireDie {
+    0%   { opacity: 1; transform: translate(-50%, -75%) scale(1); }
+    60%  { opacity: 0.6; transform: translate(-50%, -75%) scale(0.6); filter: brightness(1.4); }
+    100% { opacity: 0; transform: translate(-50%, -75%) scale(0.2); }
+  }
+  /* Newly regrown fire — quick pop-in */
+  .fire-spot.regrown { animation: fireGrow 0.5s ease-out; }
+  @keyframes fireGrow {
+    0%   { opacity: 0; transform: translate(-50%, -75%) scale(0.2); }
+    60%  { opacity: 1; transform: translate(-50%, -75%) scale(1.15); }
+    100% { opacity: 1; transform: translate(-50%, -75%) scale(1); }
+  }
+
+  /* ---------- FIRETRUCK ---------- */
+  #firetruck-wrap {
+    position: absolute;
+    bottom: 8px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 9;
+    pointer-events: none;
+    filter: drop-shadow(0 8px 18px rgba(0,0,0,0.55));
+  }
+  #firetruck-svg {
+    width: clamp(170px, 42vw, 360px);
+    height: auto;
+    display: block;
+  }
+  #firetruck-wrap {
+    bottom: calc(8px + var(--sa-bottom));
+  }
+  #firetruck-wrap.firing #firetruck-svg { animation: truckBump 0.22s ease-out; }
+  @keyframes truckBump {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(3px); }
+  }
+  /* Cherry light blink */
+  .cherry-light { animation: cherry 0.6s linear infinite alternate; }
+  @keyframes cherry {
+    0%   { fill: #ff2a00; filter: drop-shadow(0 0 4px #ff2a00); }
+    100% { fill: #fff5b0; filter: drop-shadow(0 0 12px #ff7e1a); }
+  }
+
+  /* ---------- WATER FX ---------- */
+  #fx { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 8; }
   .water-drop {
     position: absolute; pointer-events: none;
     border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
     background: radial-gradient(circle at 35% 30%, #ffffff 0%, #d8f2ff 25%, #6cd0ff 60%, #1d7fd0 100%);
     box-shadow: 0 0 18px rgba(108, 208, 255, 0.95), inset -4px -6px 10px rgba(29, 127, 208, 0.45);
-    animation: waterArc var(--dur, 0.75s) cubic-bezier(0.45, 0, 0.7, 1) forwards;
+    animation: waterArc var(--dur, 0.6s) cubic-bezier(0.45, 0, 0.7, 1) forwards;
     z-index: 9;
   }
   @keyframes waterArc {
@@ -290,7 +319,6 @@
     60%  { transform: translate(calc(-50% + var(--mx,0px)), calc(-50% + var(--my,0px))) scale(1) rotate(20deg); opacity: 1; }
     100% { transform: translate(calc(-50% + var(--ex,0px)), calc(-50% + var(--ey,0px))) scale(0.85) rotate(35deg); opacity: 0; }
   }
-  /* Big splash ring on the fire */
   .big-splash {
     position: absolute; pointer-events: none;
     width: 50px; height: 50px;
@@ -305,7 +333,6 @@
     50%  { transform: translate(-50%, -50%) scale(1.8); opacity: 0.9; }
     100% { transform: translate(-50%, -50%) scale(3.0); opacity: 0; }
   }
-  /* Smaller splash droplets exploding outward from impact */
   .splash {
     position: absolute; pointer-events: none;
     width: 22px; height: 22px;
@@ -327,18 +354,94 @@
     animation: rise 2.4s ease-out forwards;
     z-index: 8;
   }
+  @keyframes rise {
+    0%   { transform: translate(-50%, 0) scale(0.4); opacity: 0.9; }
+    100% { transform: translate(calc(-50% + var(--dx, 0px)), -120vh) scale(2.5); opacity: 0; }
+  }
+  .pop {
+    position: absolute;
+    color: #fff; font-weight: bold;
+    text-shadow: 2px 2px 0 #1d7fd0, 0 0 12px #6cd0ff;
+    font-size: 26px;
+    transform: translate(-50%, -50%);
+    animation: pop 0.7s ease-out forwards;
+    pointer-events: none;
+  }
+  @keyframes pop {
+    0%   { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+    100% { transform: translate(-50%, -180%) scale(1.6); opacity: 0; }
+  }
 
-  /* ---------- HERO ENDING ---------- */
-  #hero {
+  /* ---------- IDLE EMBERS / SMOKE FROM FIRES ---------- */
+  .idle-ember {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff8c0 0%, #ffaa00 55%, transparent 100%);
+    animation: ember-drift 2.2s ease-out forwards;
+    z-index: 7;
+  }
+  @keyframes ember-drift {
+    0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.85; }
+    40%  { opacity: 0.7; }
+    100% { transform: translate(calc(-50% + var(--dx,0px)), calc(-50% - var(--rise,100px))) scale(0.2); opacity: 0; }
+  }
+  .smoke {
+    position: absolute; pointer-events: none;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(80,80,80,0.6) 0%, rgba(40,40,40,0) 70%);
+    animation: rise 3s ease-out forwards;
+  }
+
+  /* Screen flash + shake */
+  #flash {
+    position: absolute; inset: 0; background: #fff;
+    opacity: 0; pointer-events: none; z-index: 20;
+    transition: opacity 0.1s;
+  }
+  .shake { animation: shake 0.25s; }
+  @keyframes shake {
+    0%, 100% { transform: translate(0,0); }
+    20% { transform: translate(-4px, 3px); }
+    40% { transform: translate(5px, -2px); }
+    60% { transform: translate(-3px, -3px); }
+    80% { transform: translate(3px, 4px); }
+  }
+
+  /* Initial fire burst over the scene */
+  .scene-burst {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 50% 55%, rgba(255,180,40,0.85) 0%, rgba(255,80,0,0.55) 40%, transparent 75%);
+    pointer-events: none;
+    z-index: 18;
+    animation: sceneBurst 0.9s ease-out forwards;
+  }
+  @keyframes sceneBurst {
+    0%   { opacity: 0; transform: scale(0.6); }
+    20%  { opacity: 1; }
+    100% { opacity: 0; transform: scale(2.2); }
+  }
+  /* Subtle orange overlay while fire is active (fades as fires die) */
+  #fire-overlay {
+    position: absolute; inset: 0;
+    pointer-events: none; z-index: 4;
+    background:
+      radial-gradient(ellipse at 50% 80%, rgba(255,80,0,0.35), transparent 70%),
+      radial-gradient(ellipse at 50% 50%, rgba(255,40,0,0.18), transparent 80%);
+    transition: opacity 0.6s;
+    opacity: 1;
+  }
+
+  /* ---------- LEVEL TRANSITION (brief between-level cheer) ---------- */
+  #level-transition {
     position: absolute; inset: 0;
     display: none; flex-direction: column; align-items: center; justify-content: safe center;
     background: radial-gradient(circle at 50% 30%, #fff8c4 0%, #7ec8ff 40%, #1f4a85 100%);
     color: #082c5a; z-index: 30; text-align: center; padding: 30px 20px; gap: 22px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    overflow-y: auto; overscroll-behavior: contain;
   }
-  #hero h2 {
-    font-size: clamp(48px, 9vw, 100px);
+  #level-transition h2 {
+    font-size: clamp(46px, 9vw, 100px);
     color: #fff;
     text-shadow: 0 0 30px #ffe680, 4px 4px 0 #1f4a85, 0 0 60px #ffd86b;
     letter-spacing: 2px;
@@ -348,290 +451,849 @@
     0%   { transform: scale(1); filter: drop-shadow(0 0 12px #ffd86b); }
     100% { transform: scale(1.04); filter: drop-shadow(0 0 30px #fff8c4); }
   }
-  #hero p { font-size: clamp(16px, 2.4vw, 24px); max-width: 600px; color: #082c5a; font-weight: bold; }
-  #hero .hero-art {
+  #level-transition p { font-size: clamp(18px, 2.6vw, 26px); max-width: 600px; color: #082c5a; font-weight: bold; }
+  #level-transition .hero-art {
     font-size: clamp(80px, 18vw, 200px);
     line-height: 1;
     filter: drop-shadow(0 6px 18px rgba(0,0,0,0.35));
     animation: heroBob 2.5s ease-in-out infinite;
   }
+  #level-transition-fact {
+    background: rgba(255,255,255,0.85);
+    border: 3px solid #ffd86b;
+    border-radius: 18px;
+    padding: 14px 20px;
+    max-width: 560px;
+    color: #082c5a;
+    font-size: clamp(15px, 2.2vw, 20px);
+    line-height: 1.4;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  }
+  #level-transition-fact .fact-label {
+    display: block;
+    font-size: clamp(13px, 1.8vw, 16px);
+    color: #c0392b;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  #proceed-btn {
+    cursor: pointer;
+    padding: 16px 36px;
+    border-radius: 999px;
+    border: 4px solid #fff;
+    background: linear-gradient(180deg, #2ecc71 0%, #16834a 100%);
+    color: #fff;
+    font-size: 24px;
+    font-weight: bold;
+    font-family: inherit;
+    text-shadow: 1px 1px 0 #0a3d22;
+    box-shadow: 0 0 24px rgba(0,0,0,0.35);
+    transition: transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #proceed-btn:hover { transform: scale(1.06); }
   @keyframes heroBob {
     0%, 100% { transform: translateY(0) rotate(-3deg); }
     50%      { transform: translateY(-14px) rotate(3deg); }
   }
-  #hero button {
+  #failed button {
     cursor: pointer; padding: 14px 28px; border-radius: 999px;
-    border: 4px solid #fff; background: #2ec27e; color: #fff;
+    border: 4px solid #fff;
     font-size: 22px; font-weight: bold; font-family: inherit;
-    text-shadow: 1px 1px 0 #1f6b46;
     transition: transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
   }
-  #hero button:hover { transform: scale(1.08); }
-  /* Sparkles for hero */
-  .sparkle {
-    position: absolute; pointer-events: none;
-    font-size: 28px;
-    animation: twinkle 2.2s ease-in-out infinite;
+  #failed button:hover { transform: scale(1.08); }
+  #failed-actions {
+    display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
   }
-  @keyframes twinkle {
-    0%, 100% { opacity: 0.2; transform: scale(0.8) rotate(0deg); }
-    50%      { opacity: 1;   transform: scale(1.3) rotate(20deg); }
+  #failed-share {
+    background: #1d7fd0; color: #fff;
+    text-shadow: 1px 1px 0 #143d5a;
   }
-
-  /* ---------- FIRETRUCKS ---------- */
-  .firetruck-deco {
-    position: absolute;
-    bottom: 0;
-    font-size: clamp(60px, 12vw, 110px);
-    line-height: 1;
-    pointer-events: none;
-    filter: drop-shadow(0 4px 16px rgba(0,0,0,0.5));
-    z-index: 0;
-  }
-  .firetruck-left {
-    left: clamp(4px, 2vw, 32px);
-    animation: truckPatrolLeft 6s ease-in-out infinite alternate;
-  }
-  .firetruck-right {
-    right: clamp(4px, 2vw, 32px);
-    transform: scaleX(-1);
-    animation: truckPatrolRight 6s ease-in-out infinite alternate;
-  }
-  @keyframes truckPatrolLeft {
-    0%   { transform: translateX(0px); }
-    100% { transform: translateX(18px); }
-  }
-  @keyframes truckPatrolRight {
-    0%   { transform: scaleX(-1) translateX(0px); }
-    100% { transform: scaleX(-1) translateX(18px); }
-  }
-  /* siren flash overlay on trucks */
-  .firetruck-left::after,
-  .firetruck-right::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    animation: sirenGlow 0.9s ease-in-out infinite alternate;
-    pointer-events: none;
-  }
-  @keyframes sirenGlow {
-    0%   { filter: drop-shadow(0 0 0px #ff2200); }
-    100% { filter: drop-shadow(0 0 22px #ff2200) drop-shadow(0 0 40px #ff6600); }
+  .ending-best {
+    font-size: clamp(18px, 2.6vw, 24px);
+    background: rgba(0,0,0,0.35);
+    padding: 10px 20px;
+    border-radius: 999px;
+    border: 2px solid rgba(255,255,255,0.6);
+    color: #fff;
+    font-weight: bold;
+    margin-top: -4px;
   }
 
-  /* ---------- PYROMANIAC ENDING ---------- */
-  #pyro {
+  /* ---------- FAIL ENDING (LOSS) ---------- */
+  #failed {
     position: absolute; inset: 0;
     display: none; flex-direction: column; align-items: center; justify-content: safe center;
     background:
-      radial-gradient(circle at 50% 40%, rgba(255,80,0,0.55) 0%, rgba(0,0,0,0) 60%),
+      radial-gradient(circle at 50% 40%, rgba(255,40,0,0.55) 0%, rgba(0,0,0,0) 60%),
       radial-gradient(circle, #2a0000 0%, #000 100%);
     color: #ffe0a8; z-index: 30; text-align: center; padding: 30px 20px; gap: 18px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    animation: pyroFlicker 0.18s infinite alternate;
+    overflow-y: auto; overscroll-behavior: contain;
+    animation: failFlicker 0.18s infinite alternate;
   }
-  @keyframes pyroFlicker {
+  @keyframes failFlicker {
     0%   { filter: brightness(1)    contrast(1); }
     100% { filter: brightness(1.18) contrast(1.1) hue-rotate(-6deg); }
   }
-  #pyro h2 {
-    font-size: clamp(44px, 8vw, 92px);
+  #failed h2 {
+    font-size: clamp(42px, 8vw, 92px);
     color: #fff;
-    text-shadow:
-      0 0 20px #ff2a00,
-      0 0 50px #ff7e1a,
-      4px 4px 0 #3a0000,
-      -2px 2px 0 #6b1500;
+    text-shadow: 0 0 20px #ff2a00, 0 0 50px #ff7e1a, 4px 4px 0 #3a0000;
     letter-spacing: 2px;
     position: relative; z-index: 2;
   }
-  #pyro p {
-    font-size: clamp(18px, 2.6vw, 28px);
-    max-width: 700px;
-    color: #ffd28a;
-    font-weight: bold;
+  #failed p {
+    font-size: clamp(16px, 2.4vw, 22px);
+    max-width: 600px; color: #ffd28a; font-weight: bold;
     text-shadow: 1px 1px 0 #3a0000, 0 0 14px #ff2a00;
-    letter-spacing: 1px;
     position: relative; z-index: 2;
   }
-  #pyro .pyro-art {
+  #failed .fail-art {
+    font-size: clamp(80px, 18vw, 180px);
+    line-height: 1;
+    filter: drop-shadow(0 0 20px #ff2a00);
     position: relative; z-index: 2;
-    width: clamp(220px, 38vw, 360px);
-    height: clamp(220px, 38vw, 360px);
-    display: flex; align-items: center; justify-content: center;
   }
-  #pyro .pyro-art .smile-svg {
-    width: 100%; height: 100%;
-    filter: drop-shadow(0 0 30px #ff2a00) drop-shadow(0 0 60px #ff7e1a);
-    animation: smileLeer 3s ease-in-out infinite;
-  }
-  @keyframes smileLeer {
-    0%, 100% { transform: rotate(-3deg) scale(1); }
-    50%      { transform: rotate(3deg)  scale(1.04); }
-  }
-  /* Background party flames around the pyromaniac smile */
-  .pyro-flame {
-    position: absolute; bottom: 0;
-    width: 60px; height: 120px;
-    background: radial-gradient(ellipse at 50% 100%, #fff8a8 0%, #ffd23f 25%, #ff7e1a 55%, #c0392b 80%, transparent 100%);
-    border-radius: 50% 50% 35% 35% / 70% 70% 30% 30%;
-    transform-origin: 50% 100%;
-    animation: pyroDance 0.45s ease-in-out infinite alternate;
-    filter: drop-shadow(0 0 24px #ff7a00);
-    pointer-events: none;
-    z-index: 0;
-  }
-  @keyframes pyroDance {
-    0%   { transform: scaleY(1)    skewX(-6deg); }
-    50%  { transform: scaleY(1.18) skewX(4deg); }
-    100% { transform: scaleY(0.9)  skewX(-3deg); }
-  }
-  #pyro button {
-    cursor: pointer; padding: 14px 28px; border-radius: 999px;
-    border: 4px solid #fff; background: #ff2a00; color: #fff;
-    font-size: 22px; font-weight: bold; font-family: inherit;
+  #failed button {
+    background: #ff2a00; color: #fff;
     text-shadow: 1px 1px 0 #6b1500;
-    transition: transform 0.15s;
-    position: relative; z-index: 3;
-    box-shadow: 0 0 24px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.5);
+    box-shadow: 0 0 24px rgba(0,0,0,0.6);
+    position: relative; z-index: 2;
   }
-  #pyro button:hover { transform: scale(1.08); }
+
+  /* ---------- BEST + MUTE + PRIVACY (start screen) ---------- */
+  #best-scores {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    color: #ffe9c2;
+    font-size: clamp(13px, 1.6vw, 15px);
+    font-weight: bold;
+    text-shadow: 1px 1px 0 #6b1500;
+    min-height: 22px;
+  }
+  #best-scores .best-pill {
+    background: rgba(0,0,0,0.45);
+    border: 2px solid #ffd28a;
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+  .audio-btn {
+    cursor: pointer;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    border: 2px solid #ffd28a;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 18px;
+    font-family: inherit;
+    text-shadow: 1px 1px 0 #000;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #mute-btn { margin-top: 0; }
+  #start-controls {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+    align-items: center; margin-top: 4px;
+  }
+  .mode-btn.on {
+    background: linear-gradient(180deg, #6b1500 0%, #c0392b 100%);
+    border-color: #ff5500;
+    color: #fff;
+    text-shadow: 1px 1px 0 #3a0a05, 0 0 10px #ff7e1a;
+    box-shadow: 0 0 18px rgba(255,80,0,0.55);
+  }
+  #privacy-link {
+    color: #ffe9c2;
+    font-size: 13px;
+    text-decoration: underline;
+    opacity: 0.8;
+    margin-top: 4px;
+  }
+  #privacy-link:hover { opacity: 1; }
+  #more-games-link {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 10px 22px;
+    border-radius: 999px;
+    border: 3px solid #6cd0ff;
+    background: rgba(0, 60, 120, 0.55);
+    color: #d8f2ff;
+    font-size: clamp(14px, 2vw, 18px);
+    font-weight: bold;
+    text-decoration: none;
+    text-shadow: 1px 1px 0 #001a33;
+    box-shadow: 0 4px 14px rgba(40, 160, 255, 0.35);
+    transition: transform 0.15s, box-shadow 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #more-games-link:hover, #more-games-link:active {
+    transform: scale(1.05);
+    box-shadow: 0 6px 22px rgba(80, 200, 255, 0.6);
+  }
+
+  /* ---------- TUTORIAL OVERLAY ---------- */
+  #tutorial {
+    position: fixed; inset: 0;
+    display: none;
+    align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.78);
+    z-index: 100;
+    padding: 20px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #tutorial.show { display: flex; }
+  #tutorial .tut-card {
+    background: linear-gradient(180deg, #142850 0%, #1f4a85 100%);
+    border: 4px solid #6cd0ff;
+    border-radius: 24px;
+    padding: 28px 24px;
+    max-width: 380px;
+    text-align: center;
+    color: #fff;
+    box-shadow: 0 0 60px rgba(108,208,255,0.5);
+    animation: tutPop 0.35s ease-out;
+    cursor: default;
+  }
+  @keyframes tutPop {
+    from { transform: scale(0.85); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  #tutorial .tut-emoji { font-size: 56px; margin-bottom: 8px; }
+  #tutorial h3 {
+    font-size: 26px;
+    margin-bottom: 14px;
+    text-shadow: 0 0 12px #6cd0ff, 2px 2px 0 #001a33;
+  }
+  #tutorial p { font-size: 16px; line-height: 1.45; margin-bottom: 10px; }
+  #tutorial .tut-tip {
+    font-size: 14px;
+    color: #d8f2ff;
+    margin-top: 14px;
+    margin-bottom: 0;
+    opacity: 0.9;
+  }
+
+  /* ---------- PHONE-FRIENDLY OVERRIDES ---------- */
+  @media (max-width: 600px), (pointer: coarse) {
+    /* Tighter, denser HUD so the three pills fit a 360px-wide screen */
+    .pill {
+      padding: 6px 10px;
+      font-size: 13px;
+      border-width: 2px;
+    }
+    #timer.pill { min-width: 72px; }
+    #hud { gap: 4px; }
+
+    .audio-btn { padding: 12px 18px; font-size: 18px; min-height: 48px; }
+    #failed button, #level-transition button {
+      padding: 14px 22px;
+      font-size: 18px;
+      min-height: 52px;
+    }
+    #play-now-btn { padding: 20px 44px; }
+
+    /* Start / end screens — let content breathe and not get clipped under notch */
+    #start, #level-transition, #failed {
+      padding:
+        calc(20px + var(--sa-top))
+        calc(16px + var(--sa-right))
+        calc(20px + var(--sa-bottom))
+        calc(16px + var(--sa-left));
+      gap: 16px;
+    }
+    #start h1 { font-size: clamp(38px, 13vw, 70px); }
+    #level-transition h2, #failed h2 { font-size: clamp(34px, 11vw, 60px); }
+
+    /* Smaller, denser fires so high-level boards aren't crowded on iPhone */
+    .fire-spot { width: 86px; height: 120px; }
+    .fire-spot::before { width: 120px; height: 120px; }
+    .fire-spot .flame-base { width: 58px; height: 40px; }
+  }
+
+  /* Landscape on a phone — keep the HUD out of the dynamic-island area
+     and shrink the truck so the play surface stays usable */
+  @media (max-height: 480px) and (orientation: landscape) {
+    #firetruck-svg { width: clamp(140px, 22vw, 240px); }
+    .pill { padding: 5px 10px; font-size: 12px; }
+    #hud {
+      left: calc(60px + var(--sa-left));
+      right: calc(60px + var(--sa-right));
+    }
+  }
+
+  /* ---------- PERSISTENT SITE NAV (shown on every screen) ---------- */
+  #site-nav {
+    position: fixed;
+    top: calc(8px + var(--sa-top));
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    z-index: 50;
+    max-width: calc(100vw - 16px);
+    pointer-events: auto;
+  }
+  .nav-btn {
+    background: rgba(0,0,0,0.7);
+    color: #ffe9c2;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 2px solid #ffd28a;
+    font-size: clamp(12px, 1.8vw, 14px);
+    font-weight: bold;
+    font-family: inherit;
+    text-decoration: none;
+    text-shadow: 1px 1px 0 #000;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+    line-height: 1;
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .nav-btn:hover, .nav-btn:active {
+    background: rgba(40,30,10,0.92);
+    transform: scale(1.05);
+  }
+  /* Ensure the menu/end screens leave room for the floating nav */
+  #start, #level-transition, #failed {
+    padding-top: calc(58px + var(--sa-top));
+  }
+
+  /* ---------- HOW-TO-PLAY MODAL EXTRAS ---------- */
+  #tutorial .tut-card {
+    position: relative;
+  }
+  #tut-close {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid #6cd0ff;
+    background: rgba(0,0,0,0.6);
+    color: #d8f2ff;
+    font-size: 18px;
+    font-weight: bold;
+    font-family: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    line-height: 1;
+  }
+  #tut-close:hover { background: #1d7fd0; color: #fff; }
+  #tutorial ul.tut-rules {
+    list-style: none;
+    text-align: left;
+    margin: 6px auto 8px;
+    padding: 0;
+    max-width: 320px;
+  }
+  #tutorial ul.tut-rules li {
+    padding: 6px 4px;
+    font-size: 15px;
+    line-height: 1.4;
+    border-bottom: 1px dashed rgba(108, 208, 255, 0.25);
+  }
+  #tutorial ul.tut-rules li:last-child { border-bottom: none; }
+
+  /* ---------- POSITIVE-FEEDBACK CHEER POPS ---------- */
+  .cheer-pop {
+    position: absolute;
+    color: #fff;
+    font-weight: bold;
+    font-size: clamp(20px, 4vw, 32px);
+    text-shadow: 0 0 14px #ffd86b, 2px 2px 0 #c0392b, -2px -2px 0 #6b1500;
+    transform: translate(-50%, -50%);
+    animation: cheerPop 1s ease-out forwards;
+    pointer-events: none;
+    z-index: 17;
+    white-space: nowrap;
+  }
+  @keyframes cheerPop {
+    0%   { transform: translate(-50%, -50%) scale(0.4) rotate(-10deg); opacity: 0; }
+    25%  { transform: translate(-50%, -110%) scale(1.25) rotate(6deg);  opacity: 1; }
+    100% { transform: translate(-50%, -200%) scale(1.6)  rotate(-6deg); opacity: 0; }
+  }
+
+  /* ---------- FIREWORKS (level-complete celebration) ---------- */
+  #fireworks-fx {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 35;
+  }
+  .firework {
+    position: absolute;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: fwBurst 0.95s ease-out forwards;
+  }
+  @keyframes fwBurst {
+    0%   { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+    60%  { opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--fwx, 0px)), calc(-50% + var(--fwy, 0px))) scale(1.6); opacity: 0; }
+  }
+  .firework-trail {
+    position: absolute;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle, #fff 0%, #ffd86b 60%, transparent 100%);
+    box-shadow: 0 0 8px #ffd86b;
+    animation: fwTrail 0.5s ease-out forwards;
+  }
+  @keyframes fwTrail {
+    0%   { transform: translate(-50%, 0) scale(1);   opacity: 1; }
+    100% { transform: translate(-50%, -240px) scale(0.4); opacity: 0; }
+  }
 </style>
 </head>
 <body>
-<a href="../index.html" class="zbg-home" aria-label="Back to Zak's Brain Games">🏠</a>
-<style>.zbg-home{position:fixed;top:max(12px,env(safe-area-inset-top));left:12px;z-index:2147483647;display:flex;align-items:center;justify-content:center;width:46px;height:46px;background:#fff;border:2px solid #FFD93D;border-radius:50%;font-size:22px;text-decoration:none;box-shadow:0 3px 8px rgba(0,0,0,.25);line-height:1}.zbg-home:active{transform:scale(.92)}</style>
 <div id="app" class="scene">
+
+  <!-- PERSISTENT NAV — visible on every screen -->
+  <nav id="site-nav" aria-label="Game navigation">
+    <a id="nav-home" class="nav-btn" href="./" title="Back to game home">🏠 Home</a>
+    <a id="nav-brain-games" class="nav-btn" href="https://zaksbraingames.com" target="_blank" rel="noopener" title="More brain games">🧠 Brain Games</a>
+    <button id="nav-how" class="nav-btn" type="button" title="How to play">❓ How to Play</button>
+  </nav>
+
+  <!-- FIREWORKS LAYER (celebrations) -->
+  <div id="fireworks-fx" aria-hidden="true"></div>
 
   <!-- START SCREEN -->
   <div id="start">
-    <span class="firetruck-deco firetruck-left">🚒</span>
-    <span class="firetruck-deco firetruck-right">🚒</span>
-    <h1>🔥 MoreFire 🔥</h1>
-    <p>Pick a scene. Click the fire. Watch it grow. <br>Cause maximum chaos in 20 clicks!</p>
-    <p class="water-hint">💧 Feeling merciful? Click the <b>water bucket</b> instead to put it out and become a hero.</p>
-    <div id="scene-picker">
-      <button class="scene-btn" data-scene="house">    <span class="emoji">🏠</span> House </button>
-      <button class="scene-btn" data-scene="hospital"> <span class="emoji">🏥</span> Hospital </button>
-      <button class="scene-btn" data-scene="park">     <span class="emoji">🌳</span> Park </button>
-      <button class="scene-btn" data-scene="farm">     <span class="emoji">🚜</span> Farm </button>
-      <button class="scene-btn" data-scene="city">     <span class="emoji">🏙️</span> City </button>
-      <button class="scene-btn" data-scene="monstertruck"><span class="emoji">🛻</span> Monster Truck </button>
-      <button class="scene-btn" data-scene="dump">     <span class="emoji">🗑️</span> Trash Dump </button>
-      <button class="scene-btn" data-scene="campsite"> <span class="emoji">⛺</span> Campsite </button>
-      <button class="scene-btn" data-scene="forest">   <span class="emoji">🌲</span> Forest </button>
-      <button class="scene-btn" data-scene="random">   <span class="emoji">🎲</span> Random </button>
+    <h1>🚒 Stop The Fire! 🔥</h1>
+    <p>A blaze breaks out — tap to shoot water and put out the fires before time runs out. Beat each level to unlock a tougher one!</p>
+    <button id="play-now-btn" type="button">▶ Play Now</button>
+    <div id="best-scores"></div>
+    <div id="start-controls">
+      <button id="mute-btn" class="audio-btn" type="button" aria-pressed="false" title="Toggle sound">🔊</button>
     </div>
+    <a id="more-games-link" href="https://zaksbraingames.com/">🧠 Try more brain games</a>
+    <a id="privacy-link" href="/privacy.html">Privacy</a>
   </div>
 
   <!-- GAME SCREEN -->
   <div id="game">
     <svg id="scene-svg" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice"></svg>
+    <div id="fire-overlay"></div>
+    <div id="fire-spots"></div>
     <div id="fx"></div>
-    <div id="fire-wrap" class="fire-target" title="Click me!">
-      <div class="fire" id="fire">
-        <canvas id="fire-canvas"></canvas>
-      </div>
-    </div>
     <div id="hud">
-      <div id="counter">🚒 Fire: 5 / 20</div>
-      <button id="restart-btn">↺ Restart</button>
+      <div id="level-counter" class="pill">⭐ Lvl 1</div>
+      <div id="timer" class="pill">⏱ 30.0</div>
+      <div id="fires-counter" class="pill">🔥 5 / 5</div>
     </div>
-    <!-- WATER BUCKET -->
-    <div id="bucket-wrap" title="Pour water!">
-      <svg id="bucket-svg" viewBox="0 0 100 120" aria-hidden="true">
-        <!-- handle -->
-        <path d="M20 30 Q50 -10 80 30" fill="none" stroke="#7a4a1d" stroke-width="6" stroke-linecap="round"/>
-        <!-- bucket body -->
-        <path d="M14 32 L86 32 L78 110 L22 110 Z" fill="#9aa7b3" stroke="#3a4654" stroke-width="3"/>
-        <!-- rim -->
-        <ellipse cx="50" cy="32" rx="36" ry="8" fill="#cbd5df" stroke="#3a4654" stroke-width="3"/>
-        <!-- water surface -->
-        <ellipse cx="50" cy="34" rx="30" ry="6" fill="#4ea8ff"/>
-        <!-- water shine -->
-        <ellipse cx="42" cy="33" rx="10" ry="2" fill="#d8f2ff" opacity="0.85"/>
-        <!-- droplet -->
-        <path d="M50 92 Q44 102 50 110 Q56 102 50 92 Z" fill="#6cd0ff" opacity="0.9"/>
+    <div id="firetruck-wrap">
+      <svg id="firetruck-svg" viewBox="0 0 240 100" aria-hidden="true">
+        <!-- Wheels -->
+        <circle cx="50" cy="88" r="14" fill="#1a1a1a" stroke="#000" stroke-width="2"/>
+        <circle cx="50" cy="88" r="6" fill="#bdc3c7"/>
+        <circle cx="180" cy="88" r="14" fill="#1a1a1a" stroke="#000" stroke-width="2"/>
+        <circle cx="180" cy="88" r="6" fill="#bdc3c7"/>
+        <!-- Body -->
+        <rect x="20" y="50" width="200" height="38" fill="#c0392b" stroke="#3a0a05" stroke-width="3" rx="4"/>
+        <!-- Cab -->
+        <path d="M150 50 L150 28 Q150 22 156 22 L210 22 Q220 22 220 32 L220 50 Z" fill="#c0392b" stroke="#3a0a05" stroke-width="3"/>
+        <rect x="160" y="30" width="50" height="18" fill="#9bd3ff" stroke="#3a0a05" stroke-width="2"/>
+        <!-- Bumpers -->
+        <rect x="14" y="62" width="8" height="22" fill="#bdc3c7" stroke="#000" stroke-width="2"/>
+        <rect x="220" y="62" width="8" height="22" fill="#bdc3c7" stroke="#000" stroke-width="2"/>
+        <!-- Cherry light -->
+        <rect x="178" y="14" width="14" height="10" fill="#3a0a05"/>
+        <circle class="cherry-light" cx="185" cy="16" r="6" fill="#ff2a00"/>
+        <!-- Ladder -->
+        <rect x="30" y="42" width="110" height="6" fill="#7a5a1d" stroke="#3a2410" stroke-width="1"/>
+        <line x1="40"  y1="42" x2="40"  y2="48" stroke="#3a2410" stroke-width="1"/>
+        <line x1="55"  y1="42" x2="55"  y2="48" stroke="#3a2410" stroke-width="1"/>
+        <line x1="70"  y1="42" x2="70"  y2="48" stroke="#3a2410" stroke-width="1"/>
+        <line x1="85"  y1="42" x2="85"  y2="48" stroke="#3a2410" stroke-width="1"/>
+        <line x1="100" y1="42" x2="100" y2="48" stroke="#3a2410" stroke-width="1"/>
+        <line x1="115" y1="42" x2="115" y2="48" stroke="#3a2410" stroke-width="1"/>
+        <line x1="130" y1="42" x2="130" y2="48" stroke="#3a2410" stroke-width="1"/>
+        <!-- Water cannon nozzle -->
+        <rect x="56" y="34" width="24" height="6" fill="#3a3f44" stroke="#000" stroke-width="1"/>
+        <circle cx="80" cy="37" r="5" fill="#3a3f44" stroke="#000" stroke-width="1"/>
+        <!-- Side panel "FD" badge -->
+        <rect x="60" y="58" width="60" height="22" fill="#a83020" stroke="#3a0a05" stroke-width="2" rx="2"/>
+        <text x="90" y="74" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff" font-family="sans-serif">FD</text>
       </svg>
-      <div id="bucket-label">💧 Pour Water</div>
     </div>
+    <button id="restart-btn" type="button">↺ Quit</button>
+    <button id="game-mute-btn" class="audio-btn" type="button" aria-pressed="false" title="Toggle sound">🔊</button>
     <div id="flash"></div>
   </div>
 
-  <!-- GAME OVER (Pyromaniac) -->
-  <div id="pyro">
-    <h2>Congratulations! You Destroyed Everything!</h2>
-    <p>You are a Crazy Pyromaniac!</p>
-    <div class="pyro-art">
-      <!-- Menacing smile -->
-      <svg class="smile-svg" viewBox="0 0 200 200" aria-hidden="true">
-        <defs>
-          <radialGradient id="faceGrad" cx="50%" cy="45%" r="60%">
-            <stop offset="0%"  stop-color="#ffd86b"/>
-            <stop offset="60%" stop-color="#ff7e1a"/>
-            <stop offset="100%" stop-color="#6b1500"/>
-          </radialGradient>
-        </defs>
-        <circle cx="100" cy="100" r="90" fill="url(#faceGrad)" stroke="#3a0000" stroke-width="4"/>
-        <!-- evil eyes -->
-        <path d="M50 80 L80 70 L78 90 Z" fill="#3a0000"/>
-        <path d="M150 80 L120 70 L122 90 Z" fill="#3a0000"/>
-        <circle cx="68" cy="82" r="4" fill="#fff"/>
-        <circle cx="132" cy="82" r="4" fill="#fff"/>
-        <!-- menacing smile with teeth -->
-        <path d="M40 120 Q100 180 160 120 Q150 145 100 155 Q50 145 40 120 Z"
-              fill="#1a0000" stroke="#3a0000" stroke-width="3"/>
-        <!-- jagged teeth -->
-        <path d="M55 130 L65 145 L72 130 L80 148 L88 130 L96 150 L104 130 L112 150 L120 130 L128 148 L136 130 L144 145 L152 130 Z"
-              fill="#fff" stroke="#3a0000" stroke-width="1.5"/>
-      </svg>
+  <!-- LEVEL TRANSITION (between levels) -->
+  <div id="level-transition">
+    <h2 id="level-transition-title">Level Complete!</h2>
+    <div class="hero-art">🚒💧✨</div>
+    <p id="level-transition-msg">Get ready…</p>
+    <div id="level-transition-fact">
+      <span class="fact-label">🔥 Did you know?</span>
+      <span id="level-transition-fact-text"></span>
     </div>
-    <p style="font-size: clamp(13px,1.8vw,17px); opacity:0.7; margin-top:-10px;">🚒 The firetrucks showed up... but it was too late. 🚒</p>
-    <button id="pyro-again">Play Again</button>
+    <button id="proceed-btn" type="button">▶ Next Level</button>
   </div>
 
-  <!-- GAME OVER (Hero) -->
-  <div id="hero">
-    <h2>Congratulations! You are a Hero!</h2>
-    <p>You saved the day. The fire is out. The world is grateful.</p>
-    <div class="hero-art">🦸‍♂️🚒💧</div>
-    <button id="hero-again">Play Again</button>
+  <!-- FAIL ENDING (LOSS) -->
+  <div id="failed">
+    <h2 id="failed-title">The Fire Won!</h2>
+    <p id="failed-msg">Time ran out. Try again, hero!</p>
+    <div class="fail-art">🔥😵🚒</div>
+    <p id="failed-level" class="ending-best"></p>
+    <div id="failed-actions">
+      <button id="failed-share" type="button">📲 Share via Text</button>
+      <button id="failed-again" type="button">▶ Play Again</button>
+    </div>
+  </div>
+
+  <!-- HOW TO PLAY MODAL -->
+  <div id="tutorial" role="dialog" aria-label="How to play">
+    <div class="tut-card">
+      <button id="tut-close" type="button" aria-label="Close how to play">✕</button>
+      <div class="tut-emoji">🚒💧🔥</div>
+      <h3>How to Play</h3>
+      <p>You're the hero firefighter! Big fires keep popping up around town. Use your trusty fire truck to put them out before time runs out — then a tougher level begins!</p>
+      <ul class="tut-rules">
+        <li>👆 <b>Tap</b> anywhere on the screen to shoot water at the nearest fire.</li>
+        <li>⏱ Put out <b>every fire in 30 seconds</b> to beat the level.</li>
+        <li>⭐ Each new level adds <b>5 more fires</b> — how far can you go?</li>
+        <li>🔊 Tap the speaker button to turn sounds on or off.</li>
+      </ul>
+      <p class="tut-tip">Tap the ✕ or anywhere outside to close.</p>
+    </div>
   </div>
 
 </div>
 
 <script>
 /* ===========================================================
-   MoreFire - simple click-to-burn game
+   Stop The Fire — tap-to-extinguish firefighter game
    =========================================================== */
 
-const MAX_CLICKS  = 20;
-const START_FIRE  = 5;
+/* Register the service worker for offline play. */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
 
-const startEl    = document.getElementById('start');
-const gameEl     = document.getElementById('game');
-const svgEl      = document.getElementById('scene-svg');
-const fireWrap   = document.getElementById('fire-wrap');
-const fireEl     = document.getElementById('fire');
-const counterEl  = document.getElementById('counter');
-const fxEl       = document.getElementById('fx');
-const flashEl    = document.getElementById('flash');
-const pyroEl     = document.getElementById('pyro');
-const heroEl     = document.getElementById('hero');
-const bucketWrap = document.getElementById('bucket-wrap');
+const TIME_LIMIT_S = 30;
+const FIRES_PER_LEVEL = 5;          // L1 = 5, L2 = 10, L3 = 15 …
+function firesForLevel(level) { return level * FIRES_PER_LEVEL; }
 
-let clicks = 0;
+const startEl        = document.getElementById('start');
+const gameEl         = document.getElementById('game');
+const svgEl          = document.getElementById('scene-svg');
+const fireSpotsEl    = document.getElementById('fire-spots');
+const fireOverlayEl  = document.getElementById('fire-overlay');
+const truckWrapEl    = document.getElementById('firetruck-wrap');
+const fxEl           = document.getElementById('fx');
+const flashEl        = document.getElementById('flash');
+const transitionEl   = document.getElementById('level-transition');
+const transitionTitleEl = document.getElementById('level-transition-title');
+const transitionMsgEl   = document.getElementById('level-transition-msg');
+const transitionFactEl  = document.getElementById('level-transition-fact-text');
+const proceedBtn        = document.getElementById('proceed-btn');
+const failedEl       = document.getElementById('failed');
+const tutorialEl     = document.getElementById('tutorial');
+const muteBtn        = document.getElementById('mute-btn');
+const gameMuteBtn    = document.getElementById('game-mute-btn');
+const bestEl         = document.getElementById('best-scores');
+const failedLevelEl  = document.getElementById('failed-level');
+const failedTitleEl  = document.getElementById('failed-title');
+const failedMsgEl    = document.getElementById('failed-msg');
+const failedShareBtn = document.getElementById('failed-share');
+const playNowBtn     = document.getElementById('play-now-btn');
+const timerEl        = document.getElementById('timer');
+const firesEl        = document.getElementById('fires-counter');
+const levelEl        = document.getElementById('level-counter');
+
+let fires = [];          // [{el, x, y, alive}]
+let firesLeft = 0;
+let totalFiresThisLevel = 0;
+let currentLevel = 1;
+let timeLeftMs = 0;
+let timerStart = 0;
+let timerRaf = null;
+let idleEmberTimer = null;
 let currentScene = null;
-let burnableEls = []; // scene parts in destruction order
+let lastScene = null;       // previous level's scene — never repeat back-to-back
+let lastFactIdx = -1;       // previous level's fact — never repeat back-to-back
 let gameEnded = false;
+let pendingShots = 0;    // shots fired but not yet resolved (mid-arc)
+let currentTimeLimitMs = TIME_LIMIT_S * 1000;
+
+/* ---------- FUN FACTS (between-level trivia) ---------- */
+const FIRE_FACTS = [
+  "The Great Fire of London in 1666 destroyed over 13,000 houses but killed only a handful of people.",
+  "A fire engine's siren can reach 120 decibels — about as loud as a rock concert.",
+  "Firefighters' protective gear (called 'bunker gear') can weigh more than 45 pounds.",
+  "Dalmatians became fire department mascots because they got along well with the horses that pulled fire wagons.",
+  "The fire pole was invented in 1878 in Chicago to help firefighters get downstairs faster.",
+  "A fire can double in size every 30 seconds if left unchecked.",
+  "The hottest part of a candle flame can reach about 1,400°C (2,550°F).",
+  "Fire needs three things to burn: heat, fuel, and oxygen — remove any one and it goes out.",
+  "Firefighters use special foam — not just water — to fight oil and gasoline fires.",
+  "The world's largest fire truck, the Falcon 8x8, can spray 5,000 gallons of water per minute.",
+  "Smoke — not flames — is the leading cause of fire deaths.",
+  "Fire hydrants in the U.S. have been around since the early 1800s.",
+  "A wildfire can travel up to 14 mph (23 km/h) — faster than most people can run.",
+  "The first organized fire brigade was formed in ancient Rome around 6 AD by Emperor Augustus.",
+  "Firefighters often nap in shifts at the station — a 24-hour shift is common.",
+  "House fires are most common in winter, when heaters and candles are used more.",
+  "The Stop, Drop, and Roll technique was popularized in the 1970s to help people put out clothing fires.",
+  "Some fire trucks carry over 1,000 feet of hose.",
+  "International Firefighters' Day is celebrated on May 4th every year.",
+  "A firefighter's helmet shape — with the long back brim — keeps hot water and embers off their neck.",
+  "The hottest wildfires can melt aluminum, which has a melting point of 660°C (1,220°F).",
+  "Most fire stations in the U.S. still use brass poles — they don't rust and are easy to slide down.",
+  "Firefighters can drink up to a gallon of water during a single major fire response.",
+  "The Maltese Cross, worn by many firefighters, is a symbol of protection and a badge of honor over 800 years old.",
+  "A fire alarm in your home can cut your risk of dying in a fire nearly in half.",
+  "Early fire departments were volunteer-only — paid firefighters didn't become common until the mid-1800s.",
+  "Wildfires actually help some forests by clearing dead brush and helping certain seeds (like lodgepole pine) sprout.",
+  "Firefighters train to enter burning buildings while crawling — the air is cooler and clearer near the floor.",
+  "The world record for the fastest fire truck is held by the 'Hawaiian Eagle,' which hit 407 mph.",
+  "Fire departments respond to far more medical calls than actual fires — usually 70% or more of their work."
+];
+
+/* ---------- LOCAL STORAGE ---------- */
+const LS_MUTE        = 'stopthefire.muted';
+const LS_TUTORIAL    = 'stopthefire.tutorialSeen';
+const LS_BEST_LEVEL  = 'stopthefire.bestLevel';    // highest level reached
+
+function lsGet(k, fallback = null) {
+  try { const v = localStorage.getItem(k); return v === null ? fallback : v; }
+  catch { return fallback; }
+}
+function lsSet(k, v) {
+  try { localStorage.setItem(k, v); } catch {}
+}
+
+/* ---------- HAPTICS ---------- */
+function vibrate(pattern) {
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch {}
+}
+
+/* ---------- AUDIO ---------- */
+let muted = lsGet(LS_MUTE) === '1';
+let audioCtx = null;
+
+function ensureAudio() {
+  if (muted) return null;
+  if (!audioCtx) {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) audioCtx = new Ctx();
+    } catch { audioCtx = null; }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+}
+
+function playCrackle() {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const dur = 0.09;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 1200 + Math.random() * 800;
+  filter.Q.value = 4;
+  const gain = ctx.createGain();
+  gain.gain.value = 0.18;
+  gain.gain.setValueAtTime(0.18, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+  src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+  src.start();
+  src.stop(ctx.currentTime + dur);
+}
+
+function playSplash() {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+
+  // 1) Main splash body — broad noise burst, sweeping lowpass for that "kssh" decay
+  const dur = 0.55;
+  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const t = i / data.length;
+    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 1.4);
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const hp = ctx.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 220;
+  const lp = ctx.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.setValueAtTime(4200, now);
+  lp.frequency.exponentialRampToValueAtTime(420, now + dur);
+  lp.Q.value = 0.9;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.42, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  src.connect(hp); hp.connect(lp); lp.connect(gain); gain.connect(ctx.destination);
+  src.start(now);
+  src.stop(now + dur);
+
+  // 2) Bubble pop / impact — quick descending sine "bloop"
+  const osc = ctx.createOscillator();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(820, now);
+  osc.frequency.exponentialRampToValueAtTime(180, now + 0.13);
+  const oscGain = ctx.createGain();
+  oscGain.gain.setValueAtTime(0.0001, now);
+  oscGain.gain.exponentialRampToValueAtTime(0.22, now + 0.012);
+  oscGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+  osc.connect(oscGain); oscGain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.18);
+
+  // 3) Three scattered droplet bursts at random delays — that wet, scattering tail
+  for (let k = 0; k < 3; k++) {
+    const delay = 0.04 + Math.random() * 0.22;
+    const dur2 = 0.10 + Math.random() * 0.12;
+    const buf2 = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur2), ctx.sampleRate);
+    const d2 = buf2.getChannelData(0);
+    for (let i = 0; i < d2.length; i++) {
+      d2[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d2.length, 2);
+    }
+    const s2 = ctx.createBufferSource();
+    s2.buffer = buf2;
+    const f2 = ctx.createBiquadFilter();
+    f2.type = 'bandpass';
+    f2.frequency.value = 1300 + Math.random() * 2000;
+    f2.Q.value = 1.6;
+    const g2 = ctx.createGain();
+    const peak = 0.10 + Math.random() * 0.10;
+    g2.gain.setValueAtTime(0.0001, now + delay);
+    g2.gain.exponentialRampToValueAtTime(peak, now + delay + 0.008);
+    g2.gain.exponentialRampToValueAtTime(0.0001, now + delay + dur2);
+    s2.connect(f2); f2.connect(g2); g2.connect(ctx.destination);
+    s2.start(now + delay);
+    s2.stop(now + delay + dur2);
+  }
+}
+
+function playWinSting(kind) {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  const notes = kind === 'hero'
+    ? [523.25, 659.25, 783.99, 1046.5]   // C E G C — bright major
+    : [392.00, 311.13, 261.63, 196.00];  // G Eb C G — descending sad
+  const t0 = ctx.currentTime;
+  notes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    const g = ctx.createGain();
+    const start = t0 + i * 0.10;
+    const end = start + 0.32;
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(0.22, start + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, end);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(start);
+    osc.stop(end + 0.05);
+  });
+}
+
+/* ---------- MUTE TOGGLE ---------- */
+function refreshMuteUI() {
+  const label = muted ? '🔇' : '🔊';
+  if (muteBtn)     { muteBtn.textContent = label;     muteBtn.setAttribute('aria-pressed', muted ? 'true' : 'false'); }
+  if (gameMuteBtn) { gameMuteBtn.textContent = label; gameMuteBtn.setAttribute('aria-pressed', muted ? 'true' : 'false'); }
+}
+function toggleMute(e) {
+  if (e) e.stopPropagation();
+  muted = !muted;
+  lsSet(LS_MUTE, muted ? '1' : '0');
+  if (muted && audioCtx) { try { audioCtx.suspend(); } catch {} }
+  refreshMuteUI();
+}
+if (muteBtn)     muteBtn.addEventListener('click', toggleMute);
+if (gameMuteBtn) gameMuteBtn.addEventListener('click', toggleMute);
+refreshMuteUI();
+
+/* ---------- BEST SCORES (highest level reached) ---------- */
+function renderBest() {
+  const bestLevel = parseInt(lsGet(LS_BEST_LEVEL, ''), 10);
+  if (Number.isFinite(bestLevel) && bestLevel > 0) {
+    bestEl.innerHTML = `<span class="best-pill">🏆 Best: Level ${bestLevel}</span>`;
+  } else {
+    bestEl.innerHTML = '';
+  }
+}
+renderBest();
+
+/* ---------- TUTORIAL / HOW TO PLAY ---------- */
+function maybeShowTutorial() {
+  if (lsGet(LS_TUTORIAL) === '1') return;
+  tutorialEl.classList.add('show');
+}
+function showTutorial() {
+  tutorialEl.classList.add('show');
+}
+function dismissTutorial() {
+  tutorialEl.classList.remove('show');
+  lsSet(LS_TUTORIAL, '1');
+}
+// Click outside the card closes; click inside the card does nothing,
+// except the close (✕) button which closes.
+tutorialEl.addEventListener('click', (e) => {
+  if (e.target === tutorialEl) dismissTutorial();
+});
+const tutCloseBtn = document.getElementById('tut-close');
+if (tutCloseBtn) tutCloseBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dismissTutorial();
+});
+maybeShowTutorial();
+
+/* ---------- PERSISTENT NAV HANDLERS ---------- */
+const navHomeEl = document.getElementById('nav-home');
+const navHowEl  = document.getElementById('nav-how');
+if (navHomeEl) {
+  navHomeEl.addEventListener('click', (e) => {
+    // SPA: snap back to the start screen without a full reload.
+    e.preventDefault();
+    resetToMenu();
+  });
+}
+if (navHowEl) {
+  navHowEl.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showTutorial();
+  });
+}
 
 /* ---------- SCENES (SVG strings) ---------- */
 const SCENES = {
 
   house: () => `
-    <!-- sky -->
     <rect class="bg" width="1000" height="450" fill="url(#skyGrad)"/>
     <defs>
       <linearGradient id="skyGrad" x1="0" x2="0" y1="0" y2="1">
@@ -639,109 +1301,85 @@ const SCENES = {
         <stop offset="100%" stop-color="#cfe9ff"/>
       </linearGradient>
     </defs>
-    <!-- sun -->
-    <circle class="burnable" data-burn="9" cx="850" cy="110" r="55" fill="#ffd86b"/>
-    <!-- ground -->
+    <circle class="burnable" cx="850" cy="110" r="55" fill="#ffd86b"/>
     <rect y="450" width="1000" height="150" fill="#7cc36a"/>
     <rect y="540" width="1000" height="60"  fill="#5fa852"/>
-    <!-- tree -->
-    <g class="burnable" data-burn="3">
+    <g class="burnable">
       <rect x="120" y="380" width="30" height="100" fill="#5b3a1e"/>
       <circle cx="135" cy="370" r="60" fill="#3da955"/>
       <circle cx="100" cy="390" r="45" fill="#3da955"/>
       <circle cx="170" cy="395" r="50" fill="#3da955"/>
     </g>
-    <!-- house body -->
-    <g class="burnable" data-burn="6">
+    <g class="burnable">
       <rect x="380" y="320" width="320" height="200" fill="#f7e1b5" stroke="#7a4a1d" stroke-width="4"/>
     </g>
-    <!-- roof -->
-    <g class="burnable" data-burn="5">
+    <g class="burnable">
       <polygon points="360,320 540,200 720,320" fill="#b3471a" stroke="#5b1f08" stroke-width="4"/>
     </g>
-    <!-- door -->
-    <g class="burnable" data-burn="7">
+    <g class="burnable">
       <rect x="500" y="400" width="80" height="120" fill="#7a4a1d" stroke="#3d2210" stroke-width="3"/>
       <circle cx="565" cy="465" r="4" fill="#ffd86b"/>
     </g>
-    <!-- windows -->
-    <g class="burnable" data-burn="8">
+    <g class="burnable">
       <rect x="410" y="350" width="60" height="60" fill="#9bd3ff" stroke="#3d2210" stroke-width="3"/>
       <line x1="440" y1="350" x2="440" y2="410" stroke="#3d2210" stroke-width="2"/>
       <line x1="410" y1="380" x2="470" y2="380" stroke="#3d2210" stroke-width="2"/>
-
       <rect x="610" y="350" width="60" height="60" fill="#9bd3ff" stroke="#3d2210" stroke-width="3"/>
       <line x1="640" y1="350" x2="640" y2="410" stroke="#3d2210" stroke-width="2"/>
       <line x1="610" y1="380" x2="670" y2="380" stroke="#3d2210" stroke-width="2"/>
     </g>
-    <!-- chimney -->
-    <g class="burnable" data-burn="4">
+    <g class="burnable">
       <rect x="630" y="220" width="40" height="70" fill="#8a3414" stroke="#3d2210" stroke-width="3"/>
     </g>
-    <!-- bushes -->
-    <g class="burnable" data-burn="2">
+    <g class="burnable">
       <circle cx="780" cy="500" r="35" fill="#3da955"/>
       <circle cx="820" cy="510" r="30" fill="#3da955"/>
     </g>
-    <!-- ground itself burns last -->
-    <g class="burnable" data-burn="10">
-      <rect y="450" width="1000" height="150" fill="transparent"/>
-    </g>
   `,
 
-  hospital: () => `
-    <rect class="bg" width="1000" height="450" fill="#cfe9ff"/>
-    <rect y="450" width="1000" height="150" fill="#cccccc"/>
-    <rect y="540" width="1000" height="60"  fill="#888"/>
-    <!-- sun -->
-    <circle class="burnable" data-burn="9" cx="120" cy="100" r="45" fill="#ffd86b"/>
-    <!-- tree -->
-    <g class="burnable" data-burn="3">
-      <rect x="880" y="380" width="24" height="100" fill="#5b3a1e"/>
-      <circle cx="892" cy="370" r="50" fill="#3da955"/>
+  warehouse: () => `
+    <defs>
+      <linearGradient id="whSky" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0%"  stop-color="#8a96a8"/>
+        <stop offset="100%" stop-color="#cfd6db"/>
+      </linearGradient>
+    </defs>
+    <rect class="bg" width="1000" height="450" fill="url(#whSky)"/>
+    <rect y="450" width="1000" height="150" fill="#7a6b52"/>
+    <rect y="540" width="1000" height="60"  fill="#5a4d3a"/>
+    <circle class="burnable" cx="160" cy="100" r="45" fill="#e6c97a"/>
+    <g class="burnable">
+      <rect x="60" y="490" width="160" height="14" fill="#7a4a1d" stroke="#3a2410" stroke-width="2"/>
+      <rect x="60" y="510" width="160" height="14" fill="#7a4a1d" stroke="#3a2410" stroke-width="2"/>
+      <rect x="70"  y="490" width="10" height="34" fill="#5b3a1e"/>
+      <rect x="135" y="490" width="10" height="34" fill="#5b3a1e"/>
+      <rect x="200" y="490" width="10" height="34" fill="#5b3a1e"/>
     </g>
-    <!-- main building -->
-    <g class="burnable" data-burn="6">
-      <rect x="250" y="200" width="500" height="320" fill="#ffffff" stroke="#666" stroke-width="4"/>
+    <g class="burnable">
+      <polygon points="240,200 760,200 720,240 280,240" fill="#5a6470" stroke="#1f2630" stroke-width="3"/>
+      <line x1="280" y1="220" x2="720" y2="220" stroke="#3a4654" stroke-width="2"/>
     </g>
-    <!-- red cross -->
-    <g class="burnable" data-burn="5">
-      <rect x="470" y="225" width="60" height="120" fill="#e63946"/>
-      <rect x="440" y="255" width="120" height="60" fill="#e63946"/>
+    <g class="burnable">
+      <rect x="250" y="240" width="500" height="280" fill="#a89580" stroke="#5a4d3a" stroke-width="4"/>
+      <line x1="320" y1="240" x2="320" y2="520" stroke="#7a6b52" stroke-width="2"/>
+      <line x1="400" y1="240" x2="400" y2="520" stroke="#7a6b52" stroke-width="2"/>
+      <line x1="480" y1="240" x2="480" y2="520" stroke="#7a6b52" stroke-width="2"/>
+      <line x1="600" y1="240" x2="600" y2="520" stroke="#7a6b52" stroke-width="2"/>
+      <line x1="680" y1="240" x2="680" y2="520" stroke="#7a6b52" stroke-width="2"/>
     </g>
-    <!-- entrance -->
-    <g class="burnable" data-burn="7">
-      <rect x="460" y="430" width="80" height="90" fill="#5a8fbf"/>
-      <rect x="460" y="430" width="80" height="14" fill="#34495e"/>
+    <g class="burnable">
+      <rect x="510" y="380" width="180" height="140" fill="#7a6253" stroke="#3a2410" stroke-width="3"/>
+      <line x1="510" y1="410" x2="690" y2="410" stroke="#3a2410" stroke-width="2"/>
+      <line x1="510" y1="440" x2="690" y2="440" stroke="#3a2410" stroke-width="2"/>
+      <line x1="510" y1="470" x2="690" y2="470" stroke="#3a2410" stroke-width="2"/>
+      <line x1="510" y1="500" x2="690" y2="500" stroke="#3a2410" stroke-width="2"/>
+      <circle cx="600" cy="450" r="4" fill="#3a2410"/>
     </g>
-    <!-- windows -->
-    <g class="burnable" data-burn="8">
-      <rect x="290" y="380" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
-      <rect x="370" y="380" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
-      <rect x="580" y="380" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
-      <rect x="660" y="380" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
-
-      <rect x="290" y="290" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
-      <rect x="370" y="290" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
-      <rect x="580" y="290" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
-      <rect x="660" y="290" width="50" height="50" fill="#9bd3ff" stroke="#444" stroke-width="2"/>
-    </g>
-    <!-- ambulance -->
-    <g class="burnable" data-burn="2">
-      <rect x="60" y="450" width="160" height="70" fill="#ffffff" stroke="#222" stroke-width="3"/>
-      <rect x="170" y="470" width="50" height="50" fill="#9bd3ff" stroke="#222" stroke-width="2"/>
-      <rect x="100" y="465" width="40" height="10" fill="#e63946"/>
-      <rect x="115" y="455" width="10" height="30" fill="#e63946"/>
-      <circle cx="100" cy="525" r="14" fill="#222"/>
-      <circle cx="190" cy="525" r="14" fill="#222"/>
-    </g>
-    <!-- helipad H -->
-    <g class="burnable" data-burn="4">
-      <circle cx="500" cy="180" r="22" fill="none" stroke="#e63946" stroke-width="4"/>
-      <text x="500" y="190" text-anchor="middle" font-size="28" font-weight="bold" fill="#e63946" font-family="sans-serif">H</text>
-    </g>
-    <g class="burnable" data-burn="10">
-      <rect y="450" width="1000" height="150" fill="transparent"/>
+    <g class="burnable">
+      <rect x="290" y="290" width="50" height="50" fill="#3a4250" stroke="#444" stroke-width="2"/>
+      <rect x="370" y="290" width="50" height="50" fill="#3a4250" stroke="#444" stroke-width="2"/>
+      <rect x="290" y="380" width="50" height="50" fill="#3a4250" stroke="#444" stroke-width="2"/>
+      <rect x="370" y="380" width="50" height="50" fill="#3a4250" stroke="#444" stroke-width="2"/>
     </g>
   `,
 
@@ -755,37 +1393,31 @@ const SCENES = {
     </defs>
     <rect y="450" width="1000" height="150" fill="#7cc36a"/>
     <rect y="540" width="1000" height="60"  fill="#5fa852"/>
-    <!-- sun -->
-    <circle class="burnable" data-burn="9" cx="180" cy="110" r="50" fill="#ffd86b"/>
-    <!-- clouds -->
-    <g class="burnable" data-burn="9">
+    <circle class="burnable" cx="180" cy="110" r="50" fill="#ffd86b"/>
+    <g class="burnable">
       <ellipse cx="700" cy="120" rx="60" ry="22" fill="#fff"/>
       <ellipse cx="740" cy="105" rx="40" ry="18" fill="#fff"/>
       <ellipse cx="770" cy="130" rx="50" ry="20" fill="#fff"/>
     </g>
-    <!-- tree left -->
-    <g class="burnable" data-burn="2">
+    <g class="burnable">
       <rect x="110" y="360" width="30" height="120" fill="#5b3a1e"/>
       <circle cx="125" cy="350" r="65" fill="#3da955"/>
       <circle cx="85"  cy="370" r="50" fill="#3da955"/>
       <circle cx="170" cy="375" r="55" fill="#3da955"/>
     </g>
-    <!-- tree right -->
-    <g class="burnable" data-burn="3">
+    <g class="burnable">
       <rect x="850" y="360" width="30" height="120" fill="#5b3a1e"/>
       <circle cx="865" cy="350" r="65" fill="#3da955"/>
       <circle cx="825" cy="375" r="50" fill="#3da955"/>
       <circle cx="905" cy="375" r="55" fill="#3da955"/>
     </g>
-    <!-- bench -->
-    <g class="burnable" data-burn="6">
+    <g class="burnable">
       <rect x="380" y="450" width="240" height="20" fill="#7a4a1d"/>
       <rect x="380" y="430" width="240" height="14" fill="#7a4a1d"/>
       <rect x="395" y="470" width="14" height="40" fill="#7a4a1d"/>
       <rect x="591" y="470" width="14" height="40" fill="#7a4a1d"/>
     </g>
-    <!-- swing set -->
-    <g class="burnable" data-burn="5">
+    <g class="burnable">
       <line x1="700" y1="280" x2="660" y2="470" stroke="#444" stroke-width="6"/>
       <line x1="900" y1="280" x2="940" y2="470" stroke="#444" stroke-width="6"/>
       <line x1="660" y1="280" x2="940" y2="280" stroke="#444" stroke-width="6"/>
@@ -793,26 +1425,8 @@ const SCENES = {
       <line x1="820" y1="280" x2="820" y2="400" stroke="#222" stroke-width="3"/>
       <rect x="745" y="395" width="90" height="14" fill="#b3471a"/>
     </g>
-    <!-- flowers -->
-    <g class="burnable" data-burn="4">
-      <circle cx="280" cy="500" r="12" fill="#ff6b9c"/>
-      <circle cx="320" cy="510" r="12" fill="#ffd86b"/>
-      <circle cx="360" cy="500" r="12" fill="#ff6b9c"/>
-      <circle cx="220" cy="510" r="12" fill="#9b6bff"/>
-    </g>
-    <!-- pond -->
-    <g class="burnable" data-burn="7">
+    <g class="burnable">
       <ellipse cx="500" cy="540" rx="160" ry="30" fill="#5ab8e8"/>
-    </g>
-    <!-- duck -->
-    <g class="burnable" data-burn="8">
-      <ellipse cx="500" cy="525" rx="22" ry="12" fill="#fff"/>
-      <circle cx="520" cy="515" r="9" fill="#fff"/>
-      <polygon points="528,515 540,517 528,520" fill="#ff8c1a"/>
-      <circle cx="522" cy="513" r="1.5" fill="#000"/>
-    </g>
-    <g class="burnable" data-burn="10">
-      <rect y="450" width="1000" height="150" fill="transparent"/>
     </g>
   `,
 
@@ -826,67 +1440,35 @@ const SCENES = {
     <rect class="bg" width="1000" height="450" fill="url(#farmSky)"/>
     <rect y="450" width="1000" height="150" fill="#a3d36b"/>
     <rect y="540" width="1000" height="60"  fill="#7fb84e"/>
-    <!-- sun -->
-    <circle class="burnable" data-burn="9" cx="180" cy="120" r="48" fill="#ffd86b"/>
-    <!-- silo -->
-    <g class="burnable" data-burn="6">
+    <circle class="burnable" cx="180" cy="120" r="48" fill="#ffd86b"/>
+    <g class="burnable">
       <rect x="80" y="280" width="100" height="200" fill="#cfd6db" stroke="#5a6470" stroke-width="3"/>
       <ellipse cx="130" cy="280" rx="50" ry="14" fill="#9aa7b3" stroke="#5a6470" stroke-width="3"/>
       <path d="M80 280 Q130 230 180 280 Z" fill="#a3aeb8" stroke="#5a6470" stroke-width="3"/>
     </g>
-    <!-- barn body -->
-    <g class="burnable" data-burn="5">
+    <g class="burnable">
       <rect x="380" y="300" width="340" height="220" fill="#c0392b" stroke="#3a0a05" stroke-width="4"/>
       <polygon points="380,300 550,200 720,300" fill="#a83020" stroke="#3a0a05" stroke-width="4"/>
-      <!-- white X door -->
       <rect x="500" y="380" width="100" height="140" fill="#f4ead2" stroke="#3a0a05" stroke-width="3"/>
       <line x1="500" y1="380" x2="600" y2="520" stroke="#3a0a05" stroke-width="4"/>
       <line x1="600" y1="380" x2="500" y2="520" stroke="#3a0a05" stroke-width="4"/>
-      <!-- hayloft window -->
       <rect x="525" y="240" width="50" height="50" fill="#f4ead2" stroke="#3a0a05" stroke-width="3"/>
     </g>
-    <!-- haystack -->
-    <g class="burnable" data-burn="2">
+    <g class="burnable">
       <ellipse cx="800" cy="490" rx="60" ry="40" fill="#e8b94a" stroke="#7a5a1d" stroke-width="3"/>
-      <path d="M745 490 L855 490 M755 470 L845 470 M765 510 L835 510" stroke="#7a5a1d" stroke-width="2"/>
     </g>
-    <!-- fence -->
-    <g class="burnable" data-burn="4">
-      <rect x="240" y="470" width="6" height="50" fill="#7a4a1d"/>
-      <rect x="290" y="470" width="6" height="50" fill="#7a4a1d"/>
-      <rect x="340" y="470" width="6" height="50" fill="#7a4a1d"/>
-      <rect x="240" y="480" width="110" height="6" fill="#7a4a1d"/>
-      <rect x="240" y="500" width="110" height="6" fill="#7a4a1d"/>
+    <g class="burnable">
+      <rect x="240" y="470" width="6"   height="50" fill="#7a4a1d"/>
+      <rect x="290" y="470" width="6"   height="50" fill="#7a4a1d"/>
+      <rect x="340" y="470" width="6"   height="50" fill="#7a4a1d"/>
+      <rect x="240" y="480" width="110" height="6"  fill="#7a4a1d"/>
+      <rect x="240" y="500" width="110" height="6"  fill="#7a4a1d"/>
     </g>
-    <!-- tractor -->
-    <g class="burnable" data-burn="3">
+    <g class="burnable">
       <rect x="880" y="460" width="80" height="40" fill="#2ec27e" stroke="#143d22" stroke-width="3"/>
       <rect x="900" y="430" width="40" height="40" fill="#2ec27e" stroke="#143d22" stroke-width="3"/>
-      <rect x="908" y="438" width="24" height="20" fill="#9bd3ff"/>
       <circle cx="895" cy="510" r="18" fill="#222"/>
       <circle cx="950" cy="510" r="26" fill="#222"/>
-    </g>
-    <!-- cow -->
-    <g class="burnable" data-burn="7">
-      <ellipse cx="450" cy="510" rx="55" ry="25" fill="#fff" stroke="#222" stroke-width="3"/>
-      <ellipse cx="500" cy="505" rx="14" ry="10" fill="#222"/>
-      <ellipse cx="430" cy="515" rx="10" ry="7" fill="#222"/>
-      <circle cx="510" cy="490" r="14" fill="#fff" stroke="#222" stroke-width="3"/>
-      <circle cx="514" cy="488" r="2" fill="#222"/>
-      <rect x="425" y="530" width="6" height="14" fill="#222"/>
-      <rect x="475" y="530" width="6" height="14" fill="#222"/>
-    </g>
-    <!-- chicken -->
-    <g class="burnable" data-burn="8">
-      <ellipse cx="660" cy="525" rx="20" ry="14" fill="#fff" stroke="#444" stroke-width="2"/>
-      <circle cx="676" cy="515" r="9" fill="#fff" stroke="#444" stroke-width="2"/>
-      <polygon points="685,515 695,517 685,520" fill="#ff8c1a"/>
-      <path d="M676 506 Q672 500 678 502 Q684 500 680 506 Z" fill="#e63946"/>
-      <line x1="655" y1="540" x2="655" y2="548" stroke="#ff8c1a" stroke-width="2"/>
-      <line x1="665" y1="540" x2="665" y2="548" stroke="#ff8c1a" stroke-width="2"/>
-    </g>
-    <g class="burnable" data-burn="10">
-      <rect y="450" width="1000" height="150" fill="transparent"/>
     </g>
   `,
 
@@ -899,113 +1481,59 @@ const SCENES = {
       </linearGradient>
     </defs>
     <rect class="bg" width="1000" height="450" fill="url(#citySky)"/>
-    <!-- sidewalk + road -->
     <rect y="450" width="1000" height="40"  fill="#bdc3c7"/>
     <rect y="490" width="1000" height="80"  fill="#3a3f44"/>
     <rect y="570" width="1000" height="30"  fill="#bdc3c7"/>
-    <!-- road dashes -->
-    <g>
-      <rect x="40"  y="525" width="60" height="8" fill="#ffd86b"/>
-      <rect x="180" y="525" width="60" height="8" fill="#ffd86b"/>
-      <rect x="320" y="525" width="60" height="8" fill="#ffd86b"/>
-      <rect x="460" y="525" width="60" height="8" fill="#ffd86b"/>
-      <rect x="600" y="525" width="60" height="8" fill="#ffd86b"/>
-      <rect x="740" y="525" width="60" height="8" fill="#ffd86b"/>
-      <rect x="880" y="525" width="60" height="8" fill="#ffd86b"/>
-    </g>
-    <!-- sun -->
-    <circle class="burnable" data-burn="9" cx="850" cy="130" r="50" fill="#fff5b0"/>
-    <!-- skyscraper left -->
-    <g class="burnable" data-burn="5">
+    <circle class="burnable" cx="850" cy="130" r="50" fill="#fff5b0"/>
+    <g class="burnable">
       <rect x="60" y="180" width="170" height="270" fill="#5a6470" stroke="#1f2630" stroke-width="3"/>
       <g fill="#ffd86b">
         <rect x="80"  y="200" width="20" height="20"/>
         <rect x="120" y="200" width="20" height="20"/>
         <rect x="160" y="200" width="20" height="20"/>
         <rect x="200" y="200" width="20" height="20"/>
-        <rect x="80"  y="240" width="20" height="20"/>
-        <rect x="120" y="240" width="20" height="20"/>
-        <rect x="160" y="240" width="20" height="20"/>
         <rect x="80"  y="280" width="20" height="20"/>
         <rect x="160" y="280" width="20" height="20"/>
         <rect x="200" y="280" width="20" height="20"/>
         <rect x="80"  y="320" width="20" height="20"/>
         <rect x="120" y="320" width="20" height="20"/>
         <rect x="200" y="320" width="20" height="20"/>
-        <rect x="120" y="360" width="20" height="20"/>
-        <rect x="160" y="360" width="20" height="20"/>
-        <rect x="80"  y="400" width="20" height="20"/>
-        <rect x="200" y="400" width="20" height="20"/>
       </g>
     </g>
-    <!-- skyscraper center (tallest) -->
-    <g class="burnable" data-burn="6">
+    <g class="burnable">
       <rect x="280" y="100" width="200" height="350" fill="#4a90c2" stroke="#143d5a" stroke-width="3"/>
       <rect x="370" y="60"  width="20"  height="40" fill="#5a6470"/>
       <g fill="#9bd3ff">
         <rect x="300" y="120" width="160" height="14"/>
-        <rect x="300" y="150" width="160" height="14"/>
         <rect x="300" y="180" width="160" height="14"/>
-        <rect x="300" y="210" width="160" height="14"/>
         <rect x="300" y="240" width="160" height="14"/>
-        <rect x="300" y="270" width="160" height="14"/>
         <rect x="300" y="300" width="160" height="14"/>
-        <rect x="300" y="330" width="160" height="14"/>
         <rect x="300" y="360" width="160" height="14"/>
-        <rect x="300" y="390" width="160" height="14"/>
       </g>
     </g>
-    <!-- skyscraper right -->
-    <g class="burnable" data-burn="7">
+    <g class="burnable">
       <rect x="540" y="220" width="180" height="230" fill="#7a4a1d" stroke="#3a2410" stroke-width="3"/>
       <g fill="#ffd86b">
         <rect x="560" y="240" width="22" height="22"/>
         <rect x="600" y="240" width="22" height="22"/>
         <rect x="640" y="240" width="22" height="22"/>
         <rect x="680" y="240" width="22" height="22"/>
-        <rect x="560" y="280" width="22" height="22"/>
-        <rect x="640" y="280" width="22" height="22"/>
-        <rect x="680" y="280" width="22" height="22"/>
-        <rect x="600" y="320" width="22" height="22"/>
+        <rect x="560" y="320" width="22" height="22"/>
         <rect x="640" y="320" width="22" height="22"/>
-        <rect x="560" y="360" width="22" height="22"/>
         <rect x="680" y="360" width="22" height="22"/>
-        <rect x="600" y="400" width="22" height="22"/>
-        <rect x="640" y="400" width="22" height="22"/>
       </g>
     </g>
-    <!-- billboard -->
-    <g class="burnable" data-burn="4">
+    <g class="burnable">
       <rect x="760" y="220" width="200" height="100" fill="#fff" stroke="#222" stroke-width="3"/>
-      <rect x="800" y="320" width="10" height="130" fill="#444"/>
-      <rect x="910" y="320" width="10" height="130" fill="#444"/>
+      <rect x="800" y="320" width="10"  height="130" fill="#444"/>
+      <rect x="910" y="320" width="10"  height="130" fill="#444"/>
       <text x="860" y="280" text-anchor="middle" font-size="38" font-weight="bold" fill="#c0392b" font-family="sans-serif">SALE!</text>
     </g>
-    <!-- streetlamp -->
-    <g class="burnable" data-burn="3">
-      <rect x="245" y="340" width="6" height="110" fill="#222"/>
-      <path d="M248 340 Q280 320 280 305" stroke="#222" stroke-width="6" fill="none"/>
-      <circle cx="280" cy="300" r="10" fill="#fff5b0"/>
-    </g>
-    <!-- car -->
-    <g class="burnable" data-burn="2">
+    <g class="burnable">
       <rect x="380" y="510" width="170" height="40" fill="#e63946" stroke="#3a0a05" stroke-width="3"/>
       <path d="M410 510 L430 480 L520 480 L540 510 Z" fill="#e63946" stroke="#3a0a05" stroke-width="3"/>
-      <rect x="425" y="485" width="40" height="22" fill="#9bd3ff"/>
-      <rect x="475" y="485" width="40" height="22" fill="#9bd3ff"/>
       <circle cx="415" cy="555" r="16" fill="#222"/>
       <circle cx="525" cy="555" r="16" fill="#222"/>
-    </g>
-    <!-- traffic light -->
-    <g class="burnable" data-burn="8">
-      <rect x="730" y="380" width="6" height="80" fill="#222"/>
-      <rect x="715" y="340" width="36" height="60" fill="#222" stroke="#000" stroke-width="2"/>
-      <circle cx="733" cy="354" r="6" fill="#e63946"/>
-      <circle cx="733" cy="370" r="6" fill="#ffd86b"/>
-      <circle cx="733" cy="386" r="6" fill="#2ec27e"/>
-    </g>
-    <g class="burnable" data-burn="10">
-      <rect y="450" width="1000" height="150" fill="transparent"/>
     </g>
   `,
 
@@ -1019,60 +1547,35 @@ const SCENES = {
     <rect class="bg" width="1000" height="450" fill="url(#mtSky)"/>
     <rect y="450" width="1000" height="150" fill="#7a5a1d"/>
     <rect y="540" width="1000" height="60"  fill="#5b3a1e"/>
-    <!-- sun -->
-    <circle class="burnable" data-burn="9" cx="160" cy="120" r="55" fill="#ffae33"/>
-    <!-- dirt ramp -->
-    <g class="burnable" data-burn="4">
+    <circle class="burnable" cx="160" cy="120" r="55" fill="#ffae33"/>
+    <g class="burnable">
       <path d="M30 460 L240 460 L160 360 Z" fill="#a06a2e" stroke="#3a2410" stroke-width="3"/>
     </g>
-    <!-- crushed car 1 -->
-    <g class="burnable" data-burn="2">
-      <path d="M340 470 L360 440 L470 440 L490 470 L490 500 L340 500 Z" fill="#4a90c2" stroke="#143d5a" stroke-width="3" transform="translate(0,15) scale(1,0.55)"/>
+    <g class="burnable">
       <rect x="340" y="494" width="150" height="10" fill="#143d5a"/>
       <circle cx="365" cy="515" r="12" fill="#222"/>
       <circle cx="465" cy="515" r="12" fill="#222"/>
     </g>
-    <!-- crushed car 2 -->
-    <g class="burnable" data-burn="3">
-      <path d="M810 470 L830 442 L920 442 L940 470 L940 498 L810 498 Z" fill="#2ec27e" stroke="#143d22" stroke-width="3" transform="translate(0,18) scale(1,0.5)"/>
+    <g class="burnable">
       <rect x="810" y="492" width="130" height="10" fill="#143d22"/>
       <circle cx="830" cy="515" r="12" fill="#222"/>
       <circle cx="920" cy="515" r="12" fill="#222"/>
     </g>
-    <!-- monster truck wheels -->
-    <g class="burnable" data-burn="5">
+    <g class="burnable">
       <circle cx="490" cy="510" r="60" fill="#1a1a1a" stroke="#000" stroke-width="3"/>
       <circle cx="490" cy="510" r="22" fill="#bdc3c7" stroke="#000" stroke-width="3"/>
       <circle cx="710" cy="510" r="60" fill="#1a1a1a" stroke="#000" stroke-width="3"/>
       <circle cx="710" cy="510" r="22" fill="#bdc3c7" stroke="#000" stroke-width="3"/>
-      <!-- tread marks -->
-      <path d="M450 470 L450 460 M490 450 L490 440 M530 470 L530 460" stroke="#000" stroke-width="3"/>
-      <path d="M670 470 L670 460 M710 450 L710 440 M750 470 L750 460" stroke="#000" stroke-width="3"/>
     </g>
-    <!-- monster truck body -->
-    <g class="burnable" data-burn="6">
+    <g class="burnable">
       <rect x="430" y="370" width="340" height="110" fill="#9b1d1d" stroke="#3a0a05" stroke-width="4"/>
-      <!-- cab -->
       <path d="M470 370 L500 310 L660 310 L690 370 Z" fill="#7a1010" stroke="#3a0a05" stroke-width="4"/>
       <rect x="510" y="320" width="60" height="40" fill="#9bd3ff" stroke="#000" stroke-width="2"/>
       <rect x="590" y="320" width="60" height="40" fill="#9bd3ff" stroke="#000" stroke-width="2"/>
-      <!-- front bumper / grille -->
-      <rect x="430" y="430" width="20" height="50" fill="#bdc3c7" stroke="#000" stroke-width="2"/>
-      <rect x="750" y="430" width="20" height="50" fill="#bdc3c7" stroke="#000" stroke-width="2"/>
     </g>
-    <!-- flame decals -->
-    <g class="burnable" data-burn="7">
+    <g class="burnable">
       <path d="M450 410 Q480 380 510 410 Q540 380 570 410 Q600 380 630 410 Q660 380 690 410 Q720 380 750 410 L750 440 L450 440 Z"
             fill="#ffae33" stroke="#c0392b" stroke-width="3"/>
-    </g>
-    <!-- dust cloud -->
-    <g class="burnable" data-burn="8">
-      <circle cx="280" cy="500" r="28" fill="#d8c8a3" opacity="0.8"/>
-      <circle cx="320" cy="510" r="24" fill="#d8c8a3" opacity="0.8"/>
-      <circle cx="350" cy="495" r="20" fill="#d8c8a3" opacity="0.8"/>
-    </g>
-    <g class="burnable" data-burn="10">
-      <rect y="450" width="1000" height="150" fill="transparent"/>
     </g>
   `,
 
@@ -1086,68 +1589,30 @@ const SCENES = {
     <rect class="bg" width="1000" height="450" fill="url(#dumpSky)"/>
     <rect y="450" width="1000" height="150" fill="#8a6f3a"/>
     <rect y="540" width="1000" height="60"  fill="#5b4520"/>
-    <!-- weak sun -->
-    <circle class="burnable" data-burn="9" cx="850" cy="120" r="40" fill="#d4c878"/>
-    <!-- big trash bag pile -->
-    <g class="burnable" data-burn="5">
+    <circle class="burnable" cx="850" cy="120" r="40" fill="#d4c878"/>
+    <g class="burnable">
       <ellipse cx="500" cy="490" rx="180" ry="80" fill="#2a2a2a" stroke="#000" stroke-width="3"/>
-      <ellipse cx="430" cy="460" rx="55" ry="45" fill="#2a2a2a" stroke="#000" stroke-width="3"/>
-      <ellipse cx="540" cy="445" rx="60" ry="50" fill="#2a2a2a" stroke="#000" stroke-width="3"/>
-      <ellipse cx="610" cy="465" rx="55" ry="45" fill="#2a2a2a" stroke="#000" stroke-width="3"/>
-      <!-- twisty tops -->
-      <path d="M430 415 L425 405 L435 408 L432 400" stroke="#000" stroke-width="3" fill="none"/>
-      <path d="M540 395 L535 385 L545 388 L542 380" stroke="#000" stroke-width="3" fill="none"/>
-      <path d="M610 420 L605 410 L615 413 L612 405" stroke="#000" stroke-width="3" fill="none"/>
+      <ellipse cx="430" cy="460" rx="55"  ry="45" fill="#2a2a2a" stroke="#000" stroke-width="3"/>
+      <ellipse cx="540" cy="445" rx="60"  ry="50" fill="#2a2a2a" stroke="#000" stroke-width="3"/>
+      <ellipse cx="610" cy="465" rx="55"  ry="45" fill="#2a2a2a" stroke="#000" stroke-width="3"/>
     </g>
-    <!-- dumpster -->
-    <g class="burnable" data-burn="6">
+    <g class="burnable">
       <rect x="60" y="380" width="240" height="130" fill="#2ec27e" stroke="#143d22" stroke-width="4"/>
-      <rect x="60" y="380" width="240" height="20" fill="#1f8d5a" stroke="#143d22" stroke-width="3"/>
-      <rect x="80" y="410" width="200" height="6" fill="#143d22"/>
-      <rect x="80" y="440" width="200" height="6" fill="#143d22"/>
-      <rect x="80" y="470" width="200" height="6" fill="#143d22"/>
+      <rect x="60" y="380" width="240" height="20"  fill="#1f8d5a" stroke="#143d22" stroke-width="3"/>
       <circle cx="100" cy="515" r="12" fill="#222"/>
       <circle cx="260" cy="515" r="12" fill="#222"/>
-      <!-- overflowing trash -->
-      <ellipse cx="120" cy="375" rx="22" ry="14" fill="#7a4a1d"/>
-      <ellipse cx="180" cy="370" rx="28" ry="16" fill="#3a3a3a"/>
-      <ellipse cx="240" cy="376" rx="20" ry="12" fill="#c0392b"/>
     </g>
-    <!-- old TV -->
-    <g class="burnable" data-burn="4">
+    <g class="burnable">
       <rect x="720" y="430" width="120" height="90" fill="#3a3f44" stroke="#000" stroke-width="3"/>
-      <rect x="734" y="444" width="92" height="62" fill="#5a6470"/>
-      <line x1="734" y1="444" x2="826" y2="506" stroke="#9aa7b3" stroke-width="3"/>
-      <line x1="826" y1="444" x2="734" y2="506" stroke="#9aa7b3" stroke-width="3"/>
-      <rect x="845" y="450" width="6" height="6" fill="#222"/>
-      <rect x="845" y="470" width="6" height="6" fill="#222"/>
-      <line x1="745" y1="430" x2="730" y2="405" stroke="#222" stroke-width="3"/>
-      <line x1="815" y1="430" x2="830" y2="405" stroke="#222" stroke-width="3"/>
+      <rect x="734" y="444" width="92"  height="62" fill="#5a6470"/>
     </g>
-    <!-- broken chair -->
-    <g class="burnable" data-burn="3">
+    <g class="burnable">
       <rect x="350" y="470" width="60" height="14" fill="#7a4a1d" stroke="#3a2410" stroke-width="2"/>
       <rect x="350" y="420" width="14" height="50" fill="#7a4a1d" stroke="#3a2410" stroke-width="2"/>
-      <rect x="354" y="484" width="6" height="36" fill="#7a4a1d" transform="rotate(15 357 502)"/>
-      <rect x="400" y="484" width="6" height="20" fill="#7a4a1d" transform="rotate(-30 403 494)"/>
     </g>
-    <!-- tire -->
-    <g class="burnable" data-burn="2">
+    <g class="burnable">
       <circle cx="900" cy="520" r="34" fill="#1a1a1a" stroke="#000" stroke-width="3"/>
       <circle cx="900" cy="520" r="14" fill="#5a5a5a" stroke="#000" stroke-width="2"/>
-    </g>
-    <!-- banana peel -->
-    <g class="burnable" data-burn="7">
-      <path d="M250 530 Q260 510 280 515 Q300 520 305 540 Q285 545 270 540 Q255 545 250 530 Z" fill="#ffd86b" stroke="#7a5a1d" stroke-width="2"/>
-    </g>
-    <!-- flies -->
-    <g class="burnable" data-burn="8">
-      <text x="500" y="380" font-size="22" fill="#222">~~ 🪰 ~~</text>
-      <text x="200" y="350" font-size="18" fill="#222">🪰</text>
-      <text x="780" y="380" font-size="20" fill="#222">🪰</text>
-    </g>
-    <g class="burnable" data-burn="10">
-      <rect y="450" width="1000" height="150" fill="transparent"/>
     </g>
   `,
 
@@ -1162,69 +1627,39 @@ const SCENES = {
     <rect class="bg" width="1000" height="450" fill="url(#campSky)"/>
     <rect y="450" width="1000" height="150" fill="#3a5d2a"/>
     <rect y="540" width="1000" height="60"  fill="#234119"/>
-    <!-- moon + stars -->
-    <g class="burnable" data-burn="9">
+    <g class="burnable">
       <circle cx="180" cy="120" r="42" fill="#fff5b0"/>
       <circle cx="195" cy="110" r="36" fill="#3a1a55"/>
-      <text x="400" y="100" font-size="22" fill="#fff">✦</text>
-      <text x="600" y="80"  font-size="18" fill="#fff">✦</text>
-      <text x="780" y="140" font-size="22" fill="#fff">✦</text>
-      <text x="500" y="180" font-size="18" fill="#fff">✦</text>
-      <text x="850" y="220" font-size="18" fill="#fff">✦</text>
     </g>
-    <!-- tree left -->
-    <g class="burnable" data-burn="2">
+    <g class="burnable">
       <rect x="80" y="380" width="22" height="100" fill="#3a2410"/>
       <polygon points="91,210 50,320 132,320" fill="#1f4a2a"/>
       <polygon points="91,260 40,360 142,360" fill="#1f4a2a"/>
       <polygon points="91,310 30,400 152,400" fill="#1f4a2a"/>
     </g>
-    <!-- tree right -->
-    <g class="burnable" data-burn="3">
+    <g class="burnable">
       <rect x="900" y="380" width="22" height="100" fill="#3a2410"/>
       <polygon points="911,230 870,330 952,330" fill="#1f4a2a"/>
       <polygon points="911,280 860,370 962,370" fill="#1f4a2a"/>
       <polygon points="911,330 850,410 972,410" fill="#1f4a2a"/>
     </g>
-    <!-- log seat -->
-    <g class="burnable" data-burn="4">
+    <g class="burnable">
       <ellipse cx="700" cy="500" rx="80" ry="14" fill="#7a4a1d" stroke="#3a2410" stroke-width="3"/>
       <ellipse cx="700" cy="495" rx="80" ry="14" fill="#a36b30" stroke="#3a2410" stroke-width="3"/>
-      <ellipse cx="700" cy="495" rx="14" ry="6"  fill="#7a4a1d"/>
-      <line x1="694" y1="494" x2="706" y2="496" stroke="#3a2410" stroke-width="2"/>
     </g>
-    <!-- campfire logs -->
-    <g class="burnable" data-burn="5">
+    <g class="burnable">
       <rect x="430" y="500" width="120" height="14" fill="#7a4a1d" stroke="#3a2410" stroke-width="3" transform="rotate(-15 490 507)"/>
       <rect x="430" y="514" width="120" height="14" fill="#7a4a1d" stroke="#3a2410" stroke-width="3" transform="rotate(15 490 521)"/>
-      <!-- glowing embers -->
-      <circle cx="490" cy="510" r="6" fill="#ff6b1a"/>
-      <circle cx="475" cy="515" r="4" fill="#ffd86b"/>
-      <circle cx="505" cy="513" r="5" fill="#ffae33"/>
     </g>
-    <!-- tent -->
-    <g class="burnable" data-burn="6">
+    <g class="burnable">
       <polygon points="220,510 350,300 480,510" fill="#e63946" stroke="#3a0a05" stroke-width="4"/>
       <polygon points="350,300 480,510 460,510 350,330 240,510 220,510" fill="#a3202c" stroke="#3a0a05" stroke-width="4"/>
       <polygon points="320,510 350,360 380,510" fill="#1a1a1a"/>
     </g>
-    <!-- lantern -->
-    <g class="burnable" data-burn="7">
-      <rect x="780" y="430" width="6" height="40" fill="#222"/>
+    <g class="burnable">
+      <rect x="780" y="430" width="6"  height="40" fill="#222"/>
       <rect x="770" y="470" width="26" height="36" fill="#5a6470" stroke="#000" stroke-width="2"/>
       <rect x="775" y="476" width="16" height="22" fill="#fff5b0"/>
-      <rect x="770" y="466" width="26" height="6"  fill="#3a3f44"/>
-      <path d="M783 430 Q770 410 760 415" stroke="#222" stroke-width="3" fill="none"/>
-    </g>
-    <!-- backpack -->
-    <g class="burnable" data-burn="8">
-      <rect x="600" y="490" width="60" height="50" rx="8" fill="#2ec27e" stroke="#143d22" stroke-width="3"/>
-      <rect x="612" y="500" width="36" height="20" fill="#1f8d5a" stroke="#143d22" stroke-width="2"/>
-      <path d="M605 490 Q605 470 625 470" stroke="#143d22" stroke-width="3" fill="none"/>
-      <path d="M655 490 Q655 470 635 470" stroke="#143d22" stroke-width="3" fill="none"/>
-    </g>
-    <g class="burnable" data-burn="10">
-      <rect y="450" width="1000" height="150" fill="transparent"/>
     </g>
   `,
 
@@ -1238,496 +1673,508 @@ const SCENES = {
     <rect class="bg" width="1000" height="450" fill="url(#forestSky)"/>
     <rect y="450" width="1000" height="150" fill="#6ba84e"/>
     <rect y="540" width="1000" height="60"  fill="#3f6b29"/>
-    <!-- sun rays through canopy -->
-    <circle class="burnable" data-burn="9" cx="500" cy="100" r="40" fill="#fff5b0" opacity="0.85"/>
-    <!-- back-row tree -->
-    <g class="burnable" data-burn="5">
+    <circle class="burnable" cx="500" cy="100" r="40" fill="#fff5b0" opacity="0.85"/>
+    <g class="burnable">
       <rect x="490" y="320" width="26" height="180" fill="#5b3a1e"/>
       <polygon points="503,150 430,310 576,310" fill="#1f6b3a"/>
       <polygon points="503,210 410,360 596,360" fill="#2a8050"/>
       <polygon points="503,270 400,420 606,420" fill="#3da955"/>
     </g>
-    <!-- tree left tall -->
-    <g class="burnable" data-burn="2">
+    <g class="burnable">
       <rect x="100" y="340" width="30" height="160" fill="#5b3a1e"/>
       <circle cx="115" cy="320" r="60" fill="#3da955"/>
       <circle cx="80"  cy="350" r="50" fill="#3da955"/>
       <circle cx="155" cy="355" r="55" fill="#3da955"/>
     </g>
-    <!-- tree right tall -->
-    <g class="burnable" data-burn="3">
+    <g class="burnable">
       <rect x="850" y="340" width="30" height="160" fill="#5b3a1e"/>
       <circle cx="865" cy="320" r="60" fill="#3da955"/>
       <circle cx="830" cy="350" r="50" fill="#3da955"/>
       <circle cx="905" cy="355" r="55" fill="#3da955"/>
     </g>
-    <!-- pine tree -->
-    <g class="burnable" data-burn="4">
+    <g class="burnable">
       <rect x="280" y="380" width="22" height="110" fill="#3a2410"/>
       <polygon points="291,220 240,330 342,330" fill="#1f6b3a"/>
       <polygon points="291,270 230,370 352,370" fill="#1f6b3a"/>
       <polygon points="291,320 220,410 362,410" fill="#1f6b3a"/>
     </g>
-    <!-- bush -->
-    <g class="burnable" data-burn="6">
+    <g class="burnable">
       <ellipse cx="700" cy="510" rx="60" ry="30" fill="#3da955" stroke="#1f6b3a" stroke-width="3"/>
       <circle cx="680" cy="495" r="22" fill="#3da955"/>
       <circle cx="720" cy="490" r="26" fill="#3da955"/>
       <circle cx="740" cy="500" r="20" fill="#3da955"/>
     </g>
-    <!-- mushrooms -->
-    <g class="burnable" data-burn="7">
+    <g class="burnable">
       <ellipse cx="200" cy="520" rx="22" ry="14" fill="#e63946"/>
       <rect x="194" y="520" width="12" height="22" fill="#fff5d4"/>
-      <circle cx="190" cy="515" r="3" fill="#fff"/>
-      <circle cx="210" cy="513" r="3" fill="#fff"/>
-      <ellipse cx="240" cy="528" rx="14" ry="9" fill="#e63946"/>
-      <rect x="236" y="528" width="8" height="14" fill="#fff5d4"/>
-    </g>
-    <!-- deer -->
-    <g class="burnable" data-burn="8">
-      <ellipse cx="600" cy="510" rx="44" ry="22" fill="#a36b30" stroke="#3a2410" stroke-width="3"/>
-      <rect x="568" y="525" width="6" height="22" fill="#a36b30" stroke="#3a2410" stroke-width="2"/>
-      <rect x="580" y="525" width="6" height="22" fill="#a36b30" stroke="#3a2410" stroke-width="2"/>
-      <rect x="616" y="525" width="6" height="22" fill="#a36b30" stroke="#3a2410" stroke-width="2"/>
-      <rect x="628" y="525" width="6" height="22" fill="#a36b30" stroke="#3a2410" stroke-width="2"/>
-      <ellipse cx="640" cy="490" rx="14" ry="12" fill="#a36b30" stroke="#3a2410" stroke-width="3"/>
-      <path d="M634 478 L630 466 M634 478 L640 470 M646 478 L650 466 M646 478 L640 470" stroke="#3a2410" stroke-width="2" fill="none"/>
-      <circle cx="644" cy="488" r="2" fill="#000"/>
-    </g>
-    <g class="burnable" data-burn="10">
-      <rect y="450" width="1000" height="150" fill="transparent"/>
     </g>
   `
 };
 
 /* ---------- START SCREEN HANDLERS ---------- */
-document.querySelectorAll('.scene-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    let scene = btn.dataset.scene;
-    if (scene === 'random') {
-      const opts = Object.keys(SCENES);
-      scene = opts[Math.floor(Math.random() * opts.length)];
-    }
-    startGame(scene);
-  });
-});
+playNowBtn.addEventListener('click', () => startRun());
 
 document.getElementById('restart-btn').addEventListener('click', resetToMenu);
-document.getElementById('pyro-again').addEventListener('click', resetToMenu);
-document.getElementById('hero-again').addEventListener('click', resetToMenu);
+document.getElementById('failed-again').addEventListener('click', resetToMenu);
+failedShareBtn.addEventListener('click', shareResults);
 
 /* ---------- GAME FLOW ---------- */
-function startGame(sceneName) {
-  currentScene = sceneName;
-  clicks = START_FIRE;
+function pickRandomScene() {
+  const all = Object.keys(SCENES);
+  const opts = all.length > 1 && lastScene
+    ? all.filter(s => s !== lastScene)
+    : all;
+  return opts[Math.floor(Math.random() * opts.length)];
+}
+
+function pickRandomFact() {
+  if (FIRE_FACTS.length <= 1) return 0;
+  let idx;
+  do {
+    idx = Math.floor(Math.random() * FIRE_FACTS.length);
+  } while (idx === lastFactIdx);
+  return idx;
+}
+
+function startRun() {
+  currentLevel = 1;
+  startLevel(currentLevel);
+}
+
+function startLevel(level) {
+  currentLevel = level;
+  currentScene = pickRandomScene();
+  lastScene = currentScene;
+  totalFiresThisLevel = firesForLevel(level);
+  firesLeft = totalFiresThisLevel;
+  currentTimeLimitMs = TIME_LIMIT_S * 1000;
+  timeLeftMs = currentTimeLimitMs;
   gameEnded = false;
+  pendingShots = 0;
+  cheerCounter = 0;
+
   startEl.style.display = 'none';
-  pyroEl.style.display = 'none';
-  heroEl.style.display = 'none';
+  transitionEl.style.display = 'none';
+  failedEl.style.display = 'none';
   gameEl.style.display = 'block';
-  bucketWrap.style.display = 'block';
 
-  // Render scene SVG
-  svgEl.innerHTML = SCENES[sceneName]();
-  // Sort burnable elements by data-burn order
-  burnableEls = Array.from(svgEl.querySelectorAll('.burnable'))
-    .sort((a, b) => (+a.dataset.burn) - (+b.dataset.burn));
+  // Touch interaction triggers AudioContext creation on iOS
+  ensureAudio();
 
-  fireWrap.style.left = '50%';
+  // Render scene
+  svgEl.innerHTML = SCENES[currentScene]();
 
-  // Clear FX
+  // Slightly scorch all burnables (they're on fire)
+  svgEl.querySelectorAll('.burnable').forEach(el => el.classList.add('scorched'));
+
+  // Reset overlay
+  fireOverlayEl.style.opacity = '1';
   fxEl.innerHTML = '';
 
-  // Apply initial visuals based on START_FIRE
-  applyState();
-
-  // Start canvas particle fire + idle ember drift
-  initFireCanvas();
-  startIdleEmbers();
+  // Wait one paint so SVG layout is ready, then place fires
+  requestAnimationFrame(() => {
+    spawnFireSpots();
+    spawnSceneBurst();
+    startIdleEmbers();
+    // Start timer immediately after fires placed
+    timerStart = performance.now();
+    timeLeftMs = currentTimeLimitMs;
+    cancelAnimationFrame(timerRaf);
+    tickTimer();
+    updateHud();
+  });
 }
 
 function resetToMenu() {
-  stopFireCanvas();
+  cancelAnimationFrame(timerRaf);
+  timerRaf = null;
   stopIdleEmbers();
   gameEl.style.display = 'none';
-  pyroEl.style.display = 'none';
-  heroEl.style.display = 'none';
+  transitionEl.style.display = 'none';
+  failedEl.style.display = 'none';
   startEl.style.display = 'flex';
+  fireSpotsEl.innerHTML = '';
   fxEl.innerHTML = '';
-  clicks = 0;
+  fires = [];
   gameEnded = false;
+  currentLevel = 1;
   document.body.style.background = '#0b1020';
+  renderBest();
 }
 
-/* ---------- CANVAS FIRE PARTICLES ---------- */
-let fireCanvas, fireCtx, fireAnimId;
-let fireParticles = [];
+/* ---------- FIRE SPOT GENERATION ---------- */
+function spawnFireSpots() {
+  fireSpotsEl.innerHTML = '';
+  fires = [];
 
-function initFireCanvas() {
-  fireCanvas = document.getElementById('fire-canvas');
-  fireCtx = fireCanvas.getContext('2d');
-  fireParticles = [];
-  syncCanvasSize();
-  if (fireAnimId) cancelAnimationFrame(fireAnimId);
-  animateFire();
-}
+  const burnables = Array.from(svgEl.querySelectorAll('.burnable'));
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
 
-function stopFireCanvas() {
-  if (fireAnimId) { cancelAnimationFrame(fireAnimId); fireAnimId = null; }
-  fireParticles = [];
-}
+  // Compute screen-space bounding boxes for each burnable group
+  let boxes = burnables.map(el => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left, y: r.top, w: r.width, h: r.height, area: r.width * r.height };
+  }).filter(b => b.w > 28 && b.h > 28);
 
-function syncCanvasSize() {
-  const rect = fireEl.getBoundingClientRect();
-  const w = Math.max(rect.width, 60);
-  const h = Math.max(rect.height, 80);
-  if (fireCanvas.width  !== w) fireCanvas.width  = w;
-  if (fireCanvas.height !== h) fireCanvas.height = h;
-}
+  if (boxes.length === 0) return;
 
-function makeParticle(w, h, intensity) {
-  const isEmber = Math.random() < (0.04 + intensity * 0.09);
-  const spreadX = isEmber ? 0.8 : (0.38 + intensity * 0.25);
-  const sizeMult = 0.28 + intensity * 0.82;
-  return {
-    x:       w * (0.5 - spreadX/2 + Math.random() * spreadX),
-    y:       h * (0.82 + Math.random() * 0.18),
-    vx:      (Math.random() - 0.5) * (w / 35),
-    vy:      -(h / 35 + Math.random() * h / 16),
-    size:    isEmber ? (1.5 + Math.random() * 3)
-                     : (w / 16 + Math.random() * w / 10) * sizeMult,
-    life:    0,
-    maxLife: isEmber ? (70 + Math.random() * 90) : (18 + Math.random() * 22),
-    wob:     (Math.random() - 0.5) * 0.06,
-    alpha0:  0.30 + intensity * 0.62,
-    isEmber,
-  };
-}
+  // Reserve room for the firetruck (avoid placing fires behind it)
+  const truckRect = truckWrapEl.getBoundingClientRect();
+  const truckTop = truckRect.top;
 
-function animateFire() {
-  syncCanvasSize();
-  const w = fireCanvas.width, h = fireCanvas.height;
-  const intensity = clicks / MAX_CLICKS;
-
-  // Spawn: 2/frame (subtle flicker) → 42/frame (inferno)
-  const rate = Math.ceil(2 + Math.pow(intensity, 0.6) * 40);
-  const cap  = Math.floor(60 + intensity * 740);
-  for (let i = 0; i < rate && fireParticles.length < cap; i++) {
-    fireParticles.push(makeParticle(w, h, intensity));
-  }
-
-  fireCtx.clearRect(0, 0, w, h);
-
-  // Base glow scales with intensity
-  fireCtx.globalCompositeOperation = 'source-over';
-  const glowStr = 0.05 + intensity * 0.30;
-  const baseGlow = fireCtx.createRadialGradient(w/2, h*0.85, 0, w/2, h*0.85, w*0.65);
-  baseGlow.addColorStop(0,   `rgba(255,90,0,${glowStr})`);
-  baseGlow.addColorStop(0.6, `rgba(200,30,0,${(glowStr*0.35).toFixed(3)})`);
-  baseGlow.addColorStop(1,   'rgba(0,0,0,0)');
-  fireCtx.fillStyle = baseGlow;
-  fireCtx.fillRect(0, 0, w, h);
-
-  // Particles with additive blending
-  fireCtx.globalCompositeOperation = 'lighter';
-  fireParticles = fireParticles.filter(p => p.life < p.maxLife);
-  for (const p of fireParticles) {
-    p.life++;
-    p.vx += p.wob;
-    p.x  += p.vx;
-    p.y  += p.vy;
-    p.vy *= 0.987;
-
-    const t = p.life / p.maxLife;
-    const alpha = t < 0.55 ? p.alpha0 : p.alpha0 * (1 - (t - 0.55) / 0.45);
-
-    if (p.isEmber) {
-      const g = fireCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
-      g.addColorStop(0,   `rgba(255,245,180,${alpha})`);
-      g.addColorStop(0.5, `rgba(255,140,20,${alpha*0.5})`);
-      g.addColorStop(1,   'rgba(255,60,0,0)');
-      fireCtx.beginPath();
-      fireCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      fireCtx.fillStyle = g;
-      fireCtx.fill();
-    } else {
-      const yNorm = 1 - p.y / h;
-      let r, gr, b;
-      if (yNorm < 0.2) {
-        r = 200; gr = 30 + yNorm / 0.2 * 70; b = 0;
-      } else if (yNorm < 0.55) {
-        const tt = (yNorm - 0.2) / 0.35;
-        r = 255; gr = 100 + tt * 130; b = 0;
-      } else {
-        const tt = (yNorm - 0.55) / 0.45;
-        r = 255; gr = 230 + tt * 25; b = 40 + tt * 180;
-      }
-      const g = fireCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
-      g.addColorStop(0,    `rgba(${r},${gr},${b},${alpha})`);
-      g.addColorStop(0.45, `rgba(${Math.floor(r*0.9)},${Math.floor(gr*0.55)},0,${alpha*0.55})`);
-      g.addColorStop(1,    'rgba(180,0,0,0)');
-      fireCtx.beginPath();
-      fireCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      fireCtx.fillStyle = g;
-      fireCtx.fill();
+  const target = totalFiresThisLevel;
+  const totalArea = boxes.reduce((s, b) => s + b.area, 0);
+  let positions = [];
+  for (const b of boxes) {
+    const n = Math.max(1, Math.round((b.area / totalArea) * target));
+    for (let i = 0; i < n; i++) {
+      positions.push({
+        x: b.x + b.w * (0.15 + Math.random() * 0.7),
+        y: b.y + b.h * (0.15 + Math.random() * 0.7),
+      });
     }
   }
-  fireCtx.globalCompositeOperation = 'source-over';
-  fireAnimId = requestAnimationFrame(animateFire);
+  // Top up if not enough
+  while (positions.length < target) {
+    const b = boxes[Math.floor(Math.random() * boxes.length)];
+    positions.push({
+      x: b.x + b.w * (0.15 + Math.random() * 0.7),
+      y: b.y + b.h * (0.15 + Math.random() * 0.7),
+    });
+  }
+  positions = positions.slice(0, target);
+
+  // Clamp positions to viewport (keep margins so flames aren't clipped or behind truck)
+  const sideMargin = 50;
+  const topMargin  = 90;
+  positions = positions.map(p => ({
+    x: Math.max(sideMargin, Math.min(vw - sideMargin, p.x)),
+    y: Math.max(topMargin,  Math.min(truckTop - 30, p.y))
+  }));
+
+  // Spread out so each fire's BASE (the click target) is reachable — flames may visually overlap.
+  // Scale minDist down as fires get dense so high levels still fit on small phones.
+  const baseMin = 56;
+  const minDist = Math.max(36, baseMin - Math.floor(target / 8) * 4);
+  for (let pass = 0; pass < 2; pass++) {
+    for (let i = 0; i < positions.length; i++) {
+      for (let j = 0; j < i; j++) {
+        const dx = positions[i].x - positions[j].x;
+        const dy = positions[i].y - positions[j].y;
+        if (dx*dx + dy*dy < minDist*minDist) {
+          positions[i].x += (Math.random() - 0.5) * minDist * 1.4;
+          positions[i].y += (Math.random() - 0.5) * minDist * 0.8;
+          positions[i].x = Math.max(sideMargin, Math.min(vw - sideMargin, positions[i].x));
+          positions[i].y = Math.max(topMargin,  Math.min(truckTop - 30, positions[i].y));
+        }
+      }
+    }
+  }
+
+  for (const pos of positions) {
+    fires.push(createFireSpotAt(pos.x, pos.y));
+  }
+  firesLeft = fires.length;
+  totalFiresThisLevel = fires.length;
 }
 
-/* ---------- IDLE EMBER DRIFT ---------- */
-let idleEmberTimer = null;
+function createFireSpotAt(x, y, isRegrown) {
+  const sp = document.createElement('div');
+  sp.className = 'fire-spot' + (isRegrown ? ' regrown' : '');
+  sp.style.left = x + 'px';
+  sp.style.top  = y + 'px';
+  sp.innerHTML = '<div class="flame back"></div><div class="flame"></div><div class="flame front"></div><div class="flame-base"></div>';
+  fireSpotsEl.appendChild(sp);
+  return { el: sp, x, y, alive: true };
+}
 
+function spawnSceneBurst() {
+  const b = document.createElement('div');
+  b.className = 'scene-burst';
+  gameEl.appendChild(b);
+  setTimeout(() => b.remove(), 900);
+}
+
+/* ---------- TIMER ---------- */
+function tickTimer() {
+  if (gameEnded) return;
+  const now = performance.now();
+  const elapsed = now - timerStart;
+  timeLeftMs = Math.max(0, currentTimeLimitMs - elapsed);
+  updateTimerDisplay();
+  if (timeLeftMs <= 0) {
+    endGameFailed();
+    return;
+  }
+  timerRaf = requestAnimationFrame(tickTimer);
+}
+
+function updateTimerDisplay() {
+  const sec = timeLeftMs / 1000;
+  timerEl.textContent = '⏱ ' + sec.toFixed(1);
+  if (sec <= 5) timerEl.classList.add('warn');
+  else timerEl.classList.remove('warn');
+}
+
+function updateHud() {
+  firesEl.textContent = `🔥 ${firesLeft} / ${totalFiresThisLevel}`;
+  levelEl.textContent = `⭐ Lvl ${currentLevel}`;
+  // Fade overlay as fires get extinguished
+  const t = totalFiresThisLevel > 0 ? firesLeft / totalFiresThisLevel : 0;
+  fireOverlayEl.style.opacity = String(t);
+}
+
+/* ---------- TAP / CLICK HANDLER ----------
+   Mobile-friendly: anywhere you tap shoots water. If the tap lands near a
+   live fire (within a generous proximity), we auto-aim at that fire — so
+   you don't need pixel-perfect accuracy with a fingertip. */
+function findClosestFire(x, y, maxDist) {
+  let best = null;
+  let bestD2 = maxDist * maxDist;
+  for (const f of fires) {
+    if (!f.alive) continue;
+    // Visual flame center sits ~60px above the registered base position.
+    const dx = x - f.x;
+    const dy = y - (f.y - 60);
+    const d2 = dx * dx + dy * dy;
+    if (d2 < bestD2) { bestD2 = d2; best = f; }
+  }
+  return best;
+}
+
+function handleTap(e) {
+  if (gameEnded) return;
+  // Ignore taps on HUD / restart / mute buttons (they have their own handlers)
+  if (e.target.closest('#hud, #restart-btn, #game-mute-btn')) return;
+
+  // Use the tap coordinates. pointerdown gives us clientX/Y directly.
+  const x = e.clientX;
+  const y = e.clientY;
+  if (x == null || y == null) return;
+
+  // Don't fire when the tap lands on / under the firetruck
+  const truckRect = truckWrapEl.getBoundingClientRect();
+  if (y > truckRect.top - 4) return;
+
+  // First: did the tap hit a fire-spot element directly? (Easiest case.)
+  const spot = e.target.closest('.fire-spot');
+  if (spot) {
+    const fire = fires.find(f => f.el === spot);
+    if (fire && fire.alive) {
+      shootWaterAt(fire.x, fire.y, fire);
+      e.preventDefault();
+      return;
+    }
+  }
+
+  // Otherwise: auto-aim — find the nearest live fire within a generous
+  // proximity (scales with screen size so it's forgiving on phones).
+  const tolerance = Math.max(110, Math.min(window.innerWidth, window.innerHeight) * 0.20);
+  const fire = findClosestFire(x, y, tolerance);
+  if (fire) {
+    shootWaterAt(fire.x, fire.y, fire);
+  } else {
+    // No fire nearby — shoot at the tap location (counts as a miss)
+    shootWaterAt(x, y, null);
+  }
+  e.preventDefault();
+}
+
+// pointerdown unifies mouse + touch + pen and skips the 300ms click delay.
+gameEl.addEventListener('pointerdown', handleTap);
+
+function shootWaterAt(targetX, targetY, fire) {
+  // Each shot is its own tap (pointerdown). No water cap — but we mark
+  // the fire claimed immediately so a fast double-tap can't waste a shot
+  // on a not-yet-extinguished spot.
+  if (fire) {
+    if (!fire.alive) return;
+    fire.alive = false;
+  }
+
+  // Source: top of firetruck cannon (relative to viewport)
+  const truckRect = truckWrapEl.getBoundingClientRect();
+  const sx = truckRect.left + truckRect.width * 0.33;  // cannon position
+  const sy = truckRect.top  + truckRect.height * 0.18; // top of cannon
+
+  truckBump();
+  vibrate(15);
+  spawnWaterArc(sx, sy, targetX, targetY, 14);
+
+  // Splash + steam land slightly later
+  pendingShots++;
+  setTimeout(() => {
+    spawnBigSplash(targetX, targetY);
+    spawnSplash(targetX, targetY, 14);
+    spawnSteam(targetX, targetY, 60);
+    playSplash();
+    if (fire) {
+      extinguishFireVisual(fire);
+      popText(targetX, targetY - 30, '💧');
+    } else {
+      popText(targetX, targetY - 30, '✗');
+    }
+    pendingShots--;
+  }, 320);
+
+  updateHud();
+}
+
+function extinguishFireVisual(fire) {
+  fire.el.classList.add('dying');
+  setTimeout(() => fire.el.remove(), 600);
+  firesLeft--;
+  updateHud();
+  playCrackle();
+  spawnCheer(fire.x, fire.y - 40);
+  if (firesLeft <= 0 && !gameEnded) {
+    setTimeout(onLevelComplete, 700);
+  }
+}
+
+/* ---------- POSITIVE FEEDBACK: CHEER POPS ---------- */
+const CHEERS = ['Great job!', 'Awesome!', 'Nice!', 'Boom!', 'Sizzle!', 'Yes!', 'Hero!', 'Wow!', 'Super!', 'Whoosh!'];
+let cheerCounter = 0;
+function spawnCheer(x, y) {
+  // Don't shout on every single fire — every other extinguish keeps it
+  // celebratory without becoming visual spam.
+  cheerCounter++;
+  if (cheerCounter % 2 !== 0) return;
+  const text = CHEERS[Math.floor(Math.random() * CHEERS.length)];
+  const p = document.createElement('div');
+  p.className = 'cheer-pop';
+  p.textContent = text;
+  p.style.left = x + 'px';
+  p.style.top  = y + 'px';
+  fxEl.appendChild(p);
+  setTimeout(() => p.remove(), 1100);
+}
+
+/* ---------- FIREWORKS (level-complete celebration) ---------- */
+const FW_PALETTE = ['#ffd86b', '#ff7e1a', '#6cd0ff', '#ff5500', '#2ecc71', '#ff2a6d', '#fff5b0', '#a86bff'];
+const fireworksEl = document.getElementById('fireworks-fx');
+function spawnFireworkBurst(bx, by) {
+  const color = FW_PALETTE[Math.floor(Math.random() * FW_PALETTE.length)];
+  const particles = 22;
+  for (let i = 0; i < particles; i++) {
+    const f = document.createElement('div');
+    f.className = 'firework';
+    f.style.left = bx + 'px';
+    f.style.top  = by + 'px';
+    f.style.background = `radial-gradient(circle, #fff 0%, ${color} 55%, transparent 100%)`;
+    f.style.boxShadow = `0 0 14px ${color}, 0 0 28px ${color}`;
+    const angle = (i / particles) * Math.PI * 2 + Math.random() * 0.3;
+    const dist  = 90 + Math.random() * 110;
+    f.style.setProperty('--fwx', Math.cos(angle) * dist + 'px');
+    f.style.setProperty('--fwy', Math.sin(angle) * dist + 'px');
+    fireworksEl.appendChild(f);
+    setTimeout(() => f.remove(), 1000);
+  }
+}
+function spawnFireworksShow() {
+  if (!fireworksEl) return;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const bursts = 6;
+  for (let i = 0; i < bursts; i++) {
+    setTimeout(() => {
+      const bx = vw * (0.15 + Math.random() * 0.7);
+      const by = vh * (0.15 + Math.random() * 0.45);
+      // Quick rising trail before the burst so it feels like a rocket.
+      const trail = document.createElement('div');
+      trail.className = 'firework-trail';
+      trail.style.left = bx + 'px';
+      trail.style.top  = (by + 240) + 'px';
+      fireworksEl.appendChild(trail);
+      setTimeout(() => trail.remove(), 520);
+      setTimeout(() => spawnFireworkBurst(bx, by), 380);
+    }, i * 240);
+  }
+}
+
+function truckBump() {
+  truckWrapEl.classList.remove('firing');
+  void truckWrapEl.offsetWidth;
+  truckWrapEl.classList.add('firing');
+}
+
+/* ---------- IDLE EMBERS / SMOKE ---------- */
 function startIdleEmbers() {
   stopIdleEmbers();
   scheduleNextEmber();
 }
-
 function stopIdleEmbers() {
   if (idleEmberTimer) { clearTimeout(idleEmberTimer); idleEmberTimer = null; }
 }
-
 function scheduleNextEmber() {
-  const delay = Math.max(60, 220 - clicks * 9);
+  if (gameEnded || gameEl.style.display === 'none') return;
+  const delay = 120 + Math.random() * 180;
   idleEmberTimer = setTimeout(() => {
-    const count = 1 + Math.floor(clicks / 7);
-    for (let i = 0; i < count; i++) spawnIdleEmber();
-    if (gameEl.style.display !== 'none') scheduleNextEmber();
+    spawnIdleEmberAtRandomFire();
+    if (Math.random() < 0.4) spawnSmokeAtRandomFire();
+    scheduleNextEmber();
   }, delay);
 }
-
-function spawnIdleEmber() {
-  const rect = fireWrap.getBoundingClientRect();
-  if (!rect.width) return;
+function spawnIdleEmberAtRandomFire() {
+  const live = fires.filter(f => f.alive);
+  if (!live.length) return;
+  const f = live[Math.floor(Math.random() * live.length)];
   const e = document.createElement('div');
   e.className = 'idle-ember';
-  const x = rect.left + rect.width  * (0.2 + Math.random() * 0.6);
-  const y = rect.top  + rect.height * (0.05 + Math.random() * 0.35);
-  e.style.left = x + 'px';
-  e.style.top  = y + 'px';
-  const size = 2.5 + Math.random() * 3.5 + clicks * 0.15;
+  e.style.left = (f.x + (Math.random() - 0.5) * 30) + 'px';
+  e.style.top  = (f.y - 10 + (Math.random() - 0.5) * 20) + 'px';
+  const size = 3 + Math.random() * 4;
   e.style.width  = size + 'px';
   e.style.height = size + 'px';
   e.style.setProperty('--dx',   ((Math.random() - 0.5) * 70) + 'px');
-  e.style.setProperty('--rise', (80 + Math.random() * 100 + clicks * 4) + 'px');
+  e.style.setProperty('--rise', (80 + Math.random() * 100) + 'px');
   fxEl.appendChild(e);
-  setTimeout(() => e.remove(), 2100);
+  setTimeout(() => e.remove(), 2300);
+}
+function spawnSmokeAtRandomFire() {
+  const live = fires.filter(f => f.alive);
+  if (!live.length) return;
+  const f = live[Math.floor(Math.random() * live.length)];
+  const s = document.createElement('div');
+  s.className = 'smoke';
+  const size = 30 + Math.random() * 40;
+  s.style.left   = (f.x + (Math.random() - 0.5) * 20) + 'px';
+  s.style.top    = (f.y - 30) + 'px';
+  s.style.width  = size + 'px';
+  s.style.height = size + 'px';
+  s.style.setProperty('--dx', ((Math.random() - 0.5) * 200) + 'px');
+  fxEl.appendChild(s);
+  setTimeout(() => s.remove(), 3100);
 }
 
-/* ---------- CLICK / GROW ---------- */
-fireWrap.addEventListener('click', onFireClick);
-bucketWrap.addEventListener('click', onBucketClick);
-
-function onFireClick(e) {
-  if (gameEnded) return;
-  if (clicks >= MAX_CLICKS) return;
-  clicks++;
-
-  applyState();
-
-  // Sparks + smoke + floating fire emoji at click point
-  const rect = fireWrap.getBoundingClientRect();
-  const cx = rect.left + rect.width / 2;
-  const cy = rect.top  + rect.height / 2;
-  spawnSparks(cx, cy, 8 + clicks);
-  spawnSmoke(cx, cy, Math.min(40 + clicks * 6, 200));
-  popText(cx, cy - rect.height/3, '🔥');
-
-  // Screen shake at higher intensity
-  if (clicks > 8) {
-    gameEl.classList.remove('shake');
-    void gameEl.offsetWidth;
-    gameEl.classList.add('shake');
-  }
-
-  // Flash for big clicks
-  if (clicks > 12) {
-    flashEl.style.opacity = Math.min(0.4, (clicks - 12) * 0.05);
-    setTimeout(() => { flashEl.style.opacity = 0; }, 80);
-  }
-
-  if (clicks >= MAX_CLICKS) {
-    gameEnded = true;
-    setTimeout(endGamePyro, 900);
-  }
-}
-
-function onBucketClick(e) {
-  if (gameEnded) return;
-  if (clicks <= 0) return;
-  clicks--;
-
-  applyState();
-
-  // Tip the bucket
-  bucketWrap.classList.remove('tipping');
-  void bucketWrap.offsetWidth;
-  bucketWrap.classList.add('tipping');
-
-  // Source point: lip of the bucket; target point: fire body
-  const bRect = bucketWrap.getBoundingClientRect();
-  const fireRect = fireWrap.getBoundingClientRect();
-  const sx = bRect.left + bRect.width * 0.25;     // tipped-left lip
-  const sy = bRect.top  + bRect.height * 0.35;
-  const fx = fireRect.left + fireRect.width / 2;
-  const fy = fireRect.top  + fireRect.height / 3;
-
-  // Big arcing droplets from bucket -> fire (delayed to follow the tip)
-  spawnWaterArc(sx, sy, fx, fy, 18);
-
-  // Big splash ring + smaller splashes + steam at fire (slightly delayed to land with droplets)
-  setTimeout(() => {
-    spawnBigSplash(fx, fy);
-    spawnSplash(fx, fy, 22);
-    spawnSteam(fx, fy, 80);
-    popText(fx, fy - fireRect.height/3, '💧');
-  }, 280);
-
-  if (clicks <= 0) {
-    gameEnded = true;
-    setTimeout(endGameHero, 950);
-  }
-}
-
-/* Recompute every visual based on current `clicks`. */
-function applyState() {
-  const t = clicks / MAX_CLICKS;
-  const baseW = 60, baseH = 80;
-  const maxW  = window.innerWidth  * 1.3;
-  const maxH  = window.innerHeight * 1.5;
-  const w = baseW + (maxW - baseW) * Math.pow(t, 1.4);
-  const h = baseH + (maxH - baseH) * Math.pow(t, 1.4);
-  fireEl.style.width  = w + 'px';
-  fireEl.style.height = h + 'px';
-  fireEl.style.opacity = clicks <= 0 ? 0 : 1;
-
-  // Drift fire upward as it grows. Express as transform offset (px) instead
-  // of mutating `top`, so the browser animates on the compositor.
-  const driftPct = -t * 12; // negative = up, peaks at -12% of viewport
-  const driftPx = driftPct / 100 * window.innerHeight;
-  fireWrap.style.setProperty('--fire-y', driftPx + 'px');
-
-  // Burn or restore scene elements based on current clicks
-  const burnIndex = Math.floor((clicks / MAX_CLICKS) * burnableEls.length);
-  for (let i = 0; i < burnableEls.length; i++) {
-    const el = burnableEls[i];
-    if (i < burnIndex) {
-      el.classList.add('charred');
-      if (clicks >= MAX_CLICKS - 2) {
-        el.classList.add('gone');
-      } else {
-        el.classList.remove('gone');
-      }
-    } else {
-      el.classList.remove('charred');
-      el.classList.remove('gone');
-    }
-  }
-
-  // Background tint
-  document.body.style.background = `rgb(${Math.max(11, 30 - clicks)}, ${Math.max(0, 16 - clicks)}, ${Math.max(0, 32 - clicks*2)})`;
-
-  updateCounter();
-}
-
-function updateCounter() {
-  counterEl.textContent = `🚒 Fire: ${clicks} / ${MAX_CLICKS}`;
-}
-
-/* ---------- FX ---------- */
-function spawnSparks(x, y, count) {
-  for (let i = 0; i < count; i++) {
-    const s = document.createElement('div');
-    s.className = 'spark';
-    s.style.left = x + 'px';
-    s.style.top  = y + 'px';
-    const angle = Math.random() * Math.PI * 2;
-    const dist  = 60 + Math.random() * 120;
-    s.style.setProperty('--sx', Math.cos(angle) * dist + 'px');
-    s.style.setProperty('--sy', (Math.sin(angle) * dist - 40) + 'px');
-    s.style.width  = (4 + Math.random() * 6) + 'px';
-    s.style.height = s.style.width;
-    fxEl.appendChild(s);
-    setTimeout(() => s.remove(), 1000);
-  }
-}
-
-function spawnSmoke(x, y, size) {
-  const n = 1 + Math.floor(Math.random() * 2);
-  for (let i = 0; i < n; i++) {
-    const s = document.createElement('div');
-    s.className = 'smoke';
-    s.style.left = (x + (Math.random() - 0.5) * 40) + 'px';
-    s.style.top  = y + 'px';
-    s.style.width  = size + 'px';
-    s.style.height = size + 'px';
-    s.style.setProperty('--dx', ((Math.random() - 0.5) * 200) + 'px');
-    fxEl.appendChild(s);
-    setTimeout(() => s.remove(), 3100);
-  }
-}
-
-function popText(x, y, txt) {
-  const p = document.createElement('div');
-  p.className = 'pop';
-  p.textContent = txt;
-  p.style.left = x + 'px';
-  p.style.top  = y + 'px';
-  fxEl.appendChild(p);
-  setTimeout(() => p.remove(), 750);
-}
-
-function spawnSplash(x, y, count) {
-  for (let i = 0; i < count; i++) {
-    const d = document.createElement('div');
-    d.className = 'splash';
-    d.style.left = x + 'px';
-    d.style.top  = y + 'px';
-    // Splashes shoot outward and up (negative y) like a real splash crown
-    const angle = Math.random() * Math.PI; // 0..PI = upper half
-    const dist  = 80 + Math.random() * 160;
-    d.style.setProperty('--wx', Math.cos(angle) * dist + 'px');
-    d.style.setProperty('--wy', (-Math.sin(angle) * dist * 0.8 + 60) + 'px');
-    const size = 16 + Math.random() * 22;
-    d.style.width  = size + 'px';
-    d.style.height = size + 'px';
-    fxEl.appendChild(d);
-    setTimeout(() => d.remove(), 1100);
-  }
-}
-
-/* Big droplets that arc from the bucket lip down to the fire. */
+/* ---------- FX HELPERS ---------- */
 function spawnWaterArc(sx, sy, tx, ty, count) {
   for (let i = 0; i < count; i++) {
     const d = document.createElement('div');
     d.className = 'water-drop';
     d.style.left = sx + 'px';
     d.style.top  = sy + 'px';
-    // Spread destination so the column of water has width
-    const spread = 70;
+    const spread = 40;
     const ex = (tx - sx) + (Math.random() - 0.5) * spread;
-    const ey = (ty - sy) + (Math.random() - 0.5) * 30;
-    // Mid-point arcs upward then over (negative y bump)
+    const ey = (ty - sy) + (Math.random() - 0.5) * 24;
     const mx = ex * 0.55 + (Math.random() - 0.5) * 30;
-    const my = ey * 0.55 - 60 - Math.random() * 40;
+    const my = ey * 0.55 - 80 - Math.random() * 40;
     d.style.setProperty('--mx', mx + 'px');
     d.style.setProperty('--my', my + 'px');
     d.style.setProperty('--ex', ex + 'px');
     d.style.setProperty('--ey', ey + 'px');
-    const w = 22 + Math.random() * 28;
+    const w = 18 + Math.random() * 22;
     const h = w * (1.4 + Math.random() * 0.4);
     d.style.width  = w + 'px';
     d.style.height = h + 'px';
-    const dur = 0.55 + Math.random() * 0.35;
+    const dur = 0.5 + Math.random() * 0.3;
     d.style.setProperty('--dur', dur + 's');
-    d.style.animationDelay = (i * 0.018 + Math.random() * 0.06) + 's';
+    d.style.animationDelay = (i * 0.018 + Math.random() * 0.05) + 's';
     fxEl.appendChild(d);
     setTimeout(() => d.remove(), (dur + 0.4) * 1000 + i * 20);
   }
 }
-
 function spawnBigSplash(x, y) {
   const s = document.createElement('div');
   s.className = 'big-splash';
@@ -1736,7 +2183,23 @@ function spawnBigSplash(x, y) {
   fxEl.appendChild(s);
   setTimeout(() => s.remove(), 950);
 }
-
+function spawnSplash(x, y, count) {
+  for (let i = 0; i < count; i++) {
+    const d = document.createElement('div');
+    d.className = 'splash';
+    d.style.left = x + 'px';
+    d.style.top  = y + 'px';
+    const angle = Math.random() * Math.PI;
+    const dist  = 60 + Math.random() * 120;
+    d.style.setProperty('--wx', Math.cos(angle) * dist + 'px');
+    d.style.setProperty('--wy', (-Math.sin(angle) * dist * 0.8 + 60) + 'px');
+    const size = 14 + Math.random() * 18;
+    d.style.width  = size + 'px';
+    d.style.height = size + 'px';
+    fxEl.appendChild(d);
+    setTimeout(() => d.remove(), 1100);
+  }
+}
 function spawnSteam(x, y, size) {
   const n = 2 + Math.floor(Math.random() * 3);
   for (let i = 0; i < n; i++) {
@@ -1751,47 +2214,99 @@ function spawnSteam(x, y, size) {
     setTimeout(() => s.remove(), 2500);
   }
 }
-
-/* ---------- END SCREENS ---------- */
-function endGamePyro() {
-  // Hide the bucket; show the pyromaniac screen with celebrating background flames.
-  bucketWrap.style.display = 'none';
-  pyroEl.style.display = 'flex';
-
-  // Spawn celebrating flames across the bottom (reset first in case of replay).
-  pyroEl.querySelectorAll('.pyro-flame').forEach(f => f.remove());
-  const w = window.innerWidth;
-  const count = Math.max(8, Math.floor(w / 90));
-  for (let i = 0; i < count; i++) {
-    const f = document.createElement('div');
-    f.className = 'pyro-flame';
-    f.style.left = ((i + 0.5) * (100 / count)) + '%';
-    f.style.transform = 'translateX(-50%)';
-    const scale = 0.6 + Math.random() * 1.2;
-    f.style.height = (90 * scale) + 'px';
-    f.style.width  = (50 * scale) + 'px';
-    f.style.animationDelay = (Math.random() * -0.6) + 's';
-    f.style.animationDuration = (0.35 + Math.random() * 0.35) + 's';
-    pyroEl.appendChild(f);
-  }
+function popText(x, y, txt) {
+  const p = document.createElement('div');
+  p.className = 'pop';
+  p.textContent = txt;
+  p.style.left = x + 'px';
+  p.style.top  = y + 'px';
+  fxEl.appendChild(p);
+  setTimeout(() => p.remove(), 750);
 }
 
-function endGameHero() {
-  // Hide the bucket; show the hero screen with sparkles.
-  bucketWrap.style.display = 'none';
-  heroEl.style.display = 'flex';
+/* ---------- LEVEL COMPLETE ---------- */
+function onLevelComplete() {
+  if (gameEnded) return;
+  gameEnded = true;
+  cancelAnimationFrame(timerRaf);
+  stopIdleEmbers();
 
-  heroEl.querySelectorAll('.sparkle').forEach(s => s.remove());
-  const sparkles = ['✨', '🌟', '💫', '⭐'];
-  for (let i = 0; i < 22; i++) {
-    const s = document.createElement('div');
-    s.className = 'sparkle';
-    s.textContent = sparkles[i % sparkles.length];
-    s.style.left = (Math.random() * 100) + '%';
-    s.style.top  = (Math.random() * 100) + '%';
-    s.style.animationDelay = (Math.random() * -2.2) + 's';
-    heroEl.appendChild(s);
+  vibrate([30, 30, 90]);
+  playWinSting('hero');
+
+  const nextLevel = currentLevel + 1;
+  const nextFires = firesForLevel(nextLevel);
+  transitionTitleEl.textContent = `Level ${currentLevel} Complete!`;
+  transitionMsgEl.textContent = `Next up: Level ${nextLevel} — ${nextFires} fires in 30 seconds!`;
+
+  const factIdx = pickRandomFact();
+  lastFactIdx = factIdx;
+  transitionFactEl.textContent = FIRE_FACTS[factIdx];
+
+  proceedBtn.textContent = `▶ Start Level ${nextLevel}`;
+  proceedBtn.dataset.nextLevel = String(nextLevel);
+
+  // Hide game elements behind the transition
+  gameEl.style.display = 'none';
+  transitionEl.style.display = 'flex';
+
+  // 🎆 Big celebration for clearing the level
+  spawnFireworksShow();
+}
+
+proceedBtn.addEventListener('click', () => {
+  const nextLevel = parseInt(proceedBtn.dataset.nextLevel || '', 10);
+  if (Number.isFinite(nextLevel) && nextLevel > 0) {
+    startLevel(nextLevel);
   }
+});
+
+/* ---------- END SCREEN (FAIL) ---------- */
+function endGameFailed() {
+  if (gameEnded) return;
+  gameEnded = true;
+  cancelAnimationFrame(timerRaf);
+  stopIdleEmbers();
+
+  // Update best level reached
+  const prevBest = parseInt(lsGet(LS_BEST_LEVEL, ''), 10);
+  if (!Number.isFinite(prevBest) || currentLevel > prevBest) {
+    lsSet(LS_BEST_LEVEL, String(currentLevel));
+  }
+  const bestNow = Math.max(Number.isFinite(prevBest) ? prevBest : 0, currentLevel);
+
+  failedTitleEl.textContent = 'Time’s Up!';
+  failedMsgEl.textContent = `${firesLeft} fire${firesLeft === 1 ? '' : 's'} still burning when the clock hit zero.`;
+  const isNewBest = !Number.isFinite(prevBest) || currentLevel > prevBest;
+  failedLevelEl.innerHTML = `🏆 You reached <b>Level ${currentLevel}</b>` +
+    (isNewBest && currentLevel > 1 ? ' &nbsp;✨ New Best!' : ` &nbsp;•&nbsp; Best: Level ${bestNow}`);
+
+  failedEl.style.display = 'flex';
+  vibrate([20, 40, 60, 40, 80]);
+  playWinSting('fail');
+}
+
+/* ---------- SHARE RESULTS (text / SMS) ---------- */
+function shareResults() {
+  const text = `🚒 I reached Level ${currentLevel} in Stop The Fire! Can you beat me? 🔥💧`;
+  const url = location.origin + location.pathname;
+
+  // Web Share API — works on iOS Safari and gives the user SMS, Messages, etc.
+  if (navigator.share) {
+    navigator.share({
+      title: 'Stop The Fire!',
+      text: text,
+      url: url,
+    }).catch(() => {});
+    return;
+  }
+
+  // Fallback: open SMS app with the message pre-filled
+  const body = encodeURIComponent(`${text} ${url}`);
+  // iOS accepts both `sms:&body=` and `sms:?body=`; the former is the iOS-standard form,
+  // and Android (most apps) accepts `?body=`. Try iOS form first; the OS will route.
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  window.location.href = isIOS ? `sms:&body=${body}` : `sms:?body=${body}`;
 }
 </script>
 </body>
