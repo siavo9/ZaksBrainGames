@@ -39,6 +39,7 @@
       { "@type": "Game", "name": "Rhyme Time Rocket", "url": "rhymetimerocket/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Community Helpers", "url": "communityhelpers/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Feelings Friends", "url": "feelingsfriends/index.html", "typicalAgeRange": "4-" },
+      { "@type": "Game", "name": "Balance Bazaar", "url": "balancebazaar/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Animal Kingdom Sort", "url": "animalkingdomsort/index.html", "typicalAgeRange": "5-" },
       { "@type": "Game", "name": "Coin Counter Cafe", "url": "coincountercafe/index.html", "typicalAgeRange": "5-" },
       { "@type": "Game", "name": "Spell-a-Bee", "url": "spellabee/index.html", "typicalAgeRange": "5-" },
@@ -1432,6 +1433,58 @@
               <text x="26" y="42" text-anchor="middle" font-size="32" fill="#6A4E00">T</text>
             </g>
           </g>
+        </svg>`,
+      balanceBazaar: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="bb-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="4" stdDeviation="3" flood-opacity="0.3"/>
+            </filter>
+            <linearGradient id="bb-gold" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#F6D87A"/>
+              <stop offset="1" stop-color="#B8860B"/>
+            </linearGradient>
+          </defs>
+          <!-- Persian indigo night sky with gold stars -->
+          <rect width="320" height="200" fill="#14275A"/>
+          <g fill="none" stroke="#E9B949" stroke-width="1.5" opacity="0.3">
+            <path d="M36 28 L40 40 L52 44 L40 48 L36 60 L32 48 L20 44 L32 40 Z"/>
+            <path d="M286 52 L290 62 L300 66 L290 70 L286 80 L282 70 L272 66 L282 62 Z"/>
+            <path d="M262 156 L265 164 L273 167 L265 170 L262 178 L259 170 L251 167 L259 164 Z"/>
+            <path d="M48 150 L51 158 L59 161 L51 164 L48 172 L45 164 L37 161 L45 158 Z"/>
+          </g>
+          <!-- balance scale -->
+          <g filter="url(#bb-sh)">
+            <!-- base + pillar -->
+            <rect x="128" y="170" width="64" height="12" rx="4" fill="url(#bb-gold)" stroke="#6B4A0E" stroke-width="2.5"/>
+            <rect x="156" y="94" width="8" height="78" fill="#C9962E" stroke="#6B4A0E" stroke-width="2"/>
+            <!-- beam -->
+            <rect x="72" y="88" width="176" height="8" rx="4" fill="url(#bb-gold)" stroke="#6B4A0E" stroke-width="2.5"/>
+            <circle cx="160" cy="92" r="6" fill="#C9962E" stroke="#6B4A0E" stroke-width="2"/>
+            <!-- gold 8-point star medallion with the whole -->
+            <g transform="translate(160,46)">
+              <rect x="-19" y="-19" width="38" height="38" rx="4" fill="url(#bb-gold)" stroke="#6B4A0E" stroke-width="2.5"/>
+              <rect x="-19" y="-19" width="38" height="38" rx="4" fill="url(#bb-gold)" stroke="#6B4A0E" stroke-width="2.5" transform="rotate(45)"/>
+              <circle r="15" fill="#F8F1DE" stroke="#1B4079" stroke-width="2.5"/>
+              <text x="0" y="7" text-anchor="middle" font-size="20" font-weight="bold" font-family="Comic Sans MS, Chalkboard SE, cursive" fill="#1B4079">7</text>
+            </g>
+            <!-- left pan with part -->
+            <g stroke="#9C6F1C" stroke-width="2.5">
+              <line x1="84" y1="96" x2="62" y2="138"/>
+              <line x1="84" y1="96" x2="106" y2="138"/>
+            </g>
+            <ellipse cx="84" cy="142" rx="36" ry="9" fill="url(#bb-gold)" stroke="#6B4A0E" stroke-width="2.5"/>
+            <rect x="68" y="108" width="32" height="32" rx="7" fill="#F8F1DE" stroke="#1B4079" stroke-width="2.5"/>
+            <text x="84" y="132" text-anchor="middle" font-size="22" font-weight="bold" font-family="Comic Sans MS, Chalkboard SE, cursive" fill="#1B4079">3</text>
+            <!-- right pan with part -->
+            <g stroke="#9C6F1C" stroke-width="2.5">
+              <line x1="236" y1="96" x2="214" y2="138"/>
+              <line x1="236" y1="96" x2="258" y2="138"/>
+            </g>
+            <ellipse cx="236" cy="142" rx="36" ry="9" fill="url(#bb-gold)" stroke="#6B4A0E" stroke-width="2.5"/>
+            <rect x="220" y="108" width="32" height="32" rx="7" fill="#F8F1DE" stroke="#1B4079" stroke-width="2.5"/>
+            <text x="236" y="132" text-anchor="middle" font-size="22" font-weight="bold" font-family="Comic Sans MS, Chalkboard SE, cursive" fill="#1B4079">4</text>
+          </g>
         </svg>`
     };
 
@@ -1517,6 +1570,16 @@
         badge: '💛 Feelings & Empathy',
         age: 'Ages 4+',
         theme: 'card-yellow'
+      },
+      {
+        name: 'Balance Bazaar',
+        url: 'balancebazaar/index.html',
+        emoji: '⚖️',
+        preview: PREVIEWS.balanceBazaar,
+        desc: 'Balance the golden scale of the bazaar! Find the missing number to make both sides match — a fun part-and-whole way to learn adding and subtracting.',
+        badge: '🔢 Math & Logic',
+        age: 'Ages 4+',
+        theme: 'card-purple'
       },
       {
         name: 'Animal Kingdom Sort',
