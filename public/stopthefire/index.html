@@ -309,8 +309,12 @@
     position: absolute; pointer-events: none;
     border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
     background: radial-gradient(circle at 35% 30%, #ffffff 0%, #d8f2ff 25%, #6cd0ff 60%, #1d7fd0 100%);
-    box-shadow: 0 0 18px rgba(108, 208, 255, 0.95), inset -4px -6px 10px rgba(29, 127, 208, 0.45);
-    animation: waterArc var(--dur, 0.6s) cubic-bezier(0.45, 0, 0.7, 1) forwards;
+    /* Light single shadow + GPU compositing keep rapid-fire taps smooth */
+    box-shadow: 0 0 8px rgba(108, 208, 255, 0.8);
+    will-change: transform, opacity;
+    /* "both" pins delayed drops to their 0% keyframe (small, at the cannon)
+       during their stagger delay instead of an unstyled full-size flash */
+    animation: waterArc var(--dur, 0.6s) cubic-bezier(0.45, 0, 0.7, 1) both;
     z-index: 9;
   }
   @keyframes waterArc {
@@ -324,7 +328,7 @@
     width: 50px; height: 50px;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(216,242,255,0.7) 30%, rgba(108,208,255,0.5) 60%, rgba(78,168,255,0) 100%);
-    box-shadow: 0 0 40px rgba(108,208,255,0.9), 0 0 80px rgba(108,208,255,0.5);
+    will-change: transform, opacity;
     animation: bigSplash 0.9s ease-out forwards;
     z-index: 9;
   }
@@ -339,7 +343,7 @@
     border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
     background: radial-gradient(circle at 35% 30%, #ffffff 0%, #d8f2ff 30%, #4ea8ff 80%, transparent 100%);
     animation: splash 0.95s ease-out forwards;
-    box-shadow: 0 0 16px #6cd0ff;
+    will-change: transform, opacity;
     z-index: 9;
   }
   @keyframes splash {
@@ -352,6 +356,7 @@
     width: 30px; height: 30px; border-radius: 50%;
     background: radial-gradient(circle, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 70%);
     animation: rise 2.4s ease-out forwards;
+    will-change: transform, opacity;
     z-index: 8;
   }
   @keyframes rise {
@@ -862,7 +867,7 @@
   <!-- PERSISTENT NAV — visible on every screen -->
   <nav id="site-nav" aria-label="Game navigation">
     <a id="nav-home" class="nav-btn" href="./" title="Back to game home">🏠 Home</a>
-    <a id="nav-brain-games" class="nav-btn" href="https://zaksbraingames.com" target="_blank" rel="noopener" title="More brain games">🧠 Brain Games</a>
+    <a id="nav-brain-games" class="nav-btn" href="../index.html" title="Back to Zak's Brain Games">🧠 Brain Games</a>
     <button id="nav-how" class="nav-btn" type="button" title="How to play">❓ How to Play</button>
   </nav>
 
@@ -1128,21 +1133,50 @@ function playCrackle() {
   src.stop(ctx.currentTime + dur);
 }
 
-function playSplash() {
-  const ctx = ensureAudio();
-  if (!ctx) return;
-  const now = ctx.currentTime;
-
-  // 1) Main splash body — broad noise burst, sweeping lowpass for that "kssh" decay
+// Noise buffers are expensive to fill (tens of thousands of samples), so
+// build them once and reuse — regenerating per shot caused jank when the
+// player tapped rapidly.
+let splashNoiseBuf = null;
+let dropletNoiseBufs = null;
+function ensureSplashBuffers(ctx) {
+  if (splashNoiseBuf) return;
   const dur = 0.55;
-  const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
-  const data = buf.getChannelData(0);
+  splashNoiseBuf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate);
+  const data = splashNoiseBuf.getChannelData(0);
   for (let i = 0; i < data.length; i++) {
     const t = i / data.length;
     data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 1.4);
   }
+  dropletNoiseBufs = [];
+  for (let k = 0; k < 3; k++) {
+    const dur2 = 0.10 + Math.random() * 0.12;
+    const buf2 = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur2), ctx.sampleRate);
+    const d2 = buf2.getChannelData(0);
+    for (let i = 0; i < d2.length; i++) {
+      d2[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d2.length, 2);
+    }
+    dropletNoiseBufs.push(buf2);
+  }
+}
+
+// Cap simultaneous splash voices: stacking more than a few is inaudible
+// but keeps the audio graph (and CPU) busy during rapid fire.
+let activeSplashVoices = 0;
+const MAX_SPLASH_VOICES = 4;
+
+function playSplash() {
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  if (activeSplashVoices >= MAX_SPLASH_VOICES) return;
+  activeSplashVoices++;
+  ensureSplashBuffers(ctx);
+  const now = ctx.currentTime;
+
+  // 1) Main splash body — broad noise burst, sweeping lowpass for that "kssh" decay
+  const dur = 0.55;
   const src = ctx.createBufferSource();
-  src.buffer = buf;
+  src.buffer = splashNoiseBuf;
+  src.onended = () => { activeSplashVoices--; };
   const hp = ctx.createBiquadFilter();
   hp.type = 'highpass';
   hp.frequency.value = 220;
@@ -1174,12 +1208,8 @@ function playSplash() {
   // 3) Three scattered droplet bursts at random delays — that wet, scattering tail
   for (let k = 0; k < 3; k++) {
     const delay = 0.04 + Math.random() * 0.22;
-    const dur2 = 0.10 + Math.random() * 0.12;
-    const buf2 = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur2), ctx.sampleRate);
-    const d2 = buf2.getChannelData(0);
-    for (let i = 0; i < d2.length; i++) {
-      d2[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d2.length, 2);
-    }
+    const buf2 = dropletNoiseBufs[k];
+    const dur2 = buf2.duration;
     const s2 = ctx.createBufferSource();
     s2.buffer = buf2;
     const f2 = ctx.createBiquadFilter();
@@ -2000,13 +2030,13 @@ function shootWaterAt(targetX, targetY, fire) {
 
   truckBump();
   vibrate(15);
-  spawnWaterArc(sx, sy, targetX, targetY, 14);
+  spawnWaterArc(sx, sy, targetX, targetY, fxCount(14));
 
   // Splash + steam land slightly later
   pendingShots++;
   setTimeout(() => {
     spawnBigSplash(targetX, targetY);
-    spawnSplash(targetX, targetY, 14);
+    spawnSplash(targetX, targetY, fxCount(14));
     spawnSteam(targetX, targetY, 60);
     playSplash();
     if (fire) {
@@ -2149,6 +2179,14 @@ function spawnSmokeAtRandomFire() {
 }
 
 /* ---------- FX HELPERS ---------- */
+// Scale particle counts down when lots of effects are already on screen
+// (rapid tapping), so the game stays responsive instead of stuttering.
+function fxCount(n) {
+  const live = fxEl.childElementCount;
+  if (live > 140) return Math.max(3, Math.round(n * 0.3));
+  if (live > 70)  return Math.max(5, Math.round(n * 0.6));
+  return n;
+}
 function spawnWaterArc(sx, sy, tx, ty, count) {
   for (let i = 0; i < count; i++) {
     const d = document.createElement('div');
