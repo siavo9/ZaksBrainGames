@@ -39,6 +39,7 @@
       { "@type": "Game", "name": "Rhyme Time Rocket", "url": "rhymetimerocket/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Community Helpers", "url": "communityhelpers/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Feelings Friends", "url": "feelingsfriends/index.html", "typicalAgeRange": "4-" },
+      { "@type": "Game", "name": "Balance Bazaar", "url": "balancebazaar/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Animal Kingdom Sort", "url": "animalkingdomsort/index.html", "typicalAgeRange": "5-" },
       { "@type": "Game", "name": "Coin Counter Cafe", "url": "coincountercafe/index.html", "typicalAgeRange": "5-" },
       { "@type": "Game", "name": "Spell-a-Bee", "url": "spellabee/index.html", "typicalAgeRange": "5-" },
@@ -1432,6 +1433,66 @@
               <text x="26" y="42" text-anchor="middle" font-size="32" fill="#6A4E00">T</text>
             </g>
           </g>
+        </svg>`,
+
+      balanceBazaar: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bz-bg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#2a1d63"/>
+              <stop offset="100%" stop-color="#1a1147"/>
+            </linearGradient>
+            <linearGradient id="bz-brass" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#F2D266"/>
+              <stop offset="55%" stop-color="#D4AF37"/>
+              <stop offset="100%" stop-color="#A8842A"/>
+            </linearGradient>
+          </defs>
+          <!-- Deep indigo night-bazaar backdrop -->
+          <rect width="320" height="200" fill="url(#bz-bg)"/>
+          <!-- Subtle gold 8-pointed stars (two overlapping squares) -->
+          <g fill="none" stroke="#D4AF37" stroke-width="1.5" opacity="0.3">
+            <g transform="translate(34,30)"><rect x="-8" y="-8" width="16" height="16"/><rect x="-8" y="-8" width="16" height="16" transform="rotate(45)"/></g>
+            <g transform="translate(286,44)"><rect x="-6" y="-6" width="12" height="12"/><rect x="-6" y="-6" width="12" height="12" transform="rotate(45)"/></g>
+            <g transform="translate(52,160)"><rect x="-6" y="-6" width="12" height="12"/><rect x="-6" y="-6" width="12" height="12" transform="rotate(45)"/></g>
+            <g transform="translate(278,150)"><rect x="-8" y="-8" width="16" height="16"/><rect x="-8" y="-8" width="16" height="16" transform="rotate(45)"/></g>
+          </g>
+          <!-- Brass pillar and stepped base -->
+          <rect x="156" y="58" width="8" height="118" fill="url(#bz-brass)" stroke="#7a5c12" stroke-width="2"/>
+          <path d="M132,184 L188,184 L178,172 L142,172 Z" fill="url(#bz-brass)" stroke="#7a5c12" stroke-width="2" stroke-linejoin="round"/>
+          <rect x="122" y="184" width="76" height="8" rx="4" fill="#A8842A" stroke="#7a5c12" stroke-width="2"/>
+          <!-- Gold 8-pointed star medallion with the whole number 7 -->
+          <g transform="translate(160,34)">
+            <g fill="url(#bz-brass)" stroke="#8a6d1f" stroke-width="2" stroke-linejoin="round">
+              <rect x="-15" y="-15" width="30" height="30"/>
+              <rect x="-15" y="-15" width="30" height="30" transform="rotate(45)"/>
+            </g>
+            <circle r="12.5" fill="#1a1147" stroke="#8a6d1f" stroke-width="2"/>
+            <text y="6.5" text-anchor="middle" font-size="17" font-weight="bold" fill="#FFD700" font-family="Fredoka, sans-serif">7</text>
+          </g>
+          <!-- Balance beam -->
+          <circle cx="160" cy="74" r="5.5" fill="url(#bz-brass)" stroke="#7a5c12" stroke-width="2"/>
+          <rect x="64" y="70" width="192" height="8" rx="4" fill="url(#bz-brass)" stroke="#7a5c12" stroke-width="2"/>
+          <circle cx="70" cy="74" r="4.5" fill="#F2D266" stroke="#7a5c12" stroke-width="2"/>
+          <circle cx="250" cy="74" r="4.5" fill="#F2D266" stroke="#7a5c12" stroke-width="2"/>
+          <!-- Left pan with tile 3 -->
+          <g>
+            <line x1="70" y1="78" x2="46" y2="128" stroke="#C9A227" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="70" y1="78" x2="94" y2="128" stroke="#C9A227" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M42,128 L98,128 Q94,148 70,151 Q46,148 42,128 Z" fill="url(#bz-brass)" stroke="#7a5c12" stroke-width="2.5" stroke-linejoin="round"/>
+            <ellipse cx="70" cy="128" rx="28" ry="4.5" fill="#F2D266" stroke="#7a5c12" stroke-width="2"/>
+            <rect x="56" y="98" width="28" height="28" rx="6" fill="#2EC4B6" stroke="#1b8a80" stroke-width="2.5"/>
+            <text x="70" y="119" text-anchor="middle" font-size="18" font-weight="bold" fill="#FFF8E7" font-family="Fredoka, sans-serif">3</text>
+          </g>
+          <!-- Right pan with tile 4 -->
+          <g>
+            <line x1="250" y1="78" x2="226" y2="128" stroke="#C9A227" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="250" y1="78" x2="274" y2="128" stroke="#C9A227" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M222,128 L278,128 Q274,148 250,151 Q226,148 222,128 Z" fill="url(#bz-brass)" stroke="#7a5c12" stroke-width="2.5" stroke-linejoin="round"/>
+            <ellipse cx="250" cy="128" rx="28" ry="4.5" fill="#F2D266" stroke="#7a5c12" stroke-width="2"/>
+            <rect x="236" y="98" width="28" height="28" rx="6" fill="#2EC4B6" stroke="#1b8a80" stroke-width="2.5"/>
+            <text x="250" y="119" text-anchor="middle" font-size="18" font-weight="bold" fill="#FFF8E7" font-family="Fredoka, sans-serif">4</text>
+          </g>
         </svg>`
     };
 
@@ -1517,6 +1578,16 @@
         badge: '💛 Feelings & Empathy',
         age: 'Ages 4+',
         theme: 'card-yellow'
+      },
+      {
+        name: 'Balance Bazaar',
+        url: 'balancebazaar/index.html',
+        emoji: '⚖️',
+        preview: PREVIEWS.balanceBazaar,
+        desc: 'Balance the golden scale of the bazaar! Find the missing number to make both sides match — a fun part-and-whole way to learn adding and subtracting.',
+        badge: '🔢 Math & Logic',
+        age: 'Ages 4+',
+        theme: 'card-purple'
       },
       {
         name: 'Animal Kingdom Sort',

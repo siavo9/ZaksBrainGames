@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balance Bazaar</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', cursive, sans-serif;
+    background:
+      radial-gradient(ellipse at 50% -10%, #3b2a78 0%, rgba(59,42,120,0) 55%),
+      linear-gradient(180deg, #241a5e 0%, #1a1147 55%, #140d38 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    user-select: none;
+    color: #FFF3D6;
+  }
+  /* Subtle tiled 8-pointed gold stars, like a bazaar's geometric lattice */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.16;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23D4AF37' stroke-width='1.6'%3E%3Crect x='44' y='44' width='32' height='32'/%3E%3Crect x='44' y='44' width='32' height='32' transform='rotate(45 60 60)'/%3E%3C/g%3E%3Cg fill='none' stroke='%2340E0D0' stroke-width='1'%3E%3Crect x='-8' y='-8' width='16' height='16' transform='rotate(45 0 0)'/%3E%3Crect x='112' y='112' width='16' height='16' transform='rotate(45 120 120)'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 120px 120px;
+  }
+  /* Soft lantern glows */
+  .glow {
+    position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+    filter: blur(6px);
+  }
+  .glow.g1 { width: 220px; height: 220px; top: 12%; left: -60px;
+             background: radial-gradient(circle, rgba(212,175,55,0.22), rgba(212,175,55,0) 70%); }
+  .glow.g2 { width: 260px; height: 260px; bottom: 8%; right: -70px;
+             background: radial-gradient(circle, rgba(64,224,208,0.16), rgba(64,224,208,0) 70%); }
+
+  .screen { display: none; min-height: 100vh; padding: 110px 20px 20px; position: relative; z-index: 10; }
+  .screen.active { display: block; }
+
+  /* ===== TOP NAV (persistent across all screens) ===== */
+  #top-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 40;
+    background: rgba(26, 17, 71, 0.94);
+    border-bottom: 3px solid #D4AF37;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #top-nav .nav-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .nav-btn {
+    font-family: inherit;
+    font-size: 1em;
+    padding: 8px 16px;
+    background: #2a1d63;
+    color: #FFF3D6;
+    border: 3px solid #D4AF37;
+    border-radius: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #8a6d1f;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .nav-btn:hover  { transform: translateY(2px); box-shadow: 0 2px 0 #8a6d1f; }
+  .nav-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #8a6d1f; }
+  .nav-btn.home {
+    background: #2EC4B6; color: #10343a;
+    border-color: #1b8a80; box-shadow: 0 4px 0 #1b8a80;
+  }
+  .nav-btn.home:hover  { box-shadow: 0 2px 0 #1b8a80; }
+  .nav-btn.home:active { box-shadow: 0 0 0 #1b8a80; }
+  .nav-btn.parent {
+    background: #D4AF37; color: #2a1d63;
+    border-color: #8a6d1f; box-shadow: 0 4px 0 #8a6d1f;
+  }
+  .nav-btn.help {
+    background: #b0599b; color: #fff;
+    border-color: #6d2f5f; box-shadow: 0 4px 0 #6d2f5f;
+  }
+  .nav-btn.help:hover  { box-shadow: 0 2px 0 #6d2f5f; }
+  .nav-btn.help:active { box-shadow: 0 0 0 #6d2f5f; }
+
+  /* ===== HOW TO PLAY modal ===== */
+  #how-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 6, 30, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  #how-modal.open { display: flex; }
+  .modal-card {
+    background: #241a5e;
+    border: 4px solid #D4AF37;
+    border-radius: 24px;
+    padding: 24px 28px 22px;
+    max-width: 540px;
+    width: 100%;
+    box-shadow: 0 9px 0 #8a6d1f;
+    text-align: left;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-card h2 {
+    font-size: 2em;
+    color: #FFD700;
+    text-shadow: 2px 2px 0 #140d38;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .modal-card p {
+    font-size: 1.15em;
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  .modal-card ul {
+    list-style: none;
+    padding-left: 0;
+    margin: 8px 0 16px;
+  }
+  .modal-card li {
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    background: rgba(64, 224, 208, 0.12);
+    border-left: 5px solid #2EC4B6;
+    border-radius: 8px;
+    font-size: 1.05em;
+  }
+  .modal-close {
+    display: block;
+    margin: 4px auto 0;
+    font-family: inherit;
+    font-size: 1.25em;
+    padding: 10px 28px;
+    background: #D4AF37;
+    color: #2a1d63;
+    border: 4px solid #8a6d1f;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #8a6d1f;
+    font-weight: bold;
+  }
+  .modal-close:active { transform: translateY(3px); box-shadow: 0 2px 0 #8a6d1f; }
+
+  /* ===== HOME ===== */
+  #home { text-align: center; padding-top: 130px; }
+  #home h1 {
+    font-size: clamp(2.6em, 8vw, 5.2em);
+    color: #FFD700;
+    text-shadow: 0 0 24px rgba(255, 215, 0, 0.35), 4px 4px 0 #140d38;
+    margin-bottom: 10px;
+    animation: shimmerBob 3s ease-in-out infinite;
+  }
+  @keyframes shimmerBob { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-12px);} }
+  .tagline { font-size: 1.5em; color: #BFE9E4; margin-bottom: 24px; }
+  #home-scale-svg { margin: 6px auto 4px; display: block; max-width: 480px; width: 90%; }
+  #home-scale-svg svg { width: 100%; height: auto; display: block; }
+  .play-btn {
+    font-family: inherit;
+    font-size: 2.2em;
+    padding: 16px 56px;
+    background: #2EC4B6;
+    color: #10343a;
+    border: 6px solid #1b8a80;
+    border-radius: 60px;
+    cursor: pointer;
+    box-shadow: 0 9px 0 #1b8a80;
+    transition: transform 0.1s, box-shadow 0.1s;
+    margin-top: 18px;
+    font-weight: bold;
+  }
+  .play-btn:hover  { transform: translateY(3px); box-shadow: 0 6px 0 #1b8a80; }
+  .play-btn:active { transform: translateY(9px); box-shadow: 0 0 0 #1b8a80; }
+  .more-games {
+    margin-top: 32px;
+    font-size: 1.15em;
+    color: #BFE9E4;
+  }
+  .more-games a {
+    color: #FFD700;
+    font-weight: bold;
+    text-decoration: none;
+    border-bottom: 3px dashed #D4AF37;
+    padding-bottom: 2px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .more-games a:hover {
+    color: #40E0D0;
+    border-bottom-color: #40E0D0;
+  }
+
+  /* ===== GAME ===== */
+  #game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;
+  }
+  #game-title {
+    font-size: 2.2em; color: #FFD700;
+    text-shadow: 0 0 16px rgba(255, 215, 0, 0.3), 3px 3px 0 #140d38;
+  }
+  .header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  #stats-bar {
+    display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .stat-card {
+    background: #241a5e;
+    border: 3px solid #D4AF37;
+    border-radius: 18px;
+    padding: 8px 18px;
+    box-shadow: 0 5px 0 #8a6d1f;
+    min-width: 110px;
+    text-align: center;
+  }
+  .stat-card .stat-label {
+    font-size: 0.95em; color: #BFE9E4; font-weight: bold;
+  }
+  .stat-card .stat-value {
+    font-size: 1.8em; font-weight: bold; color: #FFF3D6;
+  }
+  .stat-card.right .stat-value { color: #40E0D0; }
+  .stat-card.wrong .stat-value { color: #FF8FA3; }
+  .stat-card.acc .stat-value { color: #FFD700; }
+
+  .toggle-btn {
+    font-family: inherit;
+    font-size: 1em;
+    padding: 10px 18px;
+    background: #2a1d63;
+    color: #FFF3D6;
+    border: 3px solid #D4AF37;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #8a6d1f;
+    font-weight: bold;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .toggle-btn.on {
+    background: #2EC4B6;
+    color: #10343a;
+    border-color: #1b8a80;
+    box-shadow: 0 5px 0 #1b8a80;
+  }
+  .toggle-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #8a6d1f; }
+  .toggle-btn.on:active { box-shadow: 0 2px 0 #1b8a80; }
+
+  #mute-btn {
+    font-size: 1.6em; background: #2a1d63; border: 3px solid #D4AF37;
+    border-radius: 50%; width: 55px; height: 55px; cursor: pointer;
+    box-shadow: 0 5px 0 #8a6d1f;
+  }
+  #mute-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #8a6d1f; }
+
+  /* ===== STAGE (where the scale lives) ===== */
+  #stage-area {
+    background: rgba(20, 13, 56, 0.55);
+    border-radius: 24px;
+    padding: 10px 12px 4px;
+    margin: 0 auto 14px;
+    border: 3px solid #D4AF37;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.35), 0 6px 0 rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+    max-width: 680px;
+  }
+  #stage { display: flex; justify-content: center; }
+  #stage svg { width: 100%; max-width: 620px; height: auto; display: block; }
+
+  .scale-wobble { animation: scaleWobble 0.5s ease-in-out; }
+  @keyframes scaleWobble {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-7px); }
+    75% { transform: translateX(7px); }
+  }
+  .medallion-pulse { animation: medPulse 1.2s ease-in-out; transform-origin: center; transform-box: fill-box; }
+  @keyframes medPulse {
+    0%,100% { filter: none; }
+    30%     { filter: drop-shadow(0 0 10px #FFD700) brightness(1.35); }
+    65%     { filter: drop-shadow(0 0 14px #FFD700) brightness(1.5); }
+  }
+
+  /* ===== EQUATION & INPUT ===== */
+  #equation-wrap { text-align: center; }
+  #equation {
+    font-family: inherit;
+    font-size: clamp(2em, 6vw, 3.2em);
+    color: #FFF3D6;
+    background: #241a5e;
+    border: 4px solid #2EC4B6;
+    border-radius: 20px;
+    padding: 12px 28px;
+    margin: 4px auto 16px;
+    display: inline-block;
+    font-weight: bold;
+    letter-spacing: 2px;
+    box-shadow: 0 6px 0 #1b8a80;
+    text-align: center;
+  }
+  #equation .op    { color: #40E0D0; margin: 0 10px; }
+  #equation .qmark { color: #FFD700; }
+  #equation .whole { color: #FFD700; }
+
+  #answer-area { text-align: center; margin: 8px 0 16px; }
+  #answer-input {
+    font-family: inherit; font-size: 2.2em;
+    padding: 8px 16px; width: 140px; text-align: center;
+    border: 4px solid #2EC4B6; border-radius: 16px;
+    background: #FFF8E7; color: #2a1d63;
+    font-weight: bold;
+  }
+  #answer-input:focus { outline: none; border-color: #FFD700; }
+  #submit-btn {
+    font-family: inherit; font-size: 1.5em;
+    padding: 13px 32px; margin-left: 8px;
+    background: #D4AF37; color: #2a1d63;
+    border: 4px solid #8a6d1f; border-radius: 16px;
+    cursor: pointer; box-shadow: 0 6px 0 #8a6d1f;
+    font-weight: bold;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  #submit-btn:hover { transform: translateY(2px); box-shadow: 0 4px 0 #8a6d1f; }
+  #submit-btn:active { transform: translateY(6px); box-shadow: 0 0 0 #8a6d1f; }
+  #submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #feedback {
+    font-size: 1.5em; min-height: 50px; margin-top: 12px;
+    font-weight: bold;
+  }
+  .correct { color: #40E0D0; animation: pop 0.4s; }
+  .wrong   { color: #FF8FA3; animation: shake 0.4s; }
+  @keyframes pop {
+    0%   { transform: scale(0.6); }
+    60%  { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+
+  /* ===== POSITIVE-REINFORCEMENT EFFECTS ===== */
+  .praise-pop {
+    position: fixed;
+    top: 35%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: inherit;
+    font-size: clamp(2.6em, 8vw, 5em);
+    color: #FFD700;
+    text-shadow: 0 0 24px rgba(255,215,0,0.5), 4px 4px 0 #140d38;
+    font-weight: bold;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0;
+    white-space: nowrap;
+    animation: praisePop 1.7s cubic-bezier(0.34, 1.5, 0.6, 1) forwards;
+  }
+  @keyframes praisePop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(-12deg); }
+    20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(4deg); }
+    40%  { transform: translate(-50%, -50%) scale(0.95) rotate(-2deg); }
+    60%  { transform: translate(-50%, -50%) scale(1.05) rotate(1deg); }
+    80%  { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+    100% { opacity: 0; transform: translate(-50%, -75%) scale(0.9); }
+  }
+  .spark-particle {
+    position: fixed;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 55;
+    animation: sparkExplode 1.2s ease-out forwards;
+  }
+  @keyframes sparkExplode {
+    0%   { transform: translate(0, 0) scale(1);   opacity: 1; }
+    70%  { opacity: 1; }
+    100% { transform: translate(var(--fx, 0), calc(var(--fy, 0) + 30px)) scale(0.4); opacity: 0; }
+  }
+  .star-rise {
+    position: fixed;
+    font-size: 2.2em;
+    pointer-events: none;
+    z-index: 55;
+    animation: starRise 1.8s ease-out forwards;
+  }
+  @keyframes starRise {
+    0%   { transform: translateY(0) scale(0.6) rotate(0); opacity: 0; }
+    20%  { opacity: 1; transform: translateY(-30px) scale(1.1) rotate(15deg); }
+    100% { transform: translateY(-220px) scale(0.7) rotate(360deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== PERSISTENT TOP NAV (shows on every screen) ========== -->
+<nav id="top-nav" aria-label="Game navigation">
+  <div class="nav-group">
+    <a href="#" class="nav-btn home" onclick="goHome(); return false;" aria-label="Go to Balance Bazaar home page">🏠 Game Home</a>
+    <a href="../index.html" class="nav-btn parent" aria-label="Go to Zak's Brain Games">🧠 More Brain Games</a>
+  </div>
+  <div class="nav-group">
+    <button type="button" class="nav-btn help" onclick="openHowTo()" aria-label="Open How to Play instructions">❓ How to Play</button>
+  </div>
+</nav>
+
+<!-- ========== HOW TO PLAY modal (available from every screen) ========== -->
+<div id="how-modal" role="dialog" aria-modal="true" aria-labelledby="how-title" onclick="if(event.target===this) closeHowTo()">
+  <div class="modal-card">
+    <h2 id="how-title">How to Play ⚖️✨</h2>
+    <p>Welcome to the Balance Bazaar! The golden star on top shows the <strong>whole</strong> number. The two pans hold its <strong>parts</strong> — but one part is missing, so the scale is tipped!</p>
+    <ul>
+      <li>⭐ Look at the number in the golden star — that's the whole</li>
+      <li>🪙 One pan already has a number tile — that's one part</li>
+      <li>🤔 Figure out what's missing: the two pans must add up to the star</li>
+      <li>⌨️ Type your answer and hit <strong>Submit</strong> (or press <strong>Enter</strong>)</li>
+      <li>⚖️ Get it right and watch the scale swing into perfect balance!</li>
+      <li>😊 Tap <strong>Easy Mode</strong> for smaller numbers</li>
+      <li>🔊 Tap the speaker to mute or unmute sounds</li>
+    </ul>
+    <button type="button" class="modal-close" onclick="closeHowTo()">Got it! Let's play!</button>
+  </div>
+</div>
+
+<div class="glow g1"></div>
+<div class="glow g2"></div>
+
+<!-- ========== HOME SCREEN ========== -->
+<div id="home" class="screen active">
+  <h1>Balance Bazaar</h1>
+  <div class="tagline">⚖️ Balance the golden scale of the bazaar! ✨</div>
+  <div id="home-scale-svg"></div>
+  <button class="play-btn" onclick="startGame()">Play Now!</button>
+  <div class="more-games">
+    🧠 Try more brain games at
+    <a href="https://zaksbraingames.com/">zaksbraingames.com</a>
+  </div>
+</div>
+
+<!-- ========== GAME SCREEN ========== -->
+<div id="game" class="screen">
+  <div id="game-header">
+    <div id="game-title">Balance Bazaar</div>
+    <div class="header-controls">
+      <button id="easy-btn" class="toggle-btn" onclick="toggleEasy()">😊 Easy Mode: OFF</button>
+      <button id="mute-btn" onclick="toggleMute()" title="Mute/Unmute">🔊</button>
+    </div>
+  </div>
+
+  <div id="stats-bar">
+    <div class="stat-card right">
+      <div class="stat-label">First-Try ✅</div>
+      <div class="stat-value" id="stat-right">0</div>
+    </div>
+    <div class="stat-card wrong">
+      <div class="stat-label">Wrong ❌</div>
+      <div class="stat-value" id="stat-wrong">0</div>
+    </div>
+    <div class="stat-card acc">
+      <div class="stat-label">Accuracy</div>
+      <div class="stat-value" id="stat-acc">—</div>
+    </div>
+  </div>
+
+  <div id="stage-area">
+    <div id="stage"></div>
+  </div>
+
+  <div id="equation-wrap">
+    <div id="equation"></div>
+  </div>
+
+  <div id="answer-area">
+    <div>
+      <input id="answer-input" type="number" min="0" placeholder="?" inputmode="numeric"/>
+      <button id="submit-btn" onclick="checkAnswer()">Submit</button>
+    </div>
+    <div id="feedback"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   BALANCE BAZAAR — part/whole missing-number balance game
+   ========================================================= */
+
+const state = {
+  easy: false,
+  muted: false,
+  firstTryRight: 0,
+  wrongGuesses: 0,
+  totalProblems: 0,
+  triedThisProblem: false, // tracks if user already guessed wrong on the current problem
+  awaiting: false,
+  busy: false,             // true during the balance celebration, to block input
+  whole: 0,
+  partKnown: 0,
+  missingSide: 'R',        // 'L' or 'R' — which pan is missing its tile
+  sequenceTimers: [],      // ids of in-flight setTimeouts for the celebration
+};
+
+const PRAISE_MESSAGES = [
+  'Perfectly balanced!',
+  'Great job!',
+  'Awesome!',
+  'Way to go!',
+  'Math star!',
+  'Brilliant!',
+  'Fantastic!',
+  'Nailed it!',
+  'Woohoo!',
+  'You got it!',
+  'Excellent!',
+  'Math whiz!',
+  'Spot on!',
+  'Amazing!',
+  'Super!',
+];
+function pickPraise() {
+  return PRAISE_MESSAGES[Math.floor(Math.random() * PRAISE_MESSAGES.length)];
+}
+
+// Track celebration timeouts so we can cancel them on home/restart.
+function seqTimeout(fn, ms) {
+  const id = setTimeout(() => {
+    state.sequenceTimers = state.sequenceTimers.filter(t => t !== id);
+    fn();
+  }, ms);
+  state.sequenceTimers.push(id);
+  return id;
+}
+function cancelSequence() {
+  state.sequenceTimers.forEach(t => clearTimeout(t));
+  state.sequenceTimers = [];
+  document.querySelectorAll('.praise-pop, .spark-particle, .star-rise')
+    .forEach(el => el.remove());
+}
+
+/* ---------- SVG: BRASS BALANCE SCALE ----------
+   The whole scale is one SVG. The beam + chains + pans live in a "swing"
+   group that rotates around the pivot; each pan counter-rotates around its
+   hang point so the pans always hang level, like a real balance. */
+const PIVOT = { x: 300, y: 120 };
+const HANG_L = { x: 150, y: 120 };
+const HANG_R = { x: 450, y: 120 };
+
+function starPoints(cx, cy, size) {
+  // Persian 8-pointed star: two overlapping squares, one rotated 45°.
+  const h = size / 2;
+  return `
+    <rect x="${cx - h}" y="${cy - h}" width="${size}" height="${size}"/>
+    <rect x="${cx - h}" y="${cy - h}" width="${size}" height="${size}" transform="rotate(45 ${cx} ${cy})"/>
+  `;
+}
+
+function panSVG(prefix, hx) {
+  // A brass dish hanging from (hx, 120) by two chains, with a tile slot.
+  return `
+    <circle cx="${hx}" cy="124" r="4.5" fill="none" stroke="#8a6d1f" stroke-width="3"/>
+    <line x1="${hx}" y1="128" x2="${hx - 38}" y2="206" stroke="#C9A227" stroke-width="3" stroke-linecap="round"/>
+    <line x1="${hx}" y1="128" x2="${hx + 38}" y2="206" stroke="#C9A227" stroke-width="3" stroke-linecap="round"/>
+    <path d="M ${hx - 44} 206 L ${hx + 44} 206 Q ${hx + 38} 238 ${hx} 242 Q ${hx - 38} 238 ${hx - 44} 206 Z"
+          fill="url(#${prefix}-brass)" stroke="#7a5c12" stroke-width="3" stroke-linejoin="round"/>
+    <ellipse cx="${hx}" cy="206" rx="44" ry="7" fill="#F2D266" stroke="#7a5c12" stroke-width="2.5"/>
+  `;
+}
+
+function tileSVG(hx, value) {
+  // A number tile sitting in the pan at hang-x hx. value can be a number or '?'.
+  const missing = value === '?';
+  const fill   = missing ? 'rgba(64,224,208,0.10)' : '#2EC4B6';
+  const stroke = missing ? '#FFD700' : '#1b8a80';
+  const dash   = missing ? 'stroke-dasharray="7 6"' : '';
+  const color  = missing ? '#FFD700' : '#FFF8E7';
+  return `
+    <rect x="${hx - 23}" y="156" width="46" height="46" rx="9"
+          fill="${fill}" stroke="${stroke}" stroke-width="3.5" ${dash}/>
+    <text x="${hx}" y="190" text-anchor="middle" font-size="28" font-weight="bold"
+          fill="${color}" font-family="inherit">${value}</text>
+  `;
+}
+
+function scaleSVG(prefix) {
+  return `
+  <svg viewBox="0 0 600 440" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="${prefix}-brass" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#F2D266"/>
+        <stop offset="55%" stop-color="#D4AF37"/>
+        <stop offset="100%" stop-color="#A8842A"/>
+      </linearGradient>
+      <linearGradient id="${prefix}-pillar" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="#A8842A"/>
+        <stop offset="50%" stop-color="#F2D266"/>
+        <stop offset="100%" stop-color="#A8842A"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Pillar and stepped base -->
+    <rect x="293" y="84" width="14" height="306" fill="url(#${prefix}-pillar)" stroke="#7a5c12" stroke-width="2.5"/>
+    <path d="M 252 412 L 348 412 L 330 390 L 270 390 Z" fill="url(#${prefix}-brass)" stroke="#7a5c12" stroke-width="3" stroke-linejoin="round"/>
+    <rect x="232" y="412" width="136" height="12" rx="6" fill="#A8842A" stroke="#7a5c12" stroke-width="2.5"/>
+    <g fill="none" stroke="#7a5c12" stroke-width="1.6" opacity="0.65">
+      ${starPoints(300, 401, 11)}
+    </g>
+
+    <!-- Star medallion: shows the WHOLE number -->
+    <g id="${prefix}-medallion">
+      <g fill="url(#${prefix}-brass)" stroke="#8a6d1f" stroke-width="3" stroke-linejoin="round">
+        ${starPoints(300, 52, 50)}
+      </g>
+      <circle cx="300" cy="52" r="21" fill="#1a1147" stroke="#8a6d1f" stroke-width="2.5"/>
+      <text id="${prefix}-whole" x="300" y="62" text-anchor="middle" font-size="27" font-weight="bold"
+            fill="#FFD700" font-family="inherit"></text>
+    </g>
+
+    <!-- Pivot ornament -->
+    <circle cx="${PIVOT.x}" cy="${PIVOT.y}" r="9" fill="url(#${prefix}-brass)" stroke="#7a5c12" stroke-width="2.5"/>
+
+    <!-- Swinging assembly: beam + chains + pans -->
+    <g id="${prefix}-swing">
+      <rect x="142" y="113" width="316" height="13" rx="6.5" fill="url(#${prefix}-brass)" stroke="#7a5c12" stroke-width="3"/>
+      <circle cx="${HANG_L.x}" cy="${HANG_L.y}" r="7" fill="#F2D266" stroke="#7a5c12" stroke-width="2.5"/>
+      <circle cx="${HANG_R.x}" cy="${HANG_R.y}" r="7" fill="#F2D266" stroke="#7a5c12" stroke-width="2.5"/>
+      <g id="${prefix}-pan-l">
+        ${panSVG(prefix, HANG_L.x)}
+        <g id="${prefix}-tile-l"></g>
+      </g>
+      <g id="${prefix}-pan-r">
+        ${panSVG(prefix, HANG_R.x)}
+        <g id="${prefix}-tile-r"></g>
+      </g>
+    </g>
+  </svg>`;
+}
+
+/* ---------- TILT ANIMATION ----------
+   setTilt applies an instant angle; animateTilt tweens to a target angle.
+   Positive angle = clockwise = right pan down. */
+let currentTilt = 0;
+let tiltRaf = null;
+
+function applyTilt(prefix, a) {
+  const swing = document.getElementById(prefix + '-swing');
+  const panL  = document.getElementById(prefix + '-pan-l');
+  const panR  = document.getElementById(prefix + '-pan-r');
+  if (!swing) return;
+  swing.setAttribute('transform', `rotate(${a} ${PIVOT.x} ${PIVOT.y})`);
+  panL.setAttribute('transform', `rotate(${-a} ${HANG_L.x} ${HANG_L.y})`);
+  panR.setAttribute('transform', `rotate(${-a} ${HANG_R.x} ${HANG_R.y})`);
+}
+
+function animateTilt(target, duration = 900, onDone) {
+  if (tiltRaf) cancelAnimationFrame(tiltRaf);
+  const from = currentTilt;
+  const start = performance.now();
+  const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  function frame(now) {
+    const t = Math.min(1, (now - start) / duration);
+    currentTilt = from + (target - from) * ease(t);
+    applyTilt('g', currentTilt);
+    if (t < 1) {
+      tiltRaf = requestAnimationFrame(frame);
+    } else {
+      tiltRaf = null;
+      if (onDone) onDone();
+    }
+  }
+  tiltRaf = requestAnimationFrame(frame);
+}
+
+/* A gentle settling bob when the scale reaches balance. */
+function settleToBalance() {
+  animateTilt(0, 750, () => {
+    animateTilt(-1.6, 180, () => {
+      animateTilt(1.1, 180, () => {
+        animateTilt(0, 200);
+      });
+    });
+  });
+}
+
+/* ---------- SCREEN HELPERS ---------- */
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+}
+
+/* ---------- NAVIGATION ---------- */
+function goHome() {
+  cancelSequence();
+  if (tiltRaf) { cancelAnimationFrame(tiltRaf); tiltRaf = null; }
+  state.busy = false;
+  state.awaiting = false;
+  switchScreen('home');
+  const fb = document.getElementById('feedback');
+  if (fb) { fb.textContent = ''; fb.className = ''; }
+}
+function openHowTo() {
+  document.getElementById('how-modal').classList.add('open');
+}
+function closeHowTo() {
+  document.getElementById('how-modal').classList.remove('open');
+}
+
+/* ---------- POSITIVE REINFORCEMENT EFFECTS ---------- */
+function showPraisePop(msg) {
+  const el = document.createElement('div');
+  el.className = 'praise-pop';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { if (el.parentNode) el.remove(); }, 1800);
+}
+
+function launchSparkles(burstCount = 3) {
+  const colors = ['#FFD700', '#D4AF37', '#40E0D0', '#2EC4B6', '#FFF3D6'];
+  for (let b = 0; b < burstCount; b++) {
+    setTimeout(() => {
+      const cx = 80 + Math.random() * Math.max(40, window.innerWidth - 160);
+      const cy = 100 + Math.random() * Math.max(40, window.innerHeight * 0.55);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      playSparkleChime();
+      const particles = 18;
+      for (let i = 0; i < particles; i++) {
+        const p = document.createElement('div');
+        p.className = 'spark-particle';
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        p.style.background = color;
+        p.style.boxShadow = `0 0 10px ${color}`;
+        const angle = (i / particles) * Math.PI * 2 + Math.random() * 0.2;
+        const dist = 60 + Math.random() * 70;
+        p.style.setProperty('--fx', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--fy', Math.sin(angle) * dist + 'px');
+        document.body.appendChild(p);
+        setTimeout(() => { if (p.parentNode) p.remove(); }, 1300);
+      }
+    }, b * 280);
+  }
+}
+
+function launchStarRise(count = 8) {
+  const stars = ['⭐','🌟','✨','💫','🪙','🏮'];
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const s = document.createElement('div');
+      s.className = 'star-rise';
+      s.textContent = stars[Math.floor(Math.random() * stars.length)];
+      s.style.left = (Math.random() * (window.innerWidth - 40)) + 'px';
+      s.style.top = (window.innerHeight - 60) + 'px';
+      document.body.appendChild(s);
+      setTimeout(() => { if (s.parentNode) s.remove(); }, 1900);
+    }, i * 90);
+  }
+}
+
+/* ---------- GAME FLOW ---------- */
+function startGame() {
+  cancelSequence();
+  state.firstTryRight = 0;
+  state.wrongGuesses = 0;
+  state.totalProblems = 0;
+  state.triedThisProblem = false;
+  state.busy = false;
+  updateStats();
+  switchScreen('game');
+  newProblem();
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = '';
+  document.getElementById('answer-input').focus();
+}
+
+function newProblem() {
+  const maxWhole = state.easy ? 5 : 10;
+  // whole at least 2 so both pans hold at least 1
+  state.whole = 2 + Math.floor(Math.random() * (maxWhole - 1));
+  state.partKnown = 1 + Math.floor(Math.random() * (state.whole - 1));
+  state.missingSide = Math.random() < 0.5 ? 'L' : 'R';
+  state.triedThisProblem = false;
+  state.awaiting = true;
+  state.totalProblems++;
+
+  renderScale();
+  renderEquation();
+
+  // The empty pan is lighter, so the known pan sinks. Missing left
+  // ⇒ right (known) pan down ⇒ positive (clockwise) tilt.
+  const target = state.missingSide === 'L' ? 8 : -8;
+  animateTilt(target, 800);
+
+  const input = document.getElementById('answer-input');
+  input.value = '';
+  input.disabled = false;
+  document.getElementById('submit-btn').disabled = false;
+  input.focus();
+}
+
+function renderScale() {
+  document.getElementById('g-whole').textContent = state.whole;
+  const leftVal  = state.missingSide === 'L' ? '?' : state.partKnown;
+  const rightVal = state.missingSide === 'R' ? '?' : state.partKnown;
+  document.getElementById('g-tile-l').innerHTML = tileSVG(HANG_L.x, leftVal);
+  document.getElementById('g-tile-r').innerHTML = tileSVG(HANG_R.x, rightVal);
+}
+
+function renderEquation() {
+  const eq = document.getElementById('equation');
+  const known = `<span class="num">${state.partKnown}</span>`;
+  const q = `<span class="qmark">?</span>`;
+  const lhs = state.missingSide === 'L' ? `${q}<span class="op">+</span>${known}`
+                                        : `${known}<span class="op">+</span>${q}`;
+  eq.innerHTML = `${lhs}<span class="op">=</span><span class="whole">${state.whole}</span>`;
+}
+
+function checkAnswer() {
+  if (!state.awaiting || state.busy) return;
+  const input = document.getElementById('answer-input');
+  const guess = parseInt(input.value, 10);
+  if (isNaN(guess)) {
+    showFeedback('Type a number!', 'wrong');
+    return;
+  }
+
+  const answer = state.whole - state.partKnown;
+
+  if (guess === answer) {
+    state.awaiting = false;
+    if (!state.triedThisProblem) state.firstTryRight++;
+    updateStats();
+    playTileDrop();
+
+    // Reveal the missing tile and let the scale swing into balance.
+    const tileId = state.missingSide === 'L' ? 'g-tile-l' : 'g-tile-r';
+    const hangX  = state.missingSide === 'L' ? HANG_L.x : HANG_R.x;
+    document.getElementById(tileId).innerHTML = tileSVG(hangX, answer);
+
+    document.getElementById('equation').innerHTML =
+      `<span class="num">${state.missingSide === 'L' ? answer : state.partKnown}</span>` +
+      `<span class="op">+</span>` +
+      `<span class="num">${state.missingSide === 'L' ? state.partKnown : answer}</span>` +
+      `<span class="op">=</span>` +
+      `<span class="whole">${state.whole}</span>`;
+
+    input.disabled = true;
+    document.getElementById('submit-btn').disabled = true;
+    runBalanceCelebration();
+  } else {
+    state.wrongGuesses++;
+    state.triedThisProblem = true;
+    updateStats();
+    playWrong();
+    wobbleScale();
+    pulseMedallion();
+    const hint = guess > answer ? 'A little too heavy!' : 'A little too light!';
+    showFeedback(`${hint} The pans must add up to ${state.whole}.`, 'wrong');
+    input.select();
+  }
+}
+
+function wobbleScale() {
+  const svg = document.querySelector('#stage svg');
+  if (!svg) return;
+  svg.classList.remove('scale-wobble');
+  void svg.getBoundingClientRect();
+  svg.classList.add('scale-wobble');
+}
+
+function pulseMedallion() {
+  const med = document.getElementById('g-medallion');
+  if (!med) return;
+  med.classList.remove('medallion-pulse');
+  void med.getBoundingClientRect();
+  med.classList.add('medallion-pulse');
+}
+
+function runBalanceCelebration() {
+  state.busy = true;
+  settleToBalance();
+  playBalanceChime();
+
+  const praise = pickPraise();
+  showFeedback('🎉 ' + praise + ' The scale is balanced!', 'correct');
+
+  seqTimeout(() => {
+    showPraisePop(praise);
+    launchSparkles(3);
+    launchStarRise(8);
+  }, 550);
+
+  seqTimeout(() => {
+    state.busy = false;
+    newProblem();
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className = '';
+  }, 2700);
+}
+
+function showFeedback(msg, cls) {
+  const fb = document.getElementById('feedback');
+  fb.textContent = msg;
+  fb.className = '';
+  void fb.offsetWidth;
+  fb.className = cls;
+}
+
+function updateStats() {
+  document.getElementById('stat-right').textContent = state.firstTryRight;
+  document.getElementById('stat-wrong').textContent = state.wrongGuesses;
+  const attempts = state.firstTryRight + state.wrongGuesses;
+  const accEl = document.getElementById('stat-acc');
+  if (attempts === 0) {
+    accEl.textContent = '—';
+  } else {
+    const pct = Math.round((state.firstTryRight / attempts) * 100);
+    accEl.textContent = pct + '%';
+  }
+}
+
+function toggleEasy() {
+  state.easy = !state.easy;
+  const btn = document.getElementById('easy-btn');
+  btn.textContent = state.easy ? '😊 Easy Mode: ON' : '😊 Easy Mode: OFF';
+  btn.classList.toggle('on', state.easy);
+  // If a problem is already on screen, regenerate to respect the new range
+  if (state.awaiting && !state.busy) {
+    newProblem();
+  }
+}
+
+/* ---------- SOUND (Web Audio API) ---------- */
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { return null; }
+  }
+  return audioCtx;
+}
+function playTone(freq, duration, type = 'sine', vol = 0.25, delay = 0) {
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  const t0 = ctx.currentTime + delay;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  gain.gain.setValueAtTime(vol, t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+  osc.start(t0);
+  osc.stop(t0 + duration);
+}
+function playTileDrop() {
+  // A bright clink as the tile lands in the brass pan
+  playTone(1320, 0.07, 'square', 0.16, 0);
+  playTone(1980, 0.06, 'square', 0.12, 0.05);
+  playTone(660, 0.14, 'triangle', 0.22, 0.08);
+}
+function playBalanceChime() {
+  // A warm, rising bazaar-bell arpeggio for perfect balance
+  playTone(523, 0.16, 'triangle', 0.28, 0);     // C5
+  playTone(659, 0.16, 'triangle', 0.28, 0.13);  // E5
+  playTone(784, 0.18, 'triangle', 0.28, 0.26);  // G5
+  playTone(1047, 0.32, 'triangle', 0.3, 0.4);   // C6
+  playTone(1568, 0.4, 'sine', 0.14, 0.4);       // shimmer overtone
+}
+function playSparkleChime() {
+  if (state.muted) return;
+  playTone(1760, 0.1, 'sine', 0.1, 0);
+  playTone(2349, 0.12, 'sine', 0.08, 0.07);
+}
+function playWrong() {
+  // Soft buzz
+  playTone(220, 0.18, 'sawtooth', 0.16, 0);
+  playTone(160, 0.28, 'sawtooth', 0.16, 0.14);
+}
+
+function toggleMute() {
+  state.muted = !state.muted;
+  document.getElementById('mute-btn').textContent = state.muted ? '🔇' : '🔊';
+  const ctx = getAudio();
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+}
+
+/* ---------- INIT ---------- */
+// Game stage scale
+document.getElementById('stage').innerHTML = scaleSVG('g');
+
+// Home screen preview: a balanced scale showing 3 + 4 = 7
+document.getElementById('home-scale-svg').innerHTML = scaleSVG('home');
+document.getElementById('home-whole').textContent = '7';
+document.getElementById('home-tile-l').innerHTML = tileSVG(HANG_L.x, 3);
+document.getElementById('home-tile-r').innerHTML = tileSVG(HANG_R.x, 4);
+
+document.getElementById('answer-input').addEventListener('keypress', e => {
+  if (e.key === 'Enter') checkAnswer();
+});
+
+// Esc closes the How-to-Play modal
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeHowTo();
+});
+
+// Resume audio on any first click (browsers require user gesture)
+document.addEventListener('click', () => {
+  const ctx = getAudio();
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+}, { once: true });
+</script>
+
+</body>
+</html>
