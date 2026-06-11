@@ -163,6 +163,24 @@
       box-shadow: 0 4px 0 #e3dceb;
       font-size: 1.05rem;
     }
+    .stats-bar {
+      width: 100%;
+      max-width: 760px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin: -6px 0 16px;
+    }
+    .stat {
+      background: rgba(255,255,255,0.85);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      box-shadow: 0 3px 0 #e3dceb;
+      color: #5b4f7a;
+    }
     .icon-btn {
       background: white;
       border: none;
@@ -317,6 +335,12 @@
       <button class="icon-btn" id="muteBtn" title="Mute / Unmute">🔊</button>
     </div>
 
+    <div class="stats-bar" aria-label="Your stats">
+      <div class="stat" id="statFirstTry">🌟 First try: 0</div>
+      <div class="stat" id="statWrong">❌ Wrong guesses: 0</div>
+      <div class="stat" id="statBest">🏆 Best streak: 0</div>
+    </div>
+
     <div class="prompt" id="prompt">Tap the picture that matches!</div>
     <div class="clue" id="clue"></div>
     <div class="choices" id="choices"></div>
@@ -414,6 +438,10 @@
     let mode = 'wordToEmoji';// or 'emojiToWord'
     let current = null;      // {answer:{w,e}, choices:[...]}
     let streak = 0;
+    let bestStreak = 0;      // best streak this session
+    let firstTryCount = 0;   // puzzles solved with no wrong guesses
+    let wrongCount = 0;      // total wrong guesses
+    let roundMissed = false; // did the current puzzle have a wrong guess?
     let muted = false;
     let busy = false;        // disables clicks during animations
     // Anti-repeat: remember the words shown most recently and never repeat one
@@ -514,7 +542,11 @@
         flashToast('Need more words!', 'bad'); return;
       }
       streak = 0;
+      bestStreak = 0;
+      firstTryCount = 0;
+      wrongCount = 0;
       updateStreak();
+      updateStats();
       mode = 'wordToEmoji';
       recent = [];       // fresh no-repeat window for the new pool
       ensureAudio();
@@ -546,6 +578,7 @@
     }
 
     function nextRound() {
+      roundMissed = false;
       const answer = drawAnswer();
       const distractors = pickN(pool, 2, answer);
       const choices = shuffle([answer, ...distractors]);
@@ -603,7 +636,10 @@
         btn.classList.add('correct');
         sndCorrect();
         streak += 1;
+        bestStreak = Math.max(bestStreak, streak);
+        if (!roundMissed) firstTryCount += 1;
         updateStreak();
+        updateStats();
         flashToast(pickPraise(), 'good');
         if (streak > 0 && streak % 5 === 0) { sndCheer(); confettiBurst(); }
         setTimeout(()=>{
@@ -615,16 +651,25 @@
         btn.classList.add('wrong');
         btn.disabled = true;
         sndWrong();
+        roundMissed = true;
+        wrongCount += 1;
         if (streak !== 0) {
           streak = 0;
           updateStreak();
         }
+        updateStats();
         flashToast(pickEncourage(), 'bad');
       }
     }
 
     function updateStreak() {
       $('#streak').textContent = `🔥 Streak: ${streak}`;
+    }
+
+    function updateStats() {
+      $('#statFirstTry').textContent = `🌟 First try: ${firstTryCount}`;
+      $('#statWrong').textContent = `❌ Wrong guesses: ${wrongCount}`;
+      $('#statBest').textContent = `🏆 Best streak: ${bestStreak}`;
     }
 
     /* =========================================================
