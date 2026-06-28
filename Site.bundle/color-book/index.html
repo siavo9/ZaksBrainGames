@@ -151,6 +151,7 @@
       <button class="tool orange" id="eraserBtn">🧽 Eraser</button>
       <button class="tool purple" id="undoBtn">↩️ Undo</button>
       <button class="tool green" id="pictureBtn">🖼️ Pictures</button>
+      <button class="tool teal" id="prevPictureBtn">⬅️ Previous</button>
       <button class="tool" id="blankBtn">📄 Blank Canvas</button>
       <button class="tool" id="clearBtn">🗑️ Clear</button>
       <button class="tool pink" id="shareBtn">📤 Share</button>
@@ -176,6 +177,7 @@
   var eraserBtn = document.getElementById("eraserBtn");
   var undoBtn = document.getElementById("undoBtn");
   var pictureBtn = document.getElementById("pictureBtn");
+  var prevPictureBtn = document.getElementById("prevPictureBtn");
   var blankBtn = document.getElementById("blankBtn");
   var clearBtn = document.getElementById("clearBtn");
   var shareBtn = document.getElementById("shareBtn");
@@ -197,6 +199,10 @@
   // Add new pages by dropping .svg or .png files into public/pictures.
   var pictures = ["blank"];
   var pictureIndex = 0;
+  // History of pictures the child has viewed, so the Previous button can
+  // step back through them. Starts on the "blank" page (index 0).
+  var pictureHistory = [0];
+  var historyPos = 0;
 
   // ================= SIZING =================
   function setupCanvas(canvas, ctx) {
@@ -360,6 +366,35 @@
     });
   }
 
+  // ================= PICTURE NAVIGATION =================
+  // Switch the canvas to a given picture index and reset the work in progress.
+  function showPicture(idx) {
+    pictureIndex = idx;
+    pctx.clearRect(0, 0, cssW(), cssH());
+    undoStack = [];
+    drawPicture(pictures[pictureIndex]);
+  }
+  // Pick a random picture (skipping the "blank" page at index 0 and avoiding
+  // showing the same picture twice in a row) for more variety.
+  function randomPictureIndex() {
+    var count = pictures.length;
+    if (count <= 1) return 0;      // only the blank page exists
+    if (count === 2) return 1;     // a single real picture
+    var idx;
+    do {
+      idx = 1 + Math.floor(Math.random() * (count - 1));
+    } while (idx === pictureIndex);
+    return idx;
+  }
+  // Record a newly shown picture in history, dropping any "forward" entries
+  // the child stepped back past.
+  function navigateTo(idx) {
+    pictureHistory = pictureHistory.slice(0, historyPos + 1);
+    pictureHistory.push(idx);
+    historyPos = pictureHistory.length - 1;
+    showPicture(idx);
+  }
+
   // ================= PALETTE / TOOLS =================
   function buildPalette() {
     colors.forEach(function (c) {
@@ -430,16 +465,16 @@
   eraserBtn.addEventListener("click", function () { cur.mode = "brush"; cur.eraser = true; updateToolButtons(); });
   undoBtn.addEventListener("click", undo);
   pictureBtn.addEventListener("click", function () {
-    pictureIndex = (pictureIndex + 1) % pictures.length;
-    pctx.clearRect(0, 0, cssW(), cssH());
-    undoStack = [];
-    drawPicture(pictures[pictureIndex]);
+    navigateTo(randomPictureIndex());
+  });
+  prevPictureBtn.addEventListener("click", function () {
+    if (historyPos > 0) {
+      historyPos--;
+      showPicture(pictureHistory[historyPos]);
+    }
   });
   blankBtn.addEventListener("click", function () {
-    pictureIndex = 0;            // "blank" is always the first entry
-    pctx.clearRect(0, 0, cssW(), cssH());
-    undoStack = [];
-    drawPicture(pictures[pictureIndex]);
+    navigateTo(0);              // "blank" is always the first entry
   });
   clearBtn.addEventListener("click", function () {
     var ok = true;
