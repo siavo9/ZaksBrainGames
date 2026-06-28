@@ -196,7 +196,11 @@
     background: radial-gradient(ellipse at 50% 100%,
       #fff8a8 0%, #ffd23f 22%, #ff7e1a 55%, #c0392b 80%, transparent 100%);
     border-radius: 50% 50% 35% 35% / 70% 70% 30% 30%;
-    filter: drop-shadow(0 0 14px rgba(255,140,40,0.95));
+    /* No per-frame CSS filter here: animating drop-shadow/blur on every flame
+       forces a full re-rasterization each frame, and that cost multiplies by
+       the number of fires (15+ from level 3 on), choking the compositor so
+       taps/water don't paint. The radial-gradient fades to transparent for a
+       soft edge, and the ::before halo + base box-shadow supply the glow. */
     animation: flameDance 0.45s ease-in-out infinite alternate;
     pointer-events: none;
   }
@@ -208,8 +212,10 @@
   .fire-spot .flame.back {
     width: 110%; height: 102%;
     bottom: 10px;
-    opacity: 0.75;
-    filter: blur(3px) drop-shadow(0 0 22px rgba(255,80,20,0.9));
+    opacity: 0.7;
+    /* Blur was the single most expensive effect here (re-rasterized every
+       frame, per fire). The soft radial gradient already gives a hazy,
+       depth-y back flame without it. */
     background: radial-gradient(ellipse at 50% 100%,
       #ffae33 0%, #ff5500 38%, #8b1500 78%, transparent 100%);
     animation: flameDance 0.7s ease-in-out infinite alternate-reverse;
@@ -232,7 +238,7 @@
     bottom: 22px;
     background: radial-gradient(ellipse at 50% 100%,
       #ffffff 0%, #fff5b0 40%, #ffae33 80%, transparent 100%);
-    filter: drop-shadow(0 0 10px rgba(255,220,120,0.95));
+    /* drop-shadow removed for perf (see main .flame note above). */
     animation: flameDance 0.28s ease-in-out infinite alternate;
     opacity: 0.95;
   }
@@ -253,9 +259,13 @@
     z-index: 2;
     animation: baseGlow 0.7s ease-in-out infinite alternate;
   }
+  /* Opacity-only pulse: the old version animated `filter` (brightness +
+     drop-shadow) and `scale` every frame on every fire's base, re-rasterizing
+     the large box-shadow each tick. Animating opacity alone is GPU-cheap and
+     the static box-shadow still reads as a glowing hot-spot. */
   @keyframes baseGlow {
-    0%   { transform: translateX(-50%) scale(0.94); filter: brightness(1)    drop-shadow(0 0 10px rgba(255,160,40,0.9)); }
-    100% { transform: translateX(-50%) scale(1.08); filter: brightness(1.18) drop-shadow(0 0 22px rgba(255,220,80,1)); }
+    0%   { opacity: 0.8; }
+    100% { opacity: 1; }
   }
   .fire-spot .flame-base:active { transform: translateX(-50%) scale(0.85); }
   /* Dying state: shrink + fade */
