@@ -133,6 +133,27 @@
   function wordmarkUrl() { return BASE + 'zakrad-wordmark.svg'; }
   function altFor(name) { return ALT[name] || 'Zak Rad the fox'; }
 
+  // Never show a broken-image icon: if a pose PNG fails to load (e.g. an old
+  // cached build referencing a moved/renamed file), fall back to the .svg
+  // copy, then finally to a friendly fox emoji.
+  function attachPoseFallback(img, name) {
+    img.addEventListener('error', function onErr() {
+      var src = img.getAttribute('src') || '';
+      if (/\.png(\?|$)/.test(src)) {
+        img.src = BASE + 'zakrad-' + name + '.svg';
+      } else {
+        img.removeEventListener('error', onErr);
+        var span = document.createElement('span');
+        span.textContent = '🦊';
+        span.setAttribute('role', 'img');
+        span.setAttribute('aria-label', altFor(name));
+        span.style.fontSize = (img.width ? img.width * 0.8 : 48) + 'px';
+        span.style.lineHeight = '1';
+        if (img.parentNode) img.parentNode.replaceChild(span, img);
+      }
+    });
+  }
+
   function dayOfYear(d) {
     d = d || new Date();
     var start = new Date(d.getFullYear(), 0, 0);
@@ -164,6 +185,7 @@
 
     var img = document.createElement('img');
     img.className = 'zak-img' + (opts.bob ? ' zak-bob' : '');
+    attachPoseFallback(img, pose);
     img.src = poseUrl(pose);
     img.alt = opts.alt != null ? opts.alt : altFor(pose);
     if (opts.lazy) { img.loading = 'lazy'; img.decoding = 'async'; }
@@ -230,6 +252,7 @@
 
     var img = document.createElement('img');
     img.className = 'zak-toast-art';
+    attachPoseFallback(img, opts.pose);
     img.src = poseUrl(opts.pose);
     img.alt = altFor(opts.pose);
     img.decoding = 'async';
