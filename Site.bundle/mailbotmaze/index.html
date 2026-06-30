@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mailbot Maze — Zak's Brain Games</title>
+<meta name="description" content="Mailbot Maze is a friendly maze game! Drag your finger to trace a route through town, then press GO and watch the mail truck deliver the letter. Builds spatial navigation, route planning, and map reading. Ages 5+." />
+<meta name="theme-color" content="#6BE6A8" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%BA%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+
+<!-- Self-hosted fonts (offline; no external requests) -->
+<style>
+  @font-face { font-family:'Fredoka'; font-style:normal; font-weight:300 700; font-display:swap; src:url('../fonts/fredoka.woff2') format('woff2'); }
+  @font-face { font-family:'Bubblegum Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('../fonts/bubblegum-sans-400.woff2') format('woff2'); }
+</style>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --mint:        #6BE6A8;
+    --mint-dark:   #1FB97A;
+    --mint-deep:   #128A59;
+    --mint-soft:   #D6F8E8;
+    --grass:       #BFEFD2;
+    --road:        #FFFFFF;
+    --road-edge:   #E6F4EC;
+    --wall:        #7CC9A6;
+    --wall-dark:   #3FA67C;
+    --water:       #7FD3F2;
+    --water-dark:  #3BAFD9;
+    --blue:        #2196F3;
+    --blue-dark:   #0D47A1;
+    --orange:      #FF8A3D;
+    --orange-dark: #C2570F;
+    --yellow:      #FFD93D;
+    --dark:        #214A3A;
+    --ink:         #173a2c;
+    --route:       #FFB74D;
+    --route-line:  #F57C00;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Fredoka', system-ui, sans-serif;
+    background: linear-gradient(180deg, #C8F5E0 0%, #DFF8EC 55%, #EAFBF3 100%);
+    color: var(--dark);
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Decorative floating shapes (pushed below the fixed nav) */
+  .deco {
+    position: fixed; border-radius: 50%; opacity: 0.32; z-index: 1;
+    pointer-events: none; animation: float 9s ease-in-out infinite;
+  }
+  .deco.d1 { width: 120px; height: 120px; background: var(--mint); top: 120px; left: 4%; animation-delay: 0s; }
+  .deco.d2 { width: 80px;  height: 80px;  background: var(--yellow); top: 180px; right: 6%; animation-delay: 2s; }
+  .deco.d3 { width: 100px; height: 100px; background: var(--water); top: 60%; left: 6%; animation-delay: 4s; }
+  .deco.d4 { width: 64px;  height: 64px;  background: var(--orange); top: 50%; right: 4%; animation-delay: 1.5s; }
+  @keyframes float { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-24px) rotate(12deg); } }
+
+  .screen { display: none; min-height: 100vh; padding: 96px 16px 28px; position: relative; z-index: 10; }
+  .screen.active { display: block; animation: screenIn 0.3s ease; }
+  @keyframes screenIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* ===== TOP NAV (persistent across all screens) ===== */
+  #top-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+    background: rgba(255, 255, 255, 0.93);
+    border-bottom: 4px solid var(--mint-deep);
+    box-shadow: 0 4px 0 rgba(18, 138, 89, 0.18);
+    padding: 10px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px; flex-wrap: wrap;
+  }
+  #top-nav .nav-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .nav-btn {
+    font-family: inherit; font-size: 1em; padding: 9px 16px;
+    background: white; color: var(--dark);
+    border: 3px solid var(--mint-deep); border-radius: 24px;
+    cursor: pointer; box-shadow: 0 4px 0 var(--mint-deep);
+    font-weight: 700; text-decoration: none; display: inline-block;
+    min-height: 44px;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .nav-btn:hover  { transform: translateY(2px); box-shadow: 0 2px 0 var(--mint-deep); }
+  .nav-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--mint-deep); }
+  .nav-btn.home {
+    background: var(--mint-dark); color: white;
+    border-color: var(--mint-deep); box-shadow: 0 4px 0 var(--mint-deep);
+  }
+  .nav-btn.home:hover  { box-shadow: 0 2px 0 var(--mint-deep); }
+  .nav-btn.home:active { box-shadow: 0 0 0 var(--mint-deep); }
+  .nav-btn.parent {
+    background: var(--blue); color: white;
+    border-color: var(--blue-dark); box-shadow: 0 4px 0 var(--blue-dark);
+  }
+  .nav-btn.parent:hover  { box-shadow: 0 2px 0 var(--blue-dark); }
+  .nav-btn.parent:active { box-shadow: 0 0 0 var(--blue-dark); }
+  .nav-btn.help {
+    background: var(--orange); color: white;
+    border-color: var(--orange-dark); box-shadow: 0 4px 0 var(--orange-dark);
+  }
+  .nav-btn.help:hover  { box-shadow: 0 2px 0 var(--orange-dark); }
+  .nav-btn.help:active { box-shadow: 0 0 0 var(--orange-dark); }
+
+  /* ===== HOW TO PLAY modal ===== */
+  #how-modal {
+    position: fixed; inset: 0; background: rgba(23, 58, 44, 0.55);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+  }
+  #how-modal.open { display: flex; }
+  .modal-card {
+    background: white; border: 5px solid var(--mint-deep);
+    border-radius: 24px; padding: 24px 28px 22px;
+    max-width: 540px; width: 100%;
+    box-shadow: 0 9px 0 var(--mint-deep);
+    text-align: left; max-height: 90vh; overflow-y: auto;
+  }
+  .modal-card h2 {
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: 2em; color: var(--mint-dark);
+    text-shadow: 2px 2px 0 #fff, 3px 3px 0 var(--mint-deep);
+    margin-bottom: 14px; text-align: center;
+  }
+  .modal-card p { font-size: 1.15em; margin-bottom: 12px; line-height: 1.4; }
+  .modal-card ul { list-style: none; padding-left: 0; margin: 8px 0 16px; }
+  .modal-card li {
+    padding: 10px 14px; margin-bottom: 8px;
+    background: var(--mint-soft); border-left: 5px solid var(--mint);
+    border-radius: 10px; font-size: 1.05em; line-height: 1.4;
+  }
+  .modal-close {
+    display: block; margin: 4px auto 0;
+    font-family: inherit; font-size: 1.25em; padding: 12px 28px;
+    background: var(--mint-dark); color: white;
+    border: 4px solid var(--mint-deep); border-radius: 30px;
+    cursor: pointer; box-shadow: 0 5px 0 var(--mint-deep);
+    font-weight: 700; min-height: 52px;
+  }
+  .modal-close:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--mint-deep); }
+
+  /* ===== HOME ===== */
+  #home { text-align: center; padding-top: 120px; }
+  #home h1 {
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: clamp(2.8em, 8vw, 5.4em);
+    color: var(--mint-dark);
+    text-shadow: 4px 4px 0 #fff, 7px 7px 0 var(--mint-deep);
+    margin-bottom: 10px;
+    animation: bounce 2.2s ease-in-out infinite;
+  }
+  @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-16px);} }
+  .home-truck { font-size: clamp(3.2em, 12vw, 5.5em); line-height: 1; display: inline-block; animation: drive 2.6s ease-in-out infinite; filter: drop-shadow(3px 5px 0 rgba(0,0,0,0.12)); }
+  @keyframes drive { 0%,100% { transform: translateX(-14px) rotate(-2deg); } 50% { transform: translateX(14px) rotate(2deg); } }
+  .tagline { font-size: clamp(1.2em, 3.4vw, 1.7em); color: var(--dark); margin: 6px auto 18px; max-width: 540px; font-weight: 500; }
+  .age-note { font-size: 1.05em; color: var(--mint-deep); font-weight: 600; margin: 12px 0 4px; }
+  .play-btn {
+    font-family: inherit; font-size: 2.2em; padding: 18px 56px;
+    background: var(--mint-dark); color: white;
+    border: 6px solid var(--mint-deep); border-radius: 60px;
+    cursor: pointer; box-shadow: 0 9px 0 var(--mint-deep);
+    transition: transform 0.1s, box-shadow 0.1s; margin-top: 14px; min-height: 64px;
+    animation: pulseGlow 2.4s ease-in-out infinite;
+  }
+  @keyframes pulseGlow {
+    0%,100% { box-shadow: 0 9px 0 var(--mint-deep), 0 0 0 0 rgba(31,185,122,0.5); }
+    50% { box-shadow: 0 9px 0 var(--mint-deep), 0 0 0 18px rgba(31,185,122,0); }
+  }
+  .play-btn:hover  { transform: translateY(3px); }
+  .play-btn:active { transform: translateY(9px); box-shadow: 0 0 0 var(--mint-deep); }
+  .more-games { margin-top: 32px; font-size: 1.15em; color: var(--dark); }
+  .more-games a {
+    color: var(--blue-dark); font-weight: 700; text-decoration: none;
+    border-bottom: 3px dashed var(--blue-dark); padding-bottom: 2px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .more-games a:hover { color: var(--mint-dark); border-bottom-color: var(--mint-dark); }
+
+  /* ===== GAME ===== */
+  #game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 8px 8px; margin-bottom: 6px; flex-wrap: wrap; gap: 10px;
+    max-width: 700px; margin-left: auto; margin-right: auto;
+  }
+  #game-title {
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: clamp(1.6em, 5vw, 2.3em); color: var(--mint-dark);
+    text-shadow: 3px 3px 0 #fff, 4px 4px 0 var(--mint-deep);
+  }
+  .header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  #mute-btn {
+    font-size: 1.5em; background: white; border: 4px solid var(--mint-deep);
+    border-radius: 50%; width: 54px; height: 54px; cursor: pointer;
+    box-shadow: 0 5px 0 var(--mint-deep);
+  }
+  #mute-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--mint-deep); }
+
+  #stats-bar {
+    display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+    margin: 0 auto 12px; max-width: 700px;
+  }
+  .stat-card {
+    background: white; border: 4px solid var(--mint-deep); border-radius: 18px;
+    padding: 6px 16px; box-shadow: 0 5px 0 var(--mint-deep);
+    min-width: 96px; text-align: center;
+  }
+  .stat-card .stat-label { font-size: 0.9em; color: #4d7a66; font-weight: 700; }
+  .stat-card .stat-value { font-size: 1.5em; font-weight: 700; color: var(--dark); }
+  .stat-card.lvl .stat-value { color: var(--mint-dark); }
+  .stat-card.star .stat-value { color: var(--route-line); }
+
+  #challenge-banner {
+    max-width: 700px; margin: 0 auto 10px; text-align: center;
+    font-size: 1.12em; font-weight: 600; color: var(--ink);
+    background: rgba(255,255,255,0.78); border-radius: 16px;
+    padding: 8px 14px; min-height: 24px; line-height: 1.35;
+  }
+  #challenge-banner .pkg-count { color: var(--route-line); font-weight: 700; }
+
+  /* Legend / map reading */
+  #legend {
+    max-width: 700px; margin: 0 auto 10px; display: none;
+    justify-content: center; gap: 8px 16px; flex-wrap: wrap;
+    background: rgba(255,255,255,0.85); border-radius: 16px; padding: 8px 12px;
+    font-size: 0.98em; font-weight: 600;
+  }
+  #legend.show { display: flex; }
+  #legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* ===== MAZE BOARD ===== */
+  #board-wrap {
+    max-width: 560px; margin: 0 auto 8px;
+    background: rgba(255,255,255,0.6); border-radius: 26px;
+    padding: 14px; border: 5px solid var(--mint);
+    box-shadow: 0 8px 0 rgba(18,138,89,0.12);
+  }
+  #board {
+    position: relative; width: 100%;
+    border-radius: 16px; overflow: hidden;
+    background: var(--grass);
+    touch-action: none;
+    display: block;
+  }
+  #board svg { display: block; width: 100%; height: auto; }
+
+  /* ===== CONTROLS ===== */
+  #controls {
+    max-width: 560px; margin: 0 auto;
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  }
+  .game-btn {
+    font-family: inherit; font-weight: 700; font-size: 1.15em;
+    padding: 14px 26px; border-radius: 30px; cursor: pointer;
+    border: 4px solid; min-height: 56px;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .game-btn:active { transform: translateY(3px); }
+  .go-btn {
+    background: var(--mint-dark); color: white;
+    border-color: var(--mint-deep); box-shadow: 0 6px 0 var(--mint-deep);
+    font-size: 1.45em; padding: 14px 44px;
+  }
+  .go-btn:hover { transform: translateY(2px); box-shadow: 0 4px 0 var(--mint-deep); }
+  .go-btn:active { box-shadow: 0 2px 0 var(--mint-deep); }
+  .go-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: 0 6px 0 var(--mint-deep); }
+  .reset-btn {
+    background: white; color: var(--dark);
+    border-color: var(--mint-deep); box-shadow: 0 6px 0 var(--mint-deep);
+  }
+  .reset-btn:hover { transform: translateY(2px); box-shadow: 0 4px 0 var(--mint-deep); }
+  .reset-btn:active { box-shadow: 0 2px 0 var(--mint-deep); }
+
+  #feedback {
+    max-width: 560px; margin: 12px auto 0; text-align: center;
+    font-size: 1.3em; font-weight: 700; min-height: 36px; line-height: 1.3;
+  }
+  #feedback.good { color: var(--mint-dark); animation: bouncePraise 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+  #feedback.gentle { color: var(--blue-dark); }
+  @keyframes bouncePraise { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+
+  /* ===== WIN SCREEN ===== */
+  #win .panel {
+    max-width: 560px; margin: 0 auto;
+    background: white; border: 5px solid var(--mint-deep); border-radius: 26px;
+    padding: 28px 22px; text-align: center;
+    box-shadow: 0 8px 0 rgba(18,138,89,0.18);
+  }
+  #win .trophy { font-size: 5em; display: inline-block; animation: trophyBounce 1.4s ease-in-out infinite; filter: drop-shadow(4px 6px 0 rgba(0,0,0,0.15)); }
+  @keyframes trophyBounce { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-14px) rotate(6deg); } }
+  #win h2 {
+    font-family: 'Bubblegum Sans', cursive; font-size: clamp(2em, 6vw, 2.8em);
+    color: var(--mint-dark); margin: 8px 0;
+    text-shadow: 2px 2px 0 #fff, 3px 3px 0 var(--mint-deep);
+  }
+  #win .msg {
+    font-size: 1.2em; line-height: 1.5; color: var(--dark);
+    background: var(--mint-soft); padding: 16px 18px; border-radius: 18px;
+    margin: 14px auto; max-width: 460px; font-weight: 600;
+  }
+  #win .win-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  #win .win-buttons .game-btn { font-size: 1.2em; }
+  .star-row { font-size: 2.4em; letter-spacing: 8px; margin: 6px 0; min-height: 1.2em; }
+
+  /* Confetti */
+  .confetti {
+    position: fixed; width: 12px; height: 12px;
+    pointer-events: none; z-index: 9999; border-radius: 2px;
+  }
+
+  /* ===== POSITIVE REINFORCEMENT EFFECTS ===== */
+  .praise-pop {
+    position: fixed; top: 32%; left: 50%; transform: translate(-50%, -50%);
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: clamp(2.4em, 8vw, 4.6em); color: var(--mint-dark);
+    text-shadow: 3px 3px 0 #fff, 6px 6px 0 var(--mint-deep);
+    z-index: 60; pointer-events: none; opacity: 0; white-space: nowrap;
+    animation: praisePop 1.7s cubic-bezier(0.34, 1.5, 0.6, 1) forwards;
+  }
+  @keyframes praisePop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(-12deg); }
+    20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(4deg); }
+    40%  { transform: translate(-50%, -50%) scale(0.95) rotate(-2deg); }
+    60%  { transform: translate(-50%, -50%) scale(1.05) rotate(1deg); }
+    80%  { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+    100% { opacity: 0; transform: translate(-50%, -75%) scale(0.9); }
+  }
+  .firework-particle {
+    position: fixed; width: 8px; height: 8px; border-radius: 50%;
+    pointer-events: none; z-index: 55; animation: fwExplode 1.2s ease-out forwards;
+  }
+  @keyframes fwExplode {
+    0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+    70%  { opacity: 1; }
+    100% { transform: translate(var(--fx, 0), calc(var(--fy, 0) + 30px)) scale(0.4); opacity: 0; }
+  }
+  .star-rise {
+    position: fixed; font-size: 2.2em; pointer-events: none; z-index: 55;
+    animation: starRise 1.8s ease-out forwards;
+  }
+  @keyframes starRise {
+    0%   { transform: translateY(0) scale(0.6) rotate(0); opacity: 0; }
+    20%  { opacity: 1; transform: translateY(-30px) scale(1.1) rotate(15deg); }
+    100% { transform: translateY(-220px) scale(0.7) rotate(360deg); opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
+  @media (max-width: 480px) {
+    .nav-btn { font-size: 0.92em; padding: 8px 12px; }
+    #board-wrap { padding: 10px; }
+    .go-btn { padding: 14px 34px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== PERSISTENT TOP NAV ========== -->
+<nav id="top-nav" aria-label="Game navigation">
+  <div class="nav-group">
+    <a href="#" class="nav-btn home" onclick="goHome(); return false;" aria-label="Go to Mailbot Maze home page">🏠 Game Home</a>
+    <a href="../index.html" class="nav-btn parent" aria-label="Go to Zak's Brain Games">🧠 More Brain Games</a>
+  </div>
+  <div class="nav-group">
+    <button type="button" class="nav-btn help" onclick="openHowTo()" aria-label="Open How to Play instructions">❓ How to Play</button>
+  </div>
+</nav>
+
+<!-- ========== HOW TO PLAY modal ========== -->
+<div id="how-modal" role="dialog" aria-modal="true" aria-labelledby="how-title" onclick="if(event.target===this) closeHowTo()">
+  <div class="modal-card">
+    <h2 id="how-title">🗺️ How to Play</h2>
+    <p>🗺️ The mail truck has a letter to deliver!</p>
+    <ul>
+      <li>1. Find the truck and the house it needs to reach.</li>
+      <li>2. Drag your finger to draw a path through the streets.</li>
+      <li>3. Avoid dead ends — then press GO and watch the delivery!</li>
+      <li>Tip: plan your whole route before you start driving.</li>
+    </ul>
+    <button type="button" class="modal-close" onclick="closeHowTo()">Got it! Let's deliver!</button>
+  </div>
+</div>
+
+<div class="deco d1"></div>
+<div class="deco d2"></div>
+<div class="deco d3"></div>
+<div class="deco d4"></div>
+
+<!-- ========== HOME SCREEN ========== -->
+<div id="home" class="screen active">
+  <h1>Mailbot Maze</h1>
+  <div class="home-truck" role="img" aria-label="Mail truck">🚚</div>
+  <div class="tagline">Trace a path and deliver the mail!</div>
+  <div class="age-note">🗺️ Ages 5+ · Mazes &amp; Maps</div>
+  <button class="play-btn" onclick="startGame()" aria-label="Play Mailbot Maze">Play! ▶</button>
+  <div class="more-games">
+    🧠 Try more brain games at
+    <a href="../index.html">Zak's Brain Games</a>
+  </div>
+</div>
+
+<!-- ========== GAME SCREEN ========== -->
+<div id="game" class="screen">
+  <div id="game-header">
+    <div id="game-title">🗺️ Mailbot Maze</div>
+    <div class="header-controls">
+      <button id="mute-btn" onclick="toggleMute()" aria-label="Mute or unmute sounds" title="Mute/Unmute">🔊</button>
+    </div>
+  </div>
+
+  <div id="stats-bar">
+    <div class="stat-card lvl">
+      <div class="stat-label">Level</div>
+      <div class="stat-value" id="stat-level">1</div>
+    </div>
+    <div class="stat-card star">
+      <div class="stat-label">Stars ⭐</div>
+      <div class="stat-value" id="stat-stars">0</div>
+    </div>
+  </div>
+
+  <div id="challenge-banner" aria-live="polite">Drag from the truck to the house!</div>
+
+  <div id="legend" aria-hidden="false">
+    <span>🚚 Start</span>
+    <span>🏠 Deliver here</span>
+    <span>📦 Package</span>
+    <span>💧 Puddle (avoid!)</span>
+  </div>
+
+  <div id="board-wrap">
+    <div id="board" role="application" aria-label="Maze board. Drag from the truck along the streets to draw a route to the house."></div>
+  </div>
+
+  <div id="controls">
+    <button class="game-btn reset-btn" id="reset-btn" onclick="resetRoute()" aria-label="Clear your route and start over">↺ Clear Route</button>
+    <button class="game-btn go-btn" id="go-btn" onclick="pressGo()" aria-label="Drive the truck along your route" disabled>GO! 🚦</button>
+  </div>
+
+  <p id="feedback" aria-live="polite"></p>
+</div>
+
+<!-- ========== WIN SCREEN ========== -->
+<div id="win" class="screen">
+  <div class="panel">
+    <div class="trophy">🏆</div>
+    <h2 id="win-title">Special Delivery!</h2>
+    <div class="star-row" id="win-stars" aria-hidden="true">⭐⭐⭐</div>
+    <p class="msg" id="win-msg">You delivered the mail! Great route planning! 🚚💌</p>
+    <div class="win-buttons">
+      <button class="game-btn go-btn" id="next-btn" onclick="nextLevel()" aria-label="Play the next maze">Next Maze ▶</button>
+      <button class="game-btn reset-btn" onclick="goHome()" aria-label="Go to game home">🏠 Game Home</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   MAILBOT MAZE — trace-a-route delivery game. Ages 5+.
+   Spatial navigation, route planning, early map reading.
+   ========================================================= */
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+const state = {
+  muted: false,
+  level: 1,
+  stars: 0,
+  grid: null,          // 2D array of cells: {wall, water, start, goal, package}
+  cols: 0, rows: 0,
+  cell: 60,            // px size of a cell in the SVG viewBox
+  start: null,         // {r,c}
+  goal: null,          // {r,c}
+  packages: [],        // [{r,c}]
+  path: [],            // [{r,c}] cells the child has traced (includes start)
+  dragging: false,
+  driving: false,      // truck is animating
+  needPackages: false, // must collect all packages before delivery
+  shortest: 0,         // shortest possible route length (cells) for star challenge
+  starChallenge: false,// "find the shortest path" mode
+  recentStruggle: 0,   // counts retries to ease difficulty
+  solveSinceEase: 0,
+};
+
+const PRAISE = [
+  'Special delivery!', 'You did it!', 'Great driving!', 'Mail delivered!',
+  'Awesome route!', 'Way to go!', 'Perfect path!', 'Map master!',
+  'Brilliant!', 'Woohoo!', 'Nailed it!', 'Super delivery!',
+  'You got it!', 'Fantastic!', 'Route star!',
+];
+function pickPraise() { return PRAISE[Math.floor(Math.random() * PRAISE.length)]; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+/* ---------- SCREEN HELPERS ---------- */
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ---------- NAVIGATION ---------- */
+function goHome() {
+  state.driving = false;
+  state.dragging = false;
+  switchScreen('home');
+  const fb = document.getElementById('feedback');
+  if (fb) { fb.textContent = ''; fb.className = ''; }
+}
+function openHowTo() { document.getElementById('how-modal').classList.add('open'); }
+function closeHowTo() { document.getElementById('how-modal').classList.remove('open'); }
+
+/* =========================================================
+   MAZE GENERATION
+   Grid of cells. "Path" cells are streets; non-path are walls
+   (buildings). We carve a guaranteed-solvable maze with a
+   randomized DFS over a coarse cell grid so paths are wide and
+   simple, then place start, goal, packages, and puddles.
+   ========================================================= */
+
+// Difficulty profile per level band.
+function levelConfig(level) {
+  // Ease the maze if the child has been struggling.
+  const easeShift = state.recentStruggle >= 2 ? -1 : 0;
+  let L = Math.max(1, level + easeShift);
+
+  // size grows gently; wide, simple early mazes for little ones.
+  // "branch" adds extra connections (loops) so higher levels have more
+  // choices to plan around; low branch keeps early mazes near-linear.
+  let size, branch, pkgs, puddles, needPackages, legend, starChallenge;
+  if (L <= 1)      { size = 3; branch = 0.10; }  // tiny first maze, 5-yr-old friendly
+  else if (L <= 2) { size = 3; branch = 0.30; }
+  else if (L <= 4) { size = 4; branch = 0.45; }
+  else if (L <= 6) { size = 5; branch = 0.6; }
+  else if (L <= 9) { size = 6; branch = 0.75; }
+  else             { size = 7; branch = 0.9; }
+
+  // Packages: introduce at level 4, "collect all then deliver" at 5+.
+  if (L >= 5)      pkgs = Math.min(3, 1 + Math.floor((L - 5) / 2) + 1);
+  else if (L >= 4) pkgs = 1;
+  else             pkgs = 0;
+  pkgs = Math.min(pkgs, 3);
+  needPackages = L >= 5;
+
+  // Puddles (gentle obstacle) from level 3.
+  puddles = L >= 7 ? 3 : (L >= 5 ? 2 : (L >= 3 ? 1 : 0));
+
+  // Map/legend reading emphasized from level 6.
+  legend = true;
+
+  // Shortest-path star challenge for older kids (level 8+).
+  starChallenge = L >= 8;
+
+  return { size, branch, pkgs, puddles, needPackages, legend, starChallenge };
+}
+
+// Build a maze on a (size x size) cell grid using randomized DFS.
+// Returns { grid (size x size of {wall}), } where wall=false means street.
+function carveMaze(size, branch) {
+  // We use a "thick" representation: full grid is (2*size+1) wide so that
+  // walls live between cells. But for big, kid-friendly wide streets we
+  // instead carve on the cell grid directly and treat carved cells as
+  // streets connected to neighbors. Simpler: model rooms + open walls.
+  const N = size;
+  const visited = Array.from({ length: N }, () => Array(N).fill(false));
+  // adjacency: open[r][c] = {N,S,E,W} booleans meaning a street connects.
+  const open = Array.from({ length: N }, () =>
+    Array.from({ length: N }, () => ({ N: false, S: false, E: false, W: false })));
+
+  const stack = [{ r: 0, c: 0 }];
+  visited[0][0] = true;
+  const DIRS = [
+    { d: 'N', dr: -1, dc: 0, o: 'S' },
+    { d: 'S', dr: 1, dc: 0, o: 'N' },
+    { d: 'E', dr: 0, dc: 1, o: 'W' },
+    { d: 'W', dr: 0, dc: -1, o: 'E' },
+  ];
+  while (stack.length) {
+    const cur = stack[stack.length - 1];
+    const opts = [];
+    for (const dir of DIRS) {
+      const nr = cur.r + dir.dr, nc = cur.c + dir.dc;
+      if (nr >= 0 && nr < N && nc >= 0 && nc < N && !visited[nr][nc]) opts.push(dir);
+    }
+    if (opts.length === 0) { stack.pop(); continue; }
+    const dir = opts[Math.floor(Math.random() * opts.length)];
+    const nr = cur.r + dir.dr, nc = cur.c + dir.dc;
+    open[cur.r][cur.c][dir.d] = true;
+    open[nr][nc][dir.o] = true;
+    visited[nr][nc] = true;
+    stack.push({ r: nr, c: nc });
+  }
+
+  // Add extra loops/branches based on "branch" factor to make routes
+  // less linear for higher levels (more decisions). Lower branch = more
+  // tree-like and forgiving for little ones.
+  const extra = Math.floor(branch * N * N * 0.5);
+  for (let i = 0; i < extra; i++) {
+    const r = Math.floor(Math.random() * N);
+    const c = Math.floor(Math.random() * N);
+    const dir = DIRS[Math.floor(Math.random() * DIRS.length)];
+    const nr = r + dir.dr, nc = c + dir.dc;
+    if (nr >= 0 && nr < N && nc >= 0 && nc < N) {
+      open[r][c][dir.d] = true;
+      open[nr][nc][dir.o] = true;
+    }
+  }
+
+  return { N, open };
+}
+
+// Expand the room/open model into a fine cell grid where streets are
+// path cells. We use a (2N x 2N) fine grid: each room maps to (2r, 2c)
+// and corridors fill the in-between cells where rooms are open to each
+// other. This produces wide, walkable streets on a clear grid.
+function buildGrid(maze) {
+  const N = maze.N;
+  const FR = 2 * N;   // fine rows
+  const FC = 2 * N;   // fine cols
+  // cell.wall = true means building/wall (not walkable).
+  const grid = Array.from({ length: FR }, () =>
+    Array.from({ length: FC }, () => ({ wall: true, water: false })));
+
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      const fr = 2 * r, fc = 2 * c;
+      grid[fr][fc].wall = false; // room is a street
+      if (maze.open[r][c].S && 2 * r + 1 < FR) grid[fr + 1][fc].wall = false;
+      if (maze.open[r][c].E && 2 * c + 1 < FC) grid[fr][fc + 1].wall = false;
+    }
+  }
+  return { grid, rows: FR, cols: FC };
+}
+
+// BFS shortest path (in path cells) between two cells, avoiding water.
+// Optionally requires visiting a set of "must" cells (order-free) — we
+// approximate by computing pairwise BFS distances for star/package routes.
+function bfsPath(grid, rows, cols, from, to, blockWater) {
+  const key = (r, c) => r * cols + c;
+  const prev = new Map();
+  const q = [from];
+  const seen = new Set([key(from.r, from.c)]);
+  const DIRS = [[-1,0],[1,0],[0,-1],[0,1]];
+  while (q.length) {
+    const cur = q.shift();
+    if (cur.r === to.r && cur.c === to.c) {
+      // reconstruct
+      const path = [];
+      let k = key(cur.r, cur.c);
+      let node = cur;
+      while (node) {
+        path.unshift(node);
+        const pk = prev.get(key(node.r, node.c));
+        node = pk || null;
+      }
+      return path;
+    }
+    for (const [dr, dc] of DIRS) {
+      const nr = cur.r + dr, nc = cur.c + dc;
+      if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+      const cell = grid[nr][nc];
+      if (cell.wall) continue;
+      if (blockWater && cell.water) continue;
+      const nk = key(nr, nc);
+      if (seen.has(nk)) continue;
+      seen.add(nk);
+      prev.set(nk, cur);
+      q.push({ r: nr, c: nc });
+    }
+  }
+  return null;
+}
+
+// All walkable street cells.
+function streetCells(grid, rows, cols) {
+  const cells = [];
+  for (let r = 0; r < rows; r++)
+    for (let c = 0; c < cols; c++)
+      if (!grid[r][c].wall) cells.push({ r, c });
+  return cells;
+}
+
+// Generate a full, solvable level.
+function generateLevel() {
+  const cfg = levelConfig(state.level);
+  let attempt = 0;
+  while (true) {
+    attempt++;
+    const maze = carveMaze(cfg.size, cfg.branch);
+    const built = buildGrid(maze);
+    const grid = built.grid, rows = built.rows, cols = built.cols;
+    const streets = streetCells(grid, rows, cols);
+
+    // Start at top-left street; goal at the farthest street cell so the
+    // route is meaningful but always reachable.
+    const start = { r: 0, c: 0 };
+    if (grid[0][0].wall) continue;
+
+    // Find farthest reachable cell from start via BFS distance.
+    const far = farthestCell(grid, rows, cols, start);
+    if (!far || (far.r === start.r && far.c === start.c)) continue;
+    const goal = { r: far.r, c: far.c };
+
+    // Base path (no water yet) to know the corridor.
+    const basePath = bfsPath(grid, rows, cols, start, goal, false);
+    if (!basePath || basePath.length < 3) continue;
+
+    // Place packages on street cells that are NOT start/goal, spread out.
+    const packages = [];
+    if (cfg.pkgs > 0) {
+      const candidates = streets.filter(s =>
+        !(s.r === start.r && s.c === start.c) &&
+        !(s.r === goal.r && s.c === goal.c));
+      shuffleInPlace(candidates);
+      for (const cand of candidates) {
+        if (packages.length >= cfg.pkgs) break;
+        // keep packages a little apart
+        if (packages.every(p => Math.abs(p.r - cand.r) + Math.abs(p.c - cand.c) >= 2)) {
+          packages.push(cand);
+        }
+      }
+    }
+
+    // Place puddles (water) on street cells that are NOT start/goal/packages,
+    // AND not on the only path — verify solvability after placing.
+    const reserved = new Set([cellKey(start, cols), cellKey(goal, cols)]);
+    packages.forEach(p => reserved.add(cellKey(p, cols)));
+    const puddleCandidates = streets.filter(s => !reserved.has(cellKey(s, cols)));
+    shuffleInPlace(puddleCandidates);
+    let placed = 0;
+    for (const pc of puddleCandidates) {
+      if (placed >= cfg.puddles) break;
+      grid[pc.r][pc.c].water = true;
+      // verify start->goal still solvable avoiding water, and each package reachable
+      if (!solvableWith(grid, rows, cols, start, goal, packages)) {
+        grid[pc.r][pc.c].water = false; // undo
+      } else {
+        placed++;
+      }
+    }
+
+    // Final solvability check avoiding water.
+    if (!solvableWith(grid, rows, cols, start, goal, packages)) {
+      if (attempt > 30) { // give up on puddles, clear them
+        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) grid[r][c].water = false;
+        if (!solvableWith(grid, rows, cols, start, goal, packages)) continue;
+      } else continue;
+    }
+
+    // Compute shortest route length for the star challenge / star ratings.
+    const shortest = optimalRouteLength(grid, rows, cols, start, goal,
+      cfg.needPackages ? packages : []);
+
+    // Commit to state.
+    state.grid = grid;
+    state.rows = rows;
+    state.cols = cols;
+    state.start = start;
+    state.goal = goal;
+    state.packages = packages;
+    state.needPackages = cfg.needPackages && packages.length > 0;
+    state.starChallenge = cfg.starChallenge;
+    state.shortest = shortest;
+    state.cfg = cfg;
+    return;
+  }
+}
+
+function cellKey(cell, cols) { return cell.r * cols + cell.c; }
+function shuffleInPlace(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } }
+
+// Farthest reachable street cell from "from" (BFS, ignoring water for layout).
+function farthestCell(grid, rows, cols, from) {
+  const dist = Array.from({ length: rows }, () => Array(cols).fill(-1));
+  dist[from.r][from.c] = 0;
+  const q = [from];
+  let best = from, bestD = 0;
+  const DIRS = [[-1,0],[1,0],[0,-1],[0,1]];
+  while (q.length) {
+    const cur = q.shift();
+    for (const [dr, dc] of DIRS) {
+      const nr = cur.r + dr, nc = cur.c + dc;
+      if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+      if (grid[nr][nc].wall) continue;
+      if (dist[nr][nc] !== -1) continue;
+      dist[nr][nc] = dist[cur.r][cur.c] + 1;
+      if (dist[nr][nc] > bestD) { bestD = dist[nr][nc]; best = { r: nr, c: nc }; }
+      q.push({ r: nr, c: nc });
+    }
+  }
+  return best;
+}
+
+// Is the level solvable: start can reach every package and the goal,
+// while avoiding water cells (water blocks the truck).
+function solvableWith(grid, rows, cols, start, goal, packages) {
+  if (!bfsPath(grid, rows, cols, start, goal, true)) return false;
+  for (const p of packages) {
+    if (!bfsPath(grid, rows, cols, start, p, true)) return false;
+    if (!bfsPath(grid, rows, cols, p, goal, true)) return false;
+  }
+  return true;
+}
+
+// Optimal route length (in cells, including start) from start to goal,
+// visiting all must-cells. For up to 3 packages we brute-force the order.
+function optimalRouteLength(grid, rows, cols, start, goal, must) {
+  const distBetween = (a, b) => {
+    const p = bfsPath(grid, rows, cols, a, b, true);
+    return p ? p.length - 1 : Infinity; // edges
+  };
+  if (!must || must.length === 0) {
+    const d = distBetween(start, goal);
+    return d === Infinity ? 0 : d + 1; // cells = edges + 1
+  }
+  // permutations of must
+  const perms = permutations(must);
+  let best = Infinity;
+  for (const order of perms) {
+    let total = 0;
+    let cur = start;
+    for (const m of order) { total += distBetween(cur, m); cur = m; }
+    total += distBetween(cur, goal);
+    best = Math.min(best, total);
+  }
+  return best === Infinity ? 0 : best + 1;
+}
+
+function permutations(arr) {
+  if (arr.length <= 1) return [arr.slice()];
+  const out = [];
+  for (let i = 0; i < arr.length; i++) {
+    const rest = arr.slice(0, i).concat(arr.slice(i + 1));
+    for (const p of permutations(rest)) out.push([arr[i]].concat(p));
+  }
+  return out;
+}
+
+/* =========================================================
+   RENDERING (SVG)
+   ========================================================= */
+function renderBoard() {
+  const board = document.getElementById('board');
+  const { grid, rows, cols, cell } = state;
+  const W = cols * cell, H = rows * cell;
+
+  const svg = document.createElementNS(SVGNS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+  svg.setAttribute('aria-hidden', 'true');
+
+  // grass background
+  const bg = rect(0, 0, W, H, 'var(--grass)');
+  svg.appendChild(bg);
+
+  // Draw buildings (wall cells) as rounded blocks, streets as light road.
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = c * cell, y = r * cell;
+      const cellEl = grid[r][c];
+      if (cellEl.wall) {
+        // building block
+        const b = rect(x + 3, y + 3, cell - 6, cell - 6, 'var(--wall)', 10);
+        b.setAttribute('stroke', 'var(--wall-dark)');
+        b.setAttribute('stroke-width', '2');
+        svg.appendChild(b);
+        // little roof dot for charm
+        const dot = rect(x + cell * 0.32, y + cell * 0.28, cell * 0.36, cell * 0.18, 'var(--wall-dark)', 4);
+        dot.setAttribute('opacity', '0.4');
+        svg.appendChild(dot);
+      } else {
+        // street
+        const road = rect(x, y, cell, cell, 'var(--road)');
+        svg.appendChild(road);
+      }
+    }
+  }
+
+  // Street outline / dashed lane markings on horizontal+vertical runs.
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r][c].wall) continue;
+      const x = c * cell, y = r * cell;
+      // center dash marker
+      const m = document.createElementNS(SVGNS, 'circle');
+      m.setAttribute('cx', x + cell / 2);
+      m.setAttribute('cy', y + cell / 2);
+      m.setAttribute('r', 2.2);
+      m.setAttribute('fill', 'var(--road-edge)');
+      svg.appendChild(m);
+    }
+  }
+
+  // Route highlight layer (drawn under markers/icons)
+  const routeLayer = document.createElementNS(SVGNS, 'g');
+  routeLayer.setAttribute('id', 'route-layer');
+  svg.appendChild(routeLayer);
+
+  // Water / puddles
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if (grid[r][c].water) {
+        const x = c * cell, y = r * cell;
+        const w = rect(x + 5, y + 5, cell - 10, cell - 10, 'var(--water)', 12);
+        w.setAttribute('stroke', 'var(--water-dark)');
+        w.setAttribute('stroke-width', '2');
+        svg.appendChild(w);
+        svg.appendChild(emoji(x + cell / 2, y + cell / 2, '💧', cell * 0.5));
+      }
+    }
+  }
+
+  // Packages
+  state.packages.forEach((p, i) => {
+    const x = p.c * cell, y = p.r * cell;
+    const g = document.createElementNS(SVGNS, 'g');
+    g.setAttribute('id', 'pkg-' + i);
+    g.appendChild(emoji(x + cell / 2, y + cell / 2, '📦', cell * 0.6));
+    svg.appendChild(g);
+  });
+
+  // Goal (house + puppy)
+  {
+    const x = state.goal.c * cell, y = state.goal.r * cell;
+    const halo = document.createElementNS(SVGNS, 'circle');
+    halo.setAttribute('cx', x + cell / 2);
+    halo.setAttribute('cy', y + cell / 2);
+    halo.setAttribute('r', cell * 0.42);
+    halo.setAttribute('fill', 'none');
+    halo.setAttribute('stroke', 'var(--mint-dark)');
+    halo.setAttribute('stroke-width', '3');
+    halo.setAttribute('stroke-dasharray', '4 5');
+    halo.setAttribute('id', 'goal-halo');
+    svg.appendChild(halo);
+    svg.appendChild(emoji(x + cell / 2, y + cell / 2, '🏠', cell * 0.66));
+  }
+
+  // Truck (its own group so we can animate it along the route)
+  const truck = document.createElementNS(SVGNS, 'g');
+  truck.setAttribute('id', 'truck');
+  truck.appendChild(emoji(0, 0, '🚚', cell * 0.7));
+  truck.setAttribute('transform', `translate(${state.start.c * cell + cell / 2}, ${state.start.r * cell + cell / 2})`);
+  svg.appendChild(truck);
+
+  board.innerHTML = '';
+  board.appendChild(svg);
+  state.svg = svg;
+
+  drawRoute();
+}
+
+function rect(x, y, w, h, fill, r) {
+  const el = document.createElementNS(SVGNS, 'rect');
+  el.setAttribute('x', x); el.setAttribute('y', y);
+  el.setAttribute('width', w); el.setAttribute('height', h);
+  el.setAttribute('fill', fill);
+  if (r) { el.setAttribute('rx', r); el.setAttribute('ry', r); }
+  return el;
+}
+function emoji(cx, cy, ch, size) {
+  const t = document.createElementNS(SVGNS, 'text');
+  t.setAttribute('x', cx); t.setAttribute('y', cy);
+  t.setAttribute('text-anchor', 'middle');
+  t.setAttribute('dominant-baseline', 'central');
+  t.setAttribute('font-size', size);
+  t.textContent = ch;
+  return t;
+}
+
+// Draw the traced route as a thick rounded mint/orange line.
+function drawRoute() {
+  const layer = document.getElementById('route-layer');
+  if (!layer) return;
+  layer.innerHTML = '';
+  if (state.path.length < 1) return;
+  const cell = state.cell;
+  const pts = state.path.map(p => ({ x: p.c * cell + cell / 2, y: p.r * cell + cell / 2 }));
+
+  // glow underlay
+  if (pts.length >= 2) {
+    const under = polyline(pts, 'var(--route)', cell * 0.5, 0.55);
+    layer.appendChild(under);
+    const line = polyline(pts, 'var(--route-line)', cell * 0.18, 1);
+    line.setAttribute('stroke-dasharray', '1 ' + (cell * 0.42));
+    line.setAttribute('stroke-linecap', 'round');
+    layer.appendChild(line);
+  }
+  // start blob
+  const startBlob = document.createElementNS(SVGNS, 'circle');
+  startBlob.setAttribute('cx', pts[0].x);
+  startBlob.setAttribute('cy', pts[0].y);
+  startBlob.setAttribute('r', cell * 0.16);
+  startBlob.setAttribute('fill', 'var(--route)');
+  layer.appendChild(startBlob);
+  // head marker at the latest cell
+  const last = pts[pts.length - 1];
+  const head = document.createElementNS(SVGNS, 'circle');
+  head.setAttribute('cx', last.x);
+  head.setAttribute('cy', last.y);
+  head.setAttribute('r', cell * 0.2);
+  head.setAttribute('fill', 'var(--route)');
+  head.setAttribute('stroke', 'var(--route-line)');
+  head.setAttribute('stroke-width', '3');
+  layer.appendChild(head);
+}
+
+function polyline(pts, color, width, opacity) {
+  const pl = document.createElementNS(SVGNS, 'polyline');
+  pl.setAttribute('points', pts.map(p => p.x + ',' + p.y).join(' '));
+  pl.setAttribute('fill', 'none');
+  pl.setAttribute('stroke', color);
+  pl.setAttribute('stroke-width', width);
+  pl.setAttribute('stroke-linejoin', 'round');
+  pl.setAttribute('stroke-linecap', 'round');
+  pl.setAttribute('opacity', opacity);
+  return pl;
+}
+
+/* =========================================================
+   ROUTE TRACING (pointer / touch / mouse)
+   ========================================================= */
+function pointerToCell(evt) {
+  const svg = state.svg;
+  if (!svg) return null;
+  const rect = svg.getBoundingClientRect();
+  const px = (evt.clientX - rect.left) / rect.width * (state.cols * state.cell);
+  const py = (evt.clientY - rect.top) / rect.height * (state.rows * state.cell);
+  const c = Math.floor(px / state.cell);
+  const r = Math.floor(py / state.cell);
+  if (r < 0 || r >= state.rows || c < 0 || c >= state.cols) return null;
+  return { r, c };
+}
+
+function cellWalkable(r, c) {
+  if (r < 0 || r >= state.rows || c < 0 || c >= state.cols) return false;
+  const cell = state.grid[r][c];
+  return !cell.wall && !cell.water;
+}
+
+function startDrag(evt) {
+  if (state.driving) return;
+  const cell = pointerToCell(evt);
+  if (!cell) return;
+  // Only begin a drag if starting on the truck cell (or already on the path).
+  const onStart = cell.r === state.start.r && cell.c === state.start.c;
+  const onPath = state.path.some(p => p.r === cell.r && p.c === cell.c);
+  if (!onStart && !onPath) {
+    // If they tap a street cell adjacent to start, also begin from start.
+    return;
+  }
+  state.dragging = true;
+  if (state.path.length === 0) {
+    state.path = [{ r: state.start.r, c: state.start.c }];
+  } else if (onPath) {
+    // trim route back to the touched cell so they can re-draw
+    const idx = state.path.findIndex(p => p.r === cell.r && p.c === cell.c);
+    state.path = state.path.slice(0, idx + 1);
+  }
+  drawRoute();
+  updateGoButton();
+  evt.preventDefault();
+}
+
+function moveDrag(evt) {
+  if (!state.dragging || state.driving) return;
+  const cell = pointerToCell(evt);
+  if (!cell) return;
+  extendPath(cell);
+  evt.preventDefault();
+}
+
+// Extend the path toward "cell". Only accept orthogonal single-step moves
+// onto walkable cells. If the child backtracks onto the previous cell, undo.
+function extendPath(cell) {
+  const path = state.path;
+  if (path.length === 0) return;
+  const head = path[path.length - 1];
+  if (cell.r === head.r && cell.c === head.c) return;
+
+  // Backtrack: moved onto the second-to-last cell.
+  if (path.length >= 2) {
+    const prev = path[path.length - 2];
+    if (cell.r === prev.r && cell.c === prev.c) {
+      path.pop();
+      drawRoute();
+      updateGoButton();
+      playTick();
+      return;
+    }
+  }
+
+  // Only adjacent (4-neighbor) moves; bridge a straight gap if finger jumped.
+  const dr = cell.r - head.r, dc = cell.c - head.c;
+  if (Math.abs(dr) + Math.abs(dc) === 1) {
+    if (cellWalkable(cell.r, cell.c) && !onPath(cell)) {
+      path.push({ r: cell.r, c: cell.c });
+      drawRoute();
+      updateGoButton();
+      playTick();
+    }
+  } else if ((dr === 0 || dc === 0) && (Math.abs(dr) + Math.abs(dc) > 1)) {
+    // straight-line bridge: step cell-by-cell so fast drags still snap.
+    const stepR = Math.sign(dr), stepC = Math.sign(dc);
+    let cr = head.r, cc = head.c;
+    const steps = Math.abs(dr) + Math.abs(dc);
+    for (let i = 0; i < steps; i++) {
+      cr += stepR; cc += stepC;
+      if (!cellWalkable(cr, cc)) break;
+      if (onPath({ r: cr, c: cc })) break;
+      path.push({ r: cr, c: cc });
+    }
+    drawRoute();
+    updateGoButton();
+    playTick();
+  }
+}
+
+function onPath(cell) {
+  return state.path.some(p => p.r === cell.r && p.c === cell.c);
+}
+
+function endDrag() {
+  if (state.dragging) {
+    state.dragging = false;
+    updateGoButton();
+  }
+}
+
+function updateGoButton() {
+  const btn = document.getElementById('go-btn');
+  // Enabled once the route reaches the goal (and, if needed, all packages).
+  btn.disabled = !routeReachesGoal();
+}
+
+function routeReachesGoal() {
+  if (state.path.length < 2) return false;
+  const head = state.path[state.path.length - 1];
+  if (!(head.r === state.goal.r && head.c === state.goal.c)) return false;
+  if (state.needPackages) {
+    return state.packages.every(p => state.path.some(pt => pt.r === p.r && pt.c === p.c));
+  }
+  return true;
+}
+
+function resetRoute() {
+  if (state.driving) return;
+  state.path = [];
+  drawRoute();
+  updateGoButton();
+  // restore truck to start
+  const truck = document.getElementById('truck');
+  if (truck) truck.setAttribute('transform',
+    `translate(${state.start.c * state.cell + state.cell / 2}, ${state.start.r * state.cell + state.cell / 2})`);
+  // restore packages
+  state.packages.forEach((p, i) => {
+    const g = document.getElementById('pkg-' + i);
+    if (g) { g.style.opacity = '1'; }
+  });
+  const fb = document.getElementById('feedback');
+  fb.textContent = ''; fb.className = '';
+  playTick();
+}
+
+/* =========================================================
+   DRIVE THE TRUCK
+   ========================================================= */
+function pressGo() {
+  if (state.driving) return;
+  if (!routeReachesGoal()) {
+    // gentle nudge
+    const fb = document.getElementById('feedback');
+    if (state.needPackages && !state.packages.every(p => state.path.some(pt => pt.r === p.r && pt.c === p.c))) {
+      fb.textContent = 'Pick up all the 📦 packages first!';
+    } else {
+      fb.textContent = 'Drag your route all the way to the 🏠 house!';
+    }
+    fb.className = 'gentle';
+    playWrong();
+    return;
+  }
+  driveTruck();
+}
+
+function driveTruck() {
+  state.driving = true;
+  document.getElementById('go-btn').disabled = true;
+  speak('Off we go!');
+  const truck = document.getElementById('truck');
+  const path = state.path;
+  const cell = state.cell;
+  let i = 0;
+  playEngine();
+
+  function stepTo(idx) {
+    if (idx >= path.length) { arriveAtGoal(); return; }
+    const p = path[idx];
+    const tx = p.c * cell + cell / 2;
+    const ty = p.r * cell + cell / 2;
+    truck.setAttribute('transform', `translate(${tx}, ${ty})`);
+    // pick up a package if present here
+    state.packages.forEach((pk, k) => {
+      if (pk.r === p.r && pk.c === p.c) {
+        const g = document.getElementById('pkg-' + k);
+        if (g && g.style.opacity !== '0') {
+          g.style.opacity = '0';
+          playPickup();
+          showFloatEmoji(tx, ty, '📦');
+        }
+      }
+    });
+    playStep();
+    setTimeout(() => stepTo(idx + 1), 220);
+  }
+  // smooth transition style on truck
+  truck.style.transition = 'transform 0.2s linear';
+  setTimeout(() => stepTo(1), 150);
+}
+
+function arriveAtGoal() {
+  state.driving = false;
+  // Star rating: 3 stars if route is at (or near) optimal length.
+  const routeCells = state.path.length;
+  let stars = 1;
+  if (state.shortest > 0) {
+    const extra = routeCells - state.shortest;
+    if (extra <= 0) stars = 3;
+    else if (extra <= 2) stars = 2;
+    else stars = 1;
+  } else {
+    stars = 3;
+  }
+
+  // Adaptive difficulty bookkeeping.
+  if (state.struggledThisLevel) {
+    state.recentStruggle = Math.min(3, state.recentStruggle + 1);
+  } else {
+    state.recentStruggle = Math.max(0, state.recentStruggle - 1);
+  }
+
+  state.stars += stars;
+  document.getElementById('stat-stars').textContent = state.stars;
+
+  goalHaloCelebrate();
+  playCorrect();
+  celebrateBig();
+  speak(pickPraise() + ' The mail is delivered!');
+
+  setTimeout(() => showWin(stars), 700);
+}
+
+function goalHaloCelebrate() {
+  const halo = document.getElementById('goal-halo');
+  if (halo) {
+    halo.setAttribute('stroke', 'var(--route-line)');
+  }
+}
+
+function showWin(stars) {
+  const starRow = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+  document.getElementById('win-stars').textContent = starRow;
+  let msg;
+  if (state.starChallenge && stars === 3) {
+    msg = 'Shortest path — perfect! You found the smartest route! 🚚💌';
+  } else if (stars === 3) {
+    msg = 'Wow, a super-short route! The puppy got the letter! 🐶💌';
+  } else if (stars === 2) {
+    msg = 'Mail delivered! Could you find an even shorter way next time? 🚚';
+  } else {
+    msg = 'You delivered the mail! Great route planning! 🚚💌';
+  }
+  document.getElementById('win-title').textContent = pickPraise();
+  document.getElementById('win-msg').textContent = msg;
+  switchScreen('win');
+  setTimeout(() => { celebrateBig(); }, 250);
+}
+
+function nextLevel() {
+  state.level++;
+  document.getElementById('stat-level').textContent = state.level;
+  switchScreen('game');
+  newLevel();
+}
+
+/* =========================================================
+   LEVEL SETUP / BANNER
+   ========================================================= */
+function newLevel() {
+  state.path = [];
+  state.driving = false;
+  state.dragging = false;
+  state.struggledThisLevel = false;
+  generateLevel();
+  renderBoard();
+  updateGoButton();
+
+  // Legend visibility (map reading from level 6, but always helpful).
+  const legend = document.getElementById('legend');
+  if (state.cfg.legend) legend.classList.add('show'); else legend.classList.remove('show');
+
+  // Challenge banner text + spoken instruction.
+  const banner = document.getElementById('challenge-banner');
+  let text, spoken;
+  if (state.starChallenge) {
+    text = '⭐ Star Challenge: find the <span class="pkg-count">shortest</span> path to the 🏠 house!';
+    spoken = 'Star challenge! Find the shortest path to the house.';
+  } else if (state.needPackages) {
+    const n = state.packages.length;
+    text = `Collect all <span class="pkg-count">${n}</span> 📦 package${n > 1 ? 's' : ''}, then deliver to the 🏠 house!`;
+    spoken = `Collect all ${n} package${n > 1 ? 's' : ''}, then deliver the mail to the house.`;
+  } else if (state.packages.length > 0) {
+    text = 'Grab the 📦 package on the way to the 🏠 house!';
+    spoken = 'Grab the package on the way to the house.';
+  } else {
+    text = 'Drag from the 🚚 truck to the 🏠 house!';
+    spoken = 'Drag a path from the truck to the house.';
+  }
+  banner.innerHTML = text;
+  const fb = document.getElementById('feedback');
+  fb.textContent = ''; fb.className = '';
+  setTimeout(() => speak(spoken), 350);
+}
+
+/* ---------- GAME FLOW ---------- */
+function startGame() {
+  state.level = 1;
+  state.stars = 0;
+  state.recentStruggle = 0;
+  document.getElementById('stat-level').textContent = state.level;
+  document.getElementById('stat-stars').textContent = state.stars;
+  switchScreen('game');
+  newLevel();
+}
+
+/* =========================================================
+   POSITIVE REINFORCEMENT EFFECTS
+   ========================================================= */
+function showPraisePop(msg) {
+  const el = document.createElement('div');
+  el.className = 'praise-pop';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { if (el.parentNode) el.remove(); }, 1800);
+}
+
+const CONFETTI_COLORS = ['#6BE6A8', '#FFD93D', '#7FD3F2', '#FF8A3D', '#B073FF', '#1FB97A'];
+function burstConfetti(x, y, count) {
+  const n = count || 28;
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = x + 'px'; c.style.top = y + 'px';
+    c.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+    document.body.appendChild(c);
+    const angle = Math.random() * Math.PI * 2;
+    const velocity = 80 + Math.random() * 150;
+    const dx = Math.cos(angle) * velocity, dy = Math.sin(angle) * velocity - 80;
+    c.animate([
+      { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+      { transform: 'translate(' + dx + 'px, ' + (dy + 340) + 'px) rotate(' + (Math.random() * 720) + 'deg)', opacity: 0 }
+    ], { duration: 1300 + Math.random() * 500, easing: 'cubic-bezier(.2,.6,.4,1)' });
+    setTimeout(() => c.remove(), 1900);
+  }
+}
+
+function launchFireworks(burstCount = 3) {
+  const colors = CONFETTI_COLORS;
+  for (let b = 0; b < burstCount; b++) {
+    setTimeout(() => {
+      const cx = 80 + Math.random() * Math.max(40, window.innerWidth - 160);
+      const cy = 100 + Math.random() * Math.max(40, window.innerHeight * 0.5);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      playFireworkBoom();
+      const particles = 20;
+      for (let i = 0; i < particles; i++) {
+        const p = document.createElement('div');
+        p.className = 'firework-particle';
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        p.style.background = color;
+        p.style.boxShadow = `0 0 10px ${color}`;
+        const angle = (i / particles) * Math.PI * 2 + Math.random() * 0.2;
+        const dist = 70 + Math.random() * 70;
+        p.style.setProperty('--fx', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--fy', Math.sin(angle) * dist + 'px');
+        document.body.appendChild(p);
+        setTimeout(() => { if (p.parentNode) p.remove(); }, 1300);
+      }
+    }, b * 280);
+  }
+}
+
+function launchStarRise(count = 8) {
+  const stars = ['⭐','🌟','✨','💫','🎉','💌'];
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const s = document.createElement('div');
+      s.className = 'star-rise';
+      s.textContent = stars[Math.floor(Math.random() * stars.length)];
+      s.style.left = (Math.random() * (window.innerWidth - 40)) + 'px';
+      s.style.top = (window.innerHeight - 60) + 'px';
+      document.body.appendChild(s);
+      setTimeout(() => { if (s.parentNode) s.remove(); }, 1900);
+    }, i * 90);
+  }
+}
+
+function celebrateBig() {
+  const w = window.innerWidth, h = window.innerHeight;
+  burstConfetti(w * 0.25, h * 0.35, 30);
+  setTimeout(() => burstConfetti(w * 0.75, h * 0.35, 30), 150);
+  setTimeout(() => burstConfetti(w * 0.5, h * 0.28, 36), 300);
+  showPraisePop(pickPraise());
+  launchFireworks(3);
+  launchStarRise(8);
+}
+
+// Small floating emoji (e.g. when a package is picked up).
+function showFloatEmoji(svgX, svgY, ch) {
+  const board = document.getElementById('board');
+  const rect = board.getBoundingClientRect();
+  const px = rect.left + (svgX / (state.cols * state.cell)) * rect.width;
+  const py = rect.top + (svgY / (state.rows * state.cell)) * rect.height;
+  const s = document.createElement('div');
+  s.className = 'star-rise';
+  s.textContent = ch;
+  s.style.left = px + 'px';
+  s.style.top = py + 'px';
+  s.style.fontSize = '1.6em';
+  document.body.appendChild(s);
+  setTimeout(() => { if (s.parentNode) s.remove(); }, 1900);
+}
+
+/* =========================================================
+   SOUND (Web Audio API) + SPEECH (Web Speech API)
+   ========================================================= */
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { return null; }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') { try { audioCtx.resume(); } catch (e) {} }
+  return audioCtx;
+}
+function playTone(freq, duration, type = 'sine', vol = 0.25, delay = 0) {
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(vol, t0 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.02);
+  } catch (e) {}
+}
+function playCorrect() {
+  playTone(659, 0.12, 'triangle', 0.3, 0);     // E5
+  playTone(880, 0.16, 'triangle', 0.3, 0.12);  // A5
+  playTone(1175, 0.24, 'triangle', 0.3, 0.26); // D6
+}
+function playWrong() {
+  playTone(300, 0.16, 'sine', 0.16, 0);
+  playTone(230, 0.24, 'sine', 0.16, 0.12);
+}
+function playTick() { playTone(620, 0.05, 'triangle', 0.08, 0); }
+function playStep() { playTone(440, 0.05, 'square', 0.06, 0); }
+function playPickup() {
+  playTone(700, 0.08, 'triangle', 0.2, 0);
+  playTone(1050, 0.12, 'triangle', 0.2, 0.08);
+}
+function playEngine() {
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(80, t0);
+    osc.frequency.exponentialRampToValueAtTime(160, t0 + 0.25);
+    osc.frequency.exponentialRampToValueAtTime(110, t0 + 0.5);
+    gain.gain.setValueAtTime(0.14, t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.5);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t0); osc.stop(t0 + 0.5);
+  } catch (e) {}
+}
+function playFireworkBoom() {
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(700, t0);
+    osc.frequency.exponentialRampToValueAtTime(1700, t0 + 0.18);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(0.10, t0 + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.22);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t0); osc.stop(t0 + 0.24);
+    playTone(110, 0.18, 'sine', 0.16, 0.16);
+  } catch (e) {}
+}
+
+/* ---------- Speech (Web Speech API) ---------- */
+function speak(text) {
+  if (state.muted) return;
+  if (!('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.92; u.pitch = 1.1; u.volume = 1;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+function toggleMute() {
+  state.muted = !state.muted;
+  document.getElementById('mute-btn').textContent = state.muted ? '🔇' : '🔊';
+  document.getElementById('mute-btn').setAttribute('aria-label', state.muted ? 'Unmute sounds' : 'Mute sounds');
+  if (state.muted && 'speechSynthesis' in window) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+  const ctx = getAudio();
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+}
+
+/* =========================================================
+   INPUT WIRING
+   ========================================================= */
+const board = document.getElementById('board');
+
+// Pointer Events cover mouse + touch + pen uniformly.
+board.addEventListener('pointerdown', (e) => { getAudio(); startDrag(e); });
+board.addEventListener('pointermove', moveDrag);
+board.addEventListener('pointerup', endDrag);
+board.addEventListener('pointercancel', endDrag);
+board.addEventListener('pointerleave', () => { /* keep dragging across cells; end handled on up */ });
+// Prevent the page from scrolling while tracing on touch.
+board.addEventListener('touchmove', (e) => { if (state.dragging) e.preventDefault(); }, { passive: false });
+
+// Track that a level was "struggled" if they clear the route a lot.
+let clearCount = 0;
+document.getElementById('reset-btn').addEventListener('click', () => {
+  clearCount++;
+  if (clearCount >= 2) state.struggledThisLevel = true;
+});
+
+// Esc closes the How-to-Play modal.
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeHowTo(); });
+
+// Resume audio on first user gesture (browsers require it).
+document.addEventListener('click', () => {
+  const ctx = getAudio();
+  if (ctx && ctx.state === 'suspended') ctx.resume();
+}, { once: true });
+
+// Reset per-level clear counter when a new level starts.
+const _origNewLevel = newLevel;
+newLevel = function () { clearCount = 0; _origNewLevel(); };
+</script>
+  <script defer src="../assets/zakrad/zak-celebrate.js"></script>
+</body>
+</html>

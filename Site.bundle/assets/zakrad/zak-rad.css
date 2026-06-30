@@ -1,0 +1,231 @@
+/* ============================================================
+   Zak Rad mascot system — shared styles
+   Used by the <zak-rad> component, the daily fact card,
+   encouragement chips, and the celebration toast.
+   Brand palette mirrors public/index.html.
+   ============================================================ */
+:root {
+  --zak-yellow: #FFD93D;
+  --zak-pink: #FF6FB5;
+  --zak-blue: #4FC3F7;
+  --zak-mint: #6BE6A8;
+  --zak-purple: #B073FF;
+  --zak-orange: #FF9F45;
+  --zak-dark: #2D2D5F;
+  --zak-cream: #FFF8E7;
+}
+
+/* ---------- Mascot image ---------- */
+zak-rad { display: inline-block; line-height: 0; }
+.zak-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.zak-figure {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+/* Gentle idle bob (disabled under reduced motion) */
+.zak-bob { animation: zakBob 4s ease-in-out infinite; }
+@keyframes zakBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+/* ---------- Speech bubble ---------- */
+.zak-bubble {
+  position: relative;
+  background: #fff;
+  color: var(--zak-dark);
+  font-family: 'Fredoka', system-ui, sans-serif;
+  font-weight: 600;
+  font-size: clamp(0.95rem, 2.2vw, 1.1rem);
+  line-height: 1.35;
+  padding: 12px 18px;
+  border-radius: 18px;
+  max-width: 280px;
+  text-align: center;
+  box-shadow: 0 6px 0 rgba(45, 45, 95, 0.12), 0 10px 22px rgba(45, 45, 95, 0.12);
+}
+.zak-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 12px solid transparent;
+  border-top-color: #fff;
+  border-bottom: 0;
+}
+.zak-figure[data-bubble="side"] { flex-direction: row; align-items: center; gap: 14px; }
+.zak-figure[data-bubble="side"] .zak-bubble::after {
+  bottom: auto; left: -12px; top: 50%;
+  transform: translateY(-50%);
+  border: 12px solid transparent;
+  border-right-color: #fff;
+  border-left: 0;
+}
+
+/* ============================================================
+   Daily "Did you know?" fact card
+   ============================================================ */
+.zak-fact-card {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  background: linear-gradient(135deg, #fff, #FFF8E7);
+  border: 3px solid var(--zak-yellow);
+  border-radius: 28px;
+  padding: 22px 28px;
+  margin: 30px auto;
+  max-width: 820px;
+  box-shadow: 6px 8px 0 rgba(45, 45, 95, 0.12);
+}
+.zak-fact-card .zak-fact-art {
+  flex: 0 0 auto;
+  width: clamp(80px, 18vw, 130px);
+}
+.zak-fact-card .zak-fact-body { flex: 1 1 auto; min-width: 0; }
+.zak-fact-card .zak-fact-label {
+  display: inline-block;
+  background: var(--zak-yellow);
+  color: var(--zak-dark);
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+}
+.zak-fact-card .zak-fact-text {
+  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+  font-weight: 500;
+  color: var(--zak-dark);
+  line-height: 1.45;
+}
+.zak-fact-card .zak-fact-sig {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--zak-purple);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Guide strip (Zak pointing/walking toward the games)
+   ============================================================ */
+.zak-guide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 10px auto 0;
+  max-width: 760px;
+  text-align: left;
+}
+.zak-guide .zak-guide-art { width: clamp(72px, 16vw, 120px); flex: 0 0 auto; }
+.zak-guide .zak-guide-text {
+  font-family: 'Bubblegum Sans', cursive;
+  font-size: clamp(1.1rem, 3vw, 1.6rem);
+  color: var(--zak-dark);
+}
+
+/* ============================================================
+   Footer sign-off
+   ============================================================ */
+.zak-signoff {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 10px auto 18px;
+}
+.zak-signoff .zak-signoff-art { width: 90px; }
+.zak-signoff .zak-wordmark { width: clamp(200px, 50vw, 300px); height: auto; }
+
+/* ============================================================
+   Celebration toast + encouragement chip
+   ============================================================ */
+.zak-toast-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483000; /* above game overlays */
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 16px 24px;
+}
+.zak-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border-radius: 22px;
+  padding: 12px 16px 12px 12px;
+  box-shadow: 0 10px 0 rgba(45, 45, 95, 0.12), 0 16px 38px rgba(45, 45, 95, 0.22);
+  max-width: min(420px, 92vw);
+  border: 3px solid var(--zak-mint);
+  font-family: 'Fredoka', system-ui, sans-serif;
+}
+.zak-toast.zak-toast-small { border-color: var(--zak-blue); }
+.zak-toast.zak-toast-encourage { border-color: var(--zak-purple); }
+.zak-toast .zak-toast-art { width: 64px; flex: 0 0 auto; }
+.zak-toast .zak-toast-msg {
+  font-size: clamp(1rem, 3.4vw, 1.2rem);
+  font-weight: 700;
+  color: var(--zak-dark);
+  line-height: 1.25;
+}
+.zak-toast .zak-toast-close {
+  margin-left: auto;
+  align-self: flex-start;
+  background: var(--zak-cream);
+  border: none;
+  color: var(--zak-dark);
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  font-weight: 700;
+}
+.zak-toast .zak-toast-close:hover { background: var(--zak-yellow); }
+.zak-toast .zak-toast-close:focus-visible { outline: 3px solid var(--zak-purple); outline-offset: 2px; }
+
+/* Entrance / exit animations */
+.zak-toast { animation: zakToastIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.zak-toast.zak-leaving { animation: zakToastOut 0.3s ease forwards; }
+@keyframes zakToastIn {
+  from { transform: translateY(40px) scale(0.85); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes zakToastOut {
+  to { transform: translateY(30px) scale(0.9); opacity: 0; }
+}
+
+/* ============================================================
+   Reduced motion — replace bounces with simple fades
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .zak-bob { animation: none; }
+  .zak-toast { animation: zakFadeIn 0.2s ease both; }
+  .zak-toast.zak-leaving { animation: zakFadeOut 0.2s ease forwards; }
+  @keyframes zakFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes zakFadeOut { to { opacity: 0; } }
+}
+
+/* ============================================================
+   Responsive — stack the fact card on small screens
+   ============================================================ */
+@media (max-width: 560px) {
+  .zak-fact-card { flex-direction: column; text-align: center; gap: 12px; padding: 20px; }
+  .zak-fact-card .zak-fact-art { width: 96px; }
+  .zak-guide { flex-direction: column; text-align: center; }
+}

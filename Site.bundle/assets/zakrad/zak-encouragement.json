@@ -1,0 +1,51 @@
+{
+  "_comment": "Zak Rad's encouragement lines, grouped by context. Keep them short, warm, simple, and always supportive — never negative.",
+  "start": [
+    "You've got this!",
+    "Let's have some fun!",
+    "Ready, set, brain power!",
+    "Time to shine!",
+    "Your brain is warming up!",
+    "Let's go, friend!",
+    "I believe in you!",
+    "Big fun ahead!"
+  ],
+  "streak": [
+    "Smart move!",
+    "You're on fire!",
+    "Wow, keep going!",
+    "Your brain is getting stronger!",
+    "Amazing work!",
+    "You're a star!",
+    "Look at you go!",
+    "Brilliant!"
+  ],
+  "retry": [
+    "Almost! Try again.",
+    "Good try! You can do it.",
+    "Oops — let's give it another go!",
+    "Mistakes help us learn. Keep going!",
+    "So close! One more try.",
+    "No worries, you're learning!",
+    "Brave try! Let's try again together.",
+    "Every try makes you smarter!"
+  ],
+  "idle": [
+    "Still here? Let's play!",
+    "Ready when you are!",
+    "Take your time, friend.",
+    "Need a hint? Just keep trying!",
+    "I'm cheering for you!",
+    "Let's get those brain muscles moving!"
+  ],
+  "win": [
+    "You did it! High five!",
+    "Hooray! Super job!",
+    "Way to go, champion!",
+    "Your brain rocks!",
+    "Fantastic! I'm so proud!",
+    "Yes! You're amazing!",
+    "Woohoo! Brain power!",
+    "Brilliant work, friend!"
+  ]
+}
