@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sound Soup — Zak's Brain Games</title>
+<meta name="description" content="Sound Soup is a friendly phonics game! Tap letters to hear their sounds, then blend them into a word and meet the creature that pops out of the pot. Ages 4+." />
+<meta name="theme-color" content="#FF6B6B" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%B2%3C/text%3E%3C/svg%3E" />
+
+<!-- Self-hosted fonts (offline; no external requests) -->
+<style>
+@font-face { font-family:'Fredoka'; font-style:normal; font-weight:300 700; font-display:swap; src:url('../fonts/fredoka.woff2') format('woff2'); }
+@font-face { font-family:'Bubblegum Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('../fonts/bubblegum-sans-400.woff2') format('woff2'); }
+</style>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --coral: #FF6B6B;
+    --coral-dark: #E14B4B;
+    --coral-deep: #B53030;
+    --peach: #FFD3C2;
+    --cream: #FFF6EE;
+    --teal: #2EC4B6;
+    --teal-dark: #1B8F84;
+    --yellow: #FFD93D;
+    --yellow-dark: #C99700;
+    --green: #4CAF50;
+    --green-dark: #2E7D32;
+    --blue: #2196F3;
+    --blue-dark: #0D47A1;
+    --orange: #FF8A3D;
+    --orange-dark: #C9601E;
+    --dark: #3A2326;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Fredoka', system-ui, sans-serif;
+    color: var(--dark);
+    background: linear-gradient(160deg, #FFE3D6 0%, #FFF6EE 45%, #FFE8E0 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    user-select: none;
+  }
+
+  /* Decorative floating bubbles (kept below the nav) */
+  .deco {
+    position: fixed; border-radius: 50%; opacity: 0.28; z-index: 0;
+    pointer-events: none; animation: floaty 9s ease-in-out infinite;
+    background: radial-gradient(circle at 35% 30%, #fff 0 18%, var(--coral) 60%);
+  }
+  .deco.d1 { width: 110px; height: 110px; top: 130px; left: 5%;  animation-delay: 0s; }
+  .deco.d2 { width: 70px;  height: 70px;  top: 220px; right: 7%; animation-delay: 2s; background: radial-gradient(circle at 35% 30%, #fff 0 18%, var(--teal) 60%); }
+  .deco.d3 { width: 90px;  height: 90px;  top: 360px; left: 12%; animation-delay: 4s; background: radial-gradient(circle at 35% 30%, #fff 0 18%, var(--yellow) 60%); }
+  .deco.d4 { width: 60px;  height: 60px;  top: 300px; right: 16%; animation-delay: 1s; background: radial-gradient(circle at 35% 30%, #fff 0 18%, var(--orange) 60%); }
+  @keyframes floaty { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-24px) rotate(10deg); } }
+
+  .screen { display: none; min-height: 100vh; padding: 110px 16px 30px; position: relative; z-index: 10; }
+  .screen.active { display: block; animation: screenIn 0.3s ease; }
+  @keyframes screenIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* ===== TOP NAV (persistent across all screens) ===== */
+  #top-nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+    background: rgba(255, 255, 255, 0.93);
+    border-bottom: 4px solid var(--coral-deep);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.12);
+    padding: 10px 16px; display: flex; justify-content: space-between;
+    align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  #top-nav .nav-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .nav-btn {
+    font-family: inherit; font-size: 1em; padding: 8px 16px;
+    background: white; color: var(--dark);
+    border: 3px solid var(--coral-deep); border-radius: 24px;
+    cursor: pointer; box-shadow: 0 4px 0 var(--coral-deep);
+    font-weight: bold; text-decoration: none; display: inline-block;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .nav-btn:hover  { transform: translateY(2px); box-shadow: 0 2px 0 var(--coral-deep); }
+  .nav-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--coral-deep); }
+  .nav-btn.home   { background: var(--green); color: white; border-color: var(--green-dark); box-shadow: 0 4px 0 var(--green-dark); }
+  .nav-btn.home:hover  { box-shadow: 0 2px 0 var(--green-dark); }
+  .nav-btn.home:active { box-shadow: 0 0 0 var(--green-dark); }
+  .nav-btn.parent { background: var(--blue); color: white; border-color: var(--blue-dark); box-shadow: 0 4px 0 var(--blue-dark); }
+  .nav-btn.parent:hover  { box-shadow: 0 2px 0 var(--blue-dark); }
+  .nav-btn.parent:active { box-shadow: 0 0 0 var(--blue-dark); }
+  .nav-btn.help   { background: var(--orange); color: white; border-color: var(--orange-dark); box-shadow: 0 4px 0 var(--orange-dark); }
+  .nav-btn.help:hover  { box-shadow: 0 2px 0 var(--orange-dark); }
+  .nav-btn.help:active { box-shadow: 0 0 0 var(--orange-dark); }
+
+  /* ===== HOW TO PLAY modal ===== */
+  #how-modal {
+    position: fixed; inset: 0; background: rgba(58, 35, 38, 0.55);
+    display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+  }
+  #how-modal.open { display: flex; }
+  .modal-card {
+    background: white; border: 5px solid var(--coral-deep); border-radius: 24px;
+    padding: 24px 28px 22px; max-width: 540px; width: 100%;
+    box-shadow: 0 9px 0 var(--coral-deep); text-align: left;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-card h2 {
+    font-family: 'Bubblegum Sans', cursive; font-size: 2em; color: var(--coral-dark);
+    text-shadow: 2px 2px 0 #fff, 3px 3px 0 rgba(181,48,48,0.45);
+    margin-bottom: 14px; text-align: center;
+  }
+  .modal-card ul { list-style: none; padding-left: 0; margin: 8px 0 16px; }
+  .modal-card li {
+    padding: 12px 16px; margin-bottom: 8px; background: var(--cream);
+    border-left: 6px solid var(--coral); border-radius: 10px; font-size: 1.1em; line-height: 1.4;
+  }
+  .modal-close {
+    display: block; margin: 4px auto 0; font-family: inherit; font-size: 1.25em;
+    padding: 12px 30px; background: var(--green); color: white;
+    border: 4px solid var(--green-dark); border-radius: 30px; cursor: pointer;
+    box-shadow: 0 5px 0 var(--green-dark); font-weight: bold;
+  }
+  .modal-close:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--green-dark); }
+
+  /* ===== HOME ===== */
+  #home { text-align: center; padding-top: 120px; }
+  #home h1 {
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: clamp(2.8em, 9vw, 5.5em);
+    color: var(--coral-dark);
+    text-shadow: 4px 4px 0 #fff, 7px 7px 0 rgba(181,48,48,0.4);
+    margin-bottom: 6px; animation: bounce 2s ease-in-out infinite;
+  }
+  @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-16px);} }
+  .tagline { font-size: clamp(1.15em, 3.4vw, 1.6em); color: var(--dark); margin-bottom: 20px; font-weight: 500; }
+  #home-pot { margin: 6px auto 18px; display: inline-block; }
+  .play-btn {
+    font-family: inherit; font-size: clamp(1.8em, 6vw, 2.4em); padding: 18px 56px;
+    background: var(--green); color: white; border: 6px solid var(--green-dark);
+    border-radius: 60px; cursor: pointer; box-shadow: 0 9px 0 var(--green-dark);
+    transition: transform 0.1s, box-shadow 0.1s; margin-top: 6px; font-weight: bold;
+    animation: pulseGlow 2.2s ease-in-out infinite;
+  }
+  .play-btn:hover  { transform: translateY(3px); box-shadow: 0 6px 0 var(--green-dark); }
+  .play-btn:active { transform: translateY(9px); box-shadow: 0 0 0 var(--green-dark); }
+  @keyframes pulseGlow {
+    0%,100% { box-shadow: 0 9px 0 var(--green-dark), 0 0 0 0 rgba(76,175,80,0.45); }
+    50% { box-shadow: 0 9px 0 var(--green-dark), 0 0 0 18px rgba(76,175,80,0); }
+  }
+  .age-note { margin-top: 20px; font-size: 1.05em; color: #7a5b50; font-weight: 600; }
+  .more-games { margin-top: 18px; font-size: 1.1em; }
+  .more-games a {
+    color: var(--blue-dark); font-weight: bold; text-decoration: none;
+    border-bottom: 3px dashed var(--blue-dark); padding-bottom: 2px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .more-games a:hover { color: var(--coral-dark); border-bottom-color: var(--coral-dark); }
+
+  /* ===== GAME ===== */
+  #game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    max-width: 760px; margin: 0 auto 8px; gap: 10px; flex-wrap: wrap;
+  }
+  #game-title {
+    font-family: 'Bubblegum Sans', cursive; font-size: 2.1em; color: var(--coral-dark);
+    text-shadow: 3px 3px 0 #fff, 4px 4px 0 rgba(181,48,48,0.4);
+  }
+  .header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  #mute-btn {
+    font-size: 1.5em; background: white; border: 4px solid var(--coral-deep);
+    border-radius: 50%; width: 54px; height: 54px; cursor: pointer;
+    box-shadow: 0 5px 0 var(--coral-deep);
+  }
+  #mute-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--coral-deep); }
+  #book-btn {
+    font-family: inherit; font-size: 1em; padding: 10px 16px; font-weight: bold;
+    background: white; color: var(--dark); border: 4px solid var(--coral-deep);
+    border-radius: 30px; cursor: pointer; box-shadow: 0 5px 0 var(--coral-deep);
+  }
+  #book-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--coral-deep); }
+
+  .game-card {
+    background: white; border-radius: 28px; padding: 18px 16px 22px;
+    max-width: 760px; margin: 0 auto;
+    box-shadow: 0 8px 0 rgba(181,48,48,0.14), 0 14px 30px rgba(181,48,48,0.1);
+  }
+
+  .level-banner {
+    text-align: center; font-weight: 700; color: var(--coral-dark);
+    font-size: 1.05em; margin-bottom: 4px;
+  }
+  .instruction {
+    text-align: center; font-size: clamp(1.1em, 3.2vw, 1.4em); font-weight: 600;
+    color: var(--dark); min-height: 30px; margin: 2px 0 6px; line-height: 1.35;
+  }
+
+  /* Picture hint */
+  .pic-hint {
+    text-align: center; font-size: 4.4rem; line-height: 1; min-height: 70px;
+    margin: 2px 0; filter: drop-shadow(2px 4px 0 rgba(0,0,0,0.12)); transition: opacity .2s;
+  }
+  .pic-hint.mystery { font-size: 4rem; }
+
+  /* Build-mode choices */
+  .choices { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 10px 0 4px; }
+  .choice-tile {
+    min-width: 70px; height: 76px; padding: 0 14px; border-radius: 16px;
+    background: linear-gradient(180deg, #FFF1B8 0%, var(--yellow) 100%);
+    border: 3px solid var(--yellow-dark); color: #6A4E00;
+    font-family: 'Bubblegum Sans', cursive; font-size: 2.1em; cursor: pointer;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.18);
+    transition: transform 0.12s, box-shadow 0.12s, opacity 0.15s;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .choice-tile:hover  { transform: translateY(-3px); box-shadow: 0 8px 0 rgba(0,0,0,0.18); }
+  .choice-tile:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,0.18); }
+  .choices-label { text-align: center; color: #9a7d72; font-weight: 600; font-size: 0.95em; margin: 4px 0 2px; }
+
+  /* ===== POT + TILES STAGE ===== */
+  #pot-stage {
+    position: relative; max-width: 520px; margin: 4px auto 0;
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  /* The three letter tiles, sitting above the pot */
+  .tiles-row {
+    display: flex; gap: 16px; justify-content: center; align-items: flex-end;
+    min-height: 96px; margin-bottom: 4px; flex-wrap: wrap;
+  }
+  .letter-tile {
+    width: 80px; height: 88px; border-radius: 18px;
+    background: linear-gradient(180deg, #FFF1B8 0%, var(--yellow) 100%);
+    border: 4px solid var(--yellow-dark); color: #6A4E00;
+    font-family: 'Bubblegum Sans', cursive; font-size: 3em; cursor: pointer;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.2);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.12s, box-shadow 0.12s;
+    position: relative;
+  }
+  .letter-tile:hover  { transform: translateY(-3px); box-shadow: 0 9px 0 rgba(0,0,0,0.2); }
+  .letter-tile:active { transform: translateY(2px); box-shadow: 0 3px 0 rgba(0,0,0,0.2); }
+  .letter-tile.sounding { animation: tilePop 0.5s ease; background: linear-gradient(180deg,#FFE08A 0%,var(--orange) 100%); }
+  @keyframes tilePop {
+    0% { transform: scale(1); } 35% { transform: scale(1.22) rotate(-4deg); }
+    70% { transform: scale(1.05) rotate(2deg); } 100% { transform: scale(1); }
+  }
+  .letter-tile.drop-in { animation: dropIn 0.55s cubic-bezier(0.34,1.4,0.6,1) both; }
+  @keyframes dropIn {
+    0% { transform: translateY(-180px) rotate(-12deg); opacity: 0; }
+    70% { transform: translateY(8px) rotate(4deg); opacity: 1; }
+    100% { transform: translateY(0) rotate(0); opacity: 1; }
+  }
+  /* small "sound puff" caption bubble above a tile */
+  .sound-puff {
+    position: absolute; top: -38px; left: 50%; transform: translateX(-50%);
+    background: var(--teal); color: white; font-family: 'Fredoka', sans-serif;
+    font-weight: 700; font-size: 0.55em; padding: 4px 12px; border-radius: 20px;
+    white-space: nowrap; box-shadow: 0 3px 0 var(--teal-dark);
+    animation: puffUp 1s ease forwards; pointer-events: none;
+  }
+  @keyframes puffUp {
+    0% { opacity: 0; transform: translate(-50%, 6px) scale(0.7); }
+    25% { opacity: 1; transform: translate(-50%, -2px) scale(1); }
+    80% { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%, -14px) scale(0.95); }
+  }
+
+  /* The pot */
+  #pot-wrap {
+    cursor: pointer; position: relative; transition: transform 0.12s;
+    display: inline-block;
+  }
+  #pot-wrap:hover  { transform: translateY(-2px); }
+  #pot-wrap:active { transform: translateY(3px); }
+  #pot-wrap.blending { animation: potShake 0.6s ease-in-out; }
+  @keyframes potShake {
+    0%,100% { transform: translate(0,0) rotate(0); }
+    20% { transform: translate(-5px,1px) rotate(-2deg); }
+    40% { transform: translate(5px,-1px) rotate(2deg); }
+    60% { transform: translate(-4px,1px) rotate(-1deg); }
+    80% { transform: translate(4px,0) rotate(1deg); }
+  }
+  .pot-hint {
+    text-align: center; color: var(--coral-dark); font-weight: 700;
+    font-size: 1.05em; margin-top: 4px; min-height: 26px;
+  }
+  .pot-hint.ready { animation: hintPulse 1.3s ease-in-out infinite; }
+  @keyframes hintPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.07); } }
+
+  /* bubbles rising out of the pot */
+  .pot-bubble {
+    position: absolute; bottom: 40px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.9) 0 25%, rgba(255,211,194,0.85) 70%);
+    pointer-events: none; z-index: 4;
+    animation: bubbleRise 1.4s ease-in forwards;
+  }
+  @keyframes bubbleRise {
+    0% { opacity: 0; transform: translateY(0) scale(0.4); }
+    20% { opacity: 0.95; }
+    100% { opacity: 0; transform: translateY(-150px) scale(1.1); }
+  }
+
+  /* The creature that pops out of the pot */
+  #creature-pop {
+    position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%);
+    font-size: 5.2rem; line-height: 1; pointer-events: none; z-index: 6;
+    filter: drop-shadow(3px 5px 0 rgba(0,0,0,0.18)); display: none;
+  }
+  #creature-pop.show { display: block; animation: creaturePop 1.6s cubic-bezier(0.34,1.5,0.6,1) both; }
+  @keyframes creaturePop {
+    0% { opacity: 0; transform: translate(-50%, 30px) scale(0.3); }
+    35% { opacity: 1; transform: translate(-50%, -30px) scale(1.25); }
+    55% { transform: translate(-50%, -16px) scale(0.95); }
+    75% { transform: translate(-50%, -22px) scale(1.05); }
+    100% { opacity: 1; transform: translate(-50%, -18px) scale(1); }
+  }
+
+  /* The made-word banner */
+  #word-reveal {
+    text-align: center; font-family: 'Bubblegum Sans', cursive;
+    font-size: clamp(2.2em, 8vw, 3.4em); color: var(--coral-dark);
+    text-shadow: 3px 3px 0 #fff, 5px 5px 0 rgba(181,48,48,0.35);
+    min-height: 0; margin-top: 8px; opacity: 0; letter-spacing: 3px;
+    transition: opacity 0.3s; text-transform: uppercase;
+  }
+  #word-reveal.show { opacity: 1; animation: wordPop 0.6s cubic-bezier(0.34,1.5,0.6,1); }
+  @keyframes wordPop { 0% { transform: scale(0.5); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+
+  .feedback { text-align: center; font-weight: 700; font-size: 1.2em; min-height: 30px; margin-top: 8px; line-height: 1.35; }
+  .feedback.good { color: var(--teal-dark); animation: bouncePraise 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+  .feedback.gentle { color: var(--orange-dark); }
+  @keyframes bouncePraise { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+
+  /* Collection count chip */
+  .collect-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--cream); border: 3px solid var(--coral); border-radius: 20px;
+    padding: 6px 14px; font-weight: 700; color: var(--coral-dark); font-size: 0.95em;
+  }
+
+  /* ===== RECIPE BOOK (gallery) ===== */
+  #book-modal {
+    position: fixed; inset: 0; background: rgba(58,35,38,0.55);
+    display: none; align-items: center; justify-content: center; z-index: 110; padding: 20px;
+  }
+  #book-modal.open { display: flex; }
+  .book-card {
+    background: var(--cream); border: 5px solid var(--coral-deep); border-radius: 24px;
+    padding: 22px 22px 18px; max-width: 600px; width: 100%;
+    box-shadow: 0 9px 0 var(--coral-deep); max-height: 88vh; overflow-y: auto;
+  }
+  .book-card h2 {
+    font-family: 'Bubblegum Sans', cursive; font-size: 2em; color: var(--coral-dark);
+    text-align: center; margin-bottom: 4px; text-shadow: 2px 2px 0 #fff;
+  }
+  .book-sub { text-align: center; color: #7a5b50; font-weight: 600; margin-bottom: 14px; }
+  .book-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 12px; }
+  .book-item {
+    background: white; border: 3px solid var(--peach); border-radius: 16px;
+    padding: 10px 6px; text-align: center; cursor: pointer;
+    box-shadow: 0 4px 0 rgba(181,48,48,0.12); transition: transform 0.12s;
+  }
+  .book-item:hover  { transform: translateY(-3px); }
+  .book-item:active { transform: translateY(2px); }
+  .book-item .bi-emoji { font-size: 2.6rem; line-height: 1; }
+  .book-item .bi-word {
+    font-family: 'Bubblegum Sans', cursive; font-size: 1.2em;
+    color: var(--coral-dark); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px;
+  }
+  .book-empty { text-align: center; color: #9a7d72; font-weight: 600; padding: 24px 8px; font-size: 1.1em; }
+  .book-close {
+    display: block; margin: 16px auto 0; font-family: inherit; font-size: 1.15em;
+    padding: 12px 30px; background: var(--coral); color: white;
+    border: 4px solid var(--coral-deep); border-radius: 30px; cursor: pointer;
+    box-shadow: 0 5px 0 var(--coral-deep); font-weight: bold;
+  }
+  .book-close:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--coral-deep); }
+
+  /* round action buttons */
+  .round-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+  .act-btn {
+    font-family: inherit; font-size: 1.1em; padding: 12px 26px; font-weight: bold;
+    border-radius: 30px; cursor: pointer; color: white; border: 4px solid; box-shadow: 0 5px 0;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .act-btn:active { transform: translateY(3px); }
+  .act-coral { background: var(--coral); border-color: var(--coral-deep); box-shadow: 0 5px 0 var(--coral-deep); }
+  .act-coral:active { box-shadow: 0 2px 0 var(--coral-deep); }
+  .act-teal { background: var(--teal); border-color: var(--teal-dark); box-shadow: 0 5px 0 var(--teal-dark); }
+  .act-teal:active { box-shadow: 0 2px 0 var(--teal-dark); }
+  .act-green { background: var(--green); border-color: var(--green-dark); box-shadow: 0 5px 0 var(--green-dark); }
+  .act-green:active { box-shadow: 0 2px 0 var(--green-dark); }
+
+  /* Confetti */
+  .confetti { position: fixed; width: 12px; height: 12px; pointer-events: none; z-index: 200; border-radius: 2px; }
+
+  /* praise-pop / fireworks / star-rise (from carmath) */
+  .praise-pop {
+    position: fixed; top: 32%; left: 50%; transform: translate(-50%, -50%);
+    font-family: 'Bubblegum Sans', cursive; font-size: clamp(2.4em, 8vw, 4.6em);
+    color: var(--coral-dark); text-shadow: 3px 3px 0 #fff, 6px 6px 0 rgba(181,48,48,0.4);
+    font-weight: bold; z-index: 160; pointer-events: none; opacity: 0; white-space: nowrap;
+    animation: praisePop 1.7s cubic-bezier(0.34, 1.5, 0.6, 1) forwards;
+  }
+  @keyframes praisePop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(-12deg); }
+    20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(4deg); }
+    40%  { transform: translate(-50%, -50%) scale(0.95) rotate(-2deg); }
+    60%  { transform: translate(-50%, -50%) scale(1.05) rotate(1deg); }
+    80%  { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+    100% { opacity: 0; transform: translate(-50%, -75%) scale(0.9); }
+  }
+  .firework-particle {
+    position: fixed; width: 8px; height: 8px; border-radius: 50%;
+    pointer-events: none; z-index: 155; animation: fwExplode 1.2s ease-out forwards;
+  }
+  @keyframes fwExplode {
+    0%   { transform: translate(0, 0) scale(1);   opacity: 1; }
+    70%  { opacity: 1; }
+    100% { transform: translate(var(--fx, 0), calc(var(--fy, 0) + 30px)) scale(0.4); opacity: 0; }
+  }
+  .star-rise {
+    position: fixed; font-size: 2.2em; pointer-events: none; z-index: 155;
+    animation: starRise 1.8s ease-out forwards;
+  }
+  @keyframes starRise {
+    0%   { transform: translateY(0) scale(0.6) rotate(0); opacity: 0; }
+    20%  { opacity: 1; transform: translateY(-30px) scale(1.1) rotate(15deg); }
+    100% { transform: translateY(-220px) scale(0.7) rotate(360deg); opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  @media (max-width: 480px) {
+    .letter-tile { width: 66px; height: 76px; font-size: 2.5em; }
+    .tiles-row { gap: 12px; }
+    #creature-pop { font-size: 4.4rem; }
+    .game-card { padding: 16px 10px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== PERSISTENT TOP NAV ========== -->
+<nav id="top-nav" aria-label="Game navigation">
+  <div class="nav-group">
+    <a href="#" class="nav-btn home" onclick="goHome(); return false;" aria-label="Go to Sound Soup home page">🏠 Game Home</a>
+    <a href="../index.html" class="nav-btn parent" aria-label="Go to Zak's Brain Games">🧠 More Brain Games</a>
+  </div>
+  <div class="nav-group">
+    <button type="button" class="nav-btn help" onclick="openHowTo()" aria-label="Open How to Play instructions">❓ How to Play</button>
+  </div>
+</nav>
+
+<!-- ========== HOW TO PLAY modal ========== -->
+<div id="how-modal" role="dialog" aria-modal="true" aria-labelledby="how-title" onclick="if(event.target===this) closeHowTo()">
+  <div class="modal-card">
+    <h2 id="how-title">🔤 Let's cook up a word!</h2>
+    <ul>
+      <li>1. Tap each letter to hear its sound.</li>
+      <li>2. Tap the pot to blend the sounds together.</li>
+      <li>3. Listen as the sounds become a word — and meet the creature that pops out!</li>
+      <li>4. Collect every word in your Recipe Book.</li>
+    </ul>
+    <button type="button" class="modal-close" onclick="closeHowTo()">Got it! Let's cook!</button>
+  </div>
+</div>
+
+<!-- ========== RECIPE BOOK modal ========== -->
+<div id="book-modal" role="dialog" aria-modal="true" aria-labelledby="book-title" onclick="if(event.target===this) closeBook()">
+  <div class="book-card">
+    <h2 id="book-title">📖 Creature Cookbook</h2>
+    <div class="book-sub" id="book-sub">Tap a word to hear it again!</div>
+    <div class="book-grid" id="book-grid"></div>
+    <div class="book-empty" id="book-empty">No words yet — go cook some up! 🍲</div>
+    <button type="button" class="book-close" onclick="closeBook()">Close 📕</button>
+  </div>
+</div>
+
+<div class="deco d1"></div>
+<div class="deco d2"></div>
+<div class="deco d3"></div>
+<div class="deco d4"></div>
+
+<!-- ========== HOME SCREEN ========== -->
+<div id="home" class="screen active">
+  <h1>Sound Soup</h1>
+  <div class="tagline">Drop letters in the pot and blend a word!</div>
+  <div id="home-pot"></div>
+  <br>
+  <button class="play-btn" onclick="startGame()">Let's Cook! 🍲</button>
+  <div class="age-note">Ages 4+ · Words &amp; Reading · phonics &amp; blending</div>
+  <div class="more-games">🧠 Try more brain games at <a href="https://zaksbraingames.com/">zaksbraingames.com</a></div>
+</div>
+
+<!-- ========== GAME SCREEN ========== -->
+<div id="game" class="screen">
+  <div id="game-header">
+    <div id="game-title">🔤 Sound Soup</div>
+    <div class="header-controls">
+      <button id="book-btn" onclick="openBook()" aria-label="Open your Recipe Book of collected words">📖 Recipe Book <span id="book-count">0</span></button>
+      <button id="mute-btn" onclick="toggleMute()" title="Mute or unmute sounds" aria-label="Mute or unmute sounds">🔊</button>
+    </div>
+  </div>
+
+  <div class="game-card">
+    <div class="level-banner" id="level-banner">Recipe Book: <span id="collect-num">0</span> words cooked</div>
+    <div class="instruction" id="instruction" aria-live="polite">Tap each letter to hear its sound!</div>
+
+    <div class="pic-hint" id="pic-hint" aria-hidden="true">🐱</div>
+
+    <!-- Build-mode choices (hidden unless in build mode) -->
+    <div id="build-area" style="display:none;">
+      <div class="choices-label">Pick the letters that spell the picture 👇</div>
+      <div class="choices" id="choices" role="group" aria-label="Letter choices"></div>
+    </div>
+
+    <div id="pot-stage">
+      <div class="tiles-row" id="tiles-row" role="group" aria-label="Letter tiles in the pot"></div>
+      <div id="creature-pop" aria-hidden="true"></div>
+      <div id="pot-wrap" role="button" tabindex="0" aria-label="Tap the pot to blend the sounds into a word"></div>
+      <div class="pot-hint" id="pot-hint"></div>
+    </div>
+
+    <div id="word-reveal" aria-hidden="true"></div>
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+
+    <div class="round-actions" id="round-actions" style="display:none;">
+      <button class="act-btn act-teal" onclick="hearWordAgain()" aria-label="Hear the word again">🔊 Hear it</button>
+      <button class="act-btn act-green" onclick="nextRound()" aria-label="Cook the next word">Next Word ▶</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ====================================================================
+// Sound Soup — phonics blending with CVC words. Ages 4+.
+// Tap letters to hear phonemes, tap the pot to blend into a word.
+// ====================================================================
+
+/* ---------- CONTENT: curated CVC words by family, with phonemes ----------
+   Each letter maps to an approximate phoneme spelling spoken slowly.
+   Vowels use a short-vowel sound; consonants the "clipped" sound. */
+const PHONEME = {
+  a: 'aah', e: 'eh', i: 'ih', o: 'oh', u: 'uh',
+  b: 'buh', c: 'kuh', d: 'duh', f: 'fff', g: 'guh', h: 'huh',
+  j: 'juh', k: 'kuh', l: 'lll', m: 'mmm', n: 'nnn', p: 'puh',
+  r: 'rr', s: 'sss', t: 'tuh', v: 'vvv', w: 'wuh', x: 'ks',
+  y: 'yuh', z: 'zzz',
+  sh: 'shh', ch: 'chuh', th: 'th'
+};
+
+// Word families grouped so phonemes blend cleanly. emoji = the creature/object.
+const FAMILIES = [
+  // --- Tier 1: classic CVC (single letters) ---
+  { tier: 1, vowel: 'a', words: [
+    { w: 'cat', e: '🐱' }, { w: 'hat', e: '🎩' }, { w: 'bat', e: '🦇' }, { w: 'mat', e: '🟫' },
+    { w: 'rat', e: '🐀' }, { w: 'cap', e: '🧢' }, { w: 'map', e: '🗺️' }, { w: 'van', e: '🚐' },
+    { w: 'pan', e: '🍳' }, { w: 'bag', e: '🎒' }, { w: 'jam', e: '🍓' }, { w: 'fan', e: '🪭' } ] },
+  { tier: 1, vowel: 'i', words: [
+    { w: 'pig', e: '🐷' }, { w: 'wig', e: '👱' }, { w: 'dig', e: '⛏️' }, { w: 'pin', e: '📌' },
+    { w: 'fin', e: '🐟' }, { w: 'lid', e: '🥫' }, { w: 'zip', e: '🤐' }, { w: 'six', e: '6️⃣' } ] },
+  { tier: 1, vowel: 'u', words: [
+    { w: 'sun', e: '☀️' }, { w: 'bun', e: '🍞' }, { w: 'run', e: '🏃' }, { w: 'bug', e: '🐛' },
+    { w: 'rug', e: '🧶' }, { w: 'cup', e: '☕' }, { w: 'pup', e: '🐶' }, { w: 'bus', e: '🚌' } ] },
+  { tier: 1, vowel: 'o', words: [
+    { w: 'dog', e: '🐶' }, { w: 'log', e: '🪵' }, { w: 'fog', e: '🌫️' }, { w: 'fox', e: '🦊' },
+    { w: 'box', e: '📦' }, { w: 'top', e: '🔝' }, { w: 'mop', e: '🧹' }, { w: 'pot', e: '🍲' } ] },
+  { tier: 1, vowel: 'e', words: [
+    { w: 'hen', e: '🐔' }, { w: 'pen', e: '🖊️' }, { w: 'ten', e: '🔟' }, { w: 'bed', e: '🛏️' },
+    { w: 'web', e: '🕸️' }, { w: 'jet', e: '🛩️' }, { w: 'net', e: '🥅' }, { w: 'leg', e: '🦵' } ] },
+  // --- Tier 4: digraphs (sh / ch) — taught as one sound tile ---
+  { tier: 4, vowel: 'd', words: [
+    { w: 'ship', e: '🚢', units: ['sh','i','p'] },
+    { w: 'shop', e: '🏬', units: ['sh','o','p'] },
+    { w: 'fish', e: '🐟', units: ['f','i','sh'] },
+    { w: 'dish', e: '🍽️', units: ['d','i','sh'] },
+    { w: 'chip', e: '🍟', units: ['ch','i','p'] },
+    { w: 'chop', e: '🪓', units: ['ch','o','p'] },
+    { w: 'chin', e: '😀', units: ['ch','i','n'] } ] }
+];
+
+const PRAISE = [
+  'Yummy! 🍲', 'Delicious word! 😋', 'You cooked it! 🎉', 'Tasty! 🌟', 'Super soup! ⭐',
+  'Word chef! 👩‍🍳', 'Brilliant blend! ✨', 'Hooray! 🎈', 'You did it! 💖', 'So smart! 🧠',
+  'Magic soup! 🪄', 'Fantastic! 🎊', 'Great blending! 🙌', 'Wonderful! 🌈', 'Bubbly job! 🫧'
+];
+const PRAISE_SPOKEN = [
+  'Yummy! You cooked a word!', 'Delicious! Great blending!', 'You did it! Word chef!',
+  'Wonderful! So tasty!', 'Hooray! You made a word!', 'Super soup! Well done!'
+];
+
+const $ = (id) => document.getElementById(id);
+const state = {
+  muted: false,
+  busy: false,
+  made: 0,            // total words cooked this play
+  collection: [],     // {w, e}
+  collectedSet: new Set(),
+  recent: [],         // recent words to avoid repeats
+  mode: 'a',          // 'a' recognition, 'b' tap-sounds, 'c' build, 'd' digraph
+  current: null,      // {word, emoji, units}
+  tappedAll: false,   // whether the child has heard each sound (mode b/d gating is soft)
+  buildPicked: [],    // letters chosen in build mode
+};
+
+// ---------- screens ----------
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(name).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function goHome() {
+  state.busy = false;
+  cancelSpeech();
+  switchScreen('home');
+}
+function openHowTo() { $('how-modal').classList.add('open'); }
+function closeHowTo() { $('how-modal').classList.remove('open'); }
+
+function openBook() { renderBook(); $('book-modal').classList.add('open'); }
+function closeBook() { $('book-modal').classList.remove('open'); }
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+
+// ---------- pot SVG ----------
+function potSVG(scale) {
+  const s = scale || 1;
+  return `
+  <svg width="${Math.round(200*s)}" height="${Math.round(150*s)}" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <!-- steam -->
+    <g opacity="0.55" fill="none" stroke="#FFCDBC" stroke-width="6" stroke-linecap="round">
+      <path d="M70 34 q-10 -14 0 -26 q10 -12 0 -24"/>
+      <path d="M100 30 q-10 -14 0 -26 q10 -12 0 -24"/>
+      <path d="M130 34 q-10 -14 0 -26 q10 -12 0 -24"/>
+    </g>
+    <!-- pot body -->
+    <path d="M28 60 L172 60 L160 134 Q158 144 146 144 L54 144 Q42 144 40 134 Z"
+          fill="#E14B4B" stroke="#B53030" stroke-width="5" stroke-linejoin="round"/>
+    <!-- soup surface -->
+    <ellipse cx="100" cy="62" rx="72" ry="14" fill="#FF8A3D" stroke="#B53030" stroke-width="5"/>
+    <ellipse cx="100" cy="60" rx="60" ry="9" fill="#FFB36B"/>
+    <!-- soup bubbles -->
+    <circle cx="78" cy="58" r="5" fill="#FFE0C2"/>
+    <circle cx="108" cy="60" r="7" fill="#FFE0C2"/>
+    <circle cx="128" cy="57" r="4" fill="#FFE0C2"/>
+    <!-- rim -->
+    <rect x="22" y="50" width="156" height="16" rx="8" fill="#FF6B6B" stroke="#B53030" stroke-width="5"/>
+    <!-- handles -->
+    <path d="M22 70 q-16 4 -16 18 q0 14 16 16" fill="none" stroke="#B53030" stroke-width="6" stroke-linecap="round"/>
+    <path d="M178 70 q16 4 16 18 q0 14 -16 16" fill="none" stroke="#B53030" stroke-width="6" stroke-linecap="round"/>
+    <!-- highlight -->
+    <path d="M52 78 q-4 30 8 56" fill="none" stroke="#FF9A9A" stroke-width="6" stroke-linecap="round" opacity="0.7"/>
+  </svg>`;
+}
+
+// ---------- GAME FLOW ----------
+function startGame() {
+  ensureAudio();
+  state.made = 0;
+  state.collection = [];
+  state.collectedSet = new Set();
+  state.recent = [];
+  updateCount();
+  switchScreen('game');
+  newRound(true);
+}
+
+// difficulty: chooses a mode based on how many words cooked so far
+function chooseMode() {
+  const n = state.made;
+  // Stage A (recognition) for first couple, then B (tap sounds),
+  // then C (build the word), then occasionally D (digraphs).
+  if (n < 2) return 'a';
+  if (n < 5) return 'b';
+  if (n < 8) return 'c';
+  // After 8: mix build, tap, and digraphs to keep low floor / high ceiling
+  const r = Math.random();
+  if (r < 0.35) return 'd';
+  if (r < 0.7) return 'c';
+  return 'b';
+}
+
+function pickWord(forDigraph) {
+  let pool;
+  if (forDigraph) {
+    pool = FAMILIES.filter(f => f.tier === 4).flatMap(f => f.words);
+  } else {
+    pool = FAMILIES.filter(f => f.tier === 1).flatMap(f => f.words);
+  }
+  let avail = pool.filter(x => !state.recent.includes(x.w));
+  if (avail.length === 0) avail = pool;
+  const choice = pick(avail);
+  state.recent.push(choice.w);
+  if (state.recent.length > 8) state.recent.shift();
+  // units = how the word splits into sound-tiles
+  const units = choice.units ? choice.units.slice() : choice.w.split('');
+  return { word: choice.w, emoji: choice.e, units };
+}
+
+function newRound(first) {
+  state.busy = false;
+  cancelSpeech();
+  state.mode = chooseMode();
+  const isDigraph = state.mode === 'd';
+  state.current = pickWord(isDigraph);
+  state.buildPicked = [];
+  state.tappedAll = false;
+  state._tapCount = 0;
+
+  // reset visuals
+  $('creature-pop').classList.remove('show');
+  $('creature-pop').style.display = 'none';
+  $('word-reveal').classList.remove('show');
+  $('word-reveal').textContent = '';
+  $('feedback').textContent = ''; $('feedback').className = 'feedback';
+  $('round-actions').style.display = 'none';
+  $('pot-hint').className = 'pot-hint';
+
+  // pot
+  $('pot-wrap').innerHTML = potSVG(1);
+
+  const buildMode = state.mode === 'c';
+  $('build-area').style.display = buildMode ? 'block' : 'none';
+
+  // picture hint
+  const pic = $('pic-hint');
+  if (state.mode === 'b' || state.mode === 'd') {
+    // keep the picture as a gentle hint
+    pic.textContent = state.current.emoji;
+    pic.classList.remove('mystery');
+  } else if (state.mode === 'a') {
+    pic.textContent = state.current.emoji;
+    pic.classList.remove('mystery');
+  } else if (buildMode) {
+    pic.textContent = state.current.emoji;
+    pic.classList.remove('mystery');
+  }
+
+  if (buildMode) {
+    renderBuildChoices();
+    $('tiles-row').innerHTML = '';
+    renderBuildSlots();
+    setInstruction('Build the word for this picture! Pick the letters.', true);
+    $('pot-hint').textContent = '';
+  } else {
+    renderTiles(true);
+    if (state.mode === 'a') {
+      setInstruction('Listen to the sounds, then tap the pot to blend!', true);
+      // auto-play the sounds for recognition
+      setTimeout(() => autoPlaySounds(), 700);
+    } else {
+      setInstruction('Tap each letter to hear its sound!', true);
+    }
+    setPotReady();
+  }
+}
+
+function setInstruction(txt, speak) {
+  $('instruction').textContent = txt;
+  if (speak) speakText(txt);
+}
+
+function setPotReady() {
+  const ph = $('pot-hint');
+  ph.textContent = '👆 Tap the pot to blend!';
+  ph.className = 'pot-hint ready';
+}
+
+// ---------- render letter tiles in the pot ----------
+function renderTiles(animate) {
+  const row = $('tiles-row');
+  row.innerHTML = '';
+  state.current.units.forEach((u, i) => {
+    const t = document.createElement('button');
+    t.type = 'button';
+    t.className = 'letter-tile' + (animate ? ' drop-in' : '');
+    t.style.animationDelay = (i * 0.12) + 's';
+    t.textContent = u.toUpperCase();
+    t.setAttribute('aria-label', 'Letter ' + u.toUpperCase() + ', tap to hear its sound');
+    t.dataset.unit = u;
+    t.dataset.idx = i;
+    t.addEventListener('click', () => tapTile(i, t));
+    row.appendChild(t);
+  });
+}
+
+function tapTile(i, el) {
+  if (state.busy) return;
+  ensureAudio();
+  el.classList.remove('sounding'); void el.offsetWidth; el.classList.add('sounding');
+  playBlip();
+  const unit = state.current.units[i];
+  speakPhoneme(unit);
+  showPuff(el, PHONEME[unit] || unit);
+  // soft tracking: once they've tapped at least the count of tiles, encourage blending
+  state._tapCount = (state._tapCount || 0) + 1;
+  if (state.mode === 'b' && state._tapCount >= state.current.units.length) {
+    setPotReady();
+  }
+}
+
+function showPuff(tileEl, text) {
+  const old = tileEl.querySelector('.sound-puff');
+  if (old) old.remove();
+  const puff = document.createElement('div');
+  puff.className = 'sound-puff';
+  puff.textContent = '“' + text + '”';
+  tileEl.appendChild(puff);
+  setTimeout(() => { if (puff.parentNode) puff.remove(); }, 1000);
+}
+
+// auto play each sound in sequence (recognition mode)
+function autoPlaySounds() {
+  if (state.busy || !state.current) return;
+  const tiles = Array.from($('tiles-row').children);
+  let delay = 0;
+  state.current.units.forEach((u, i) => {
+    setTimeout(() => {
+      const t = tiles[i];
+      if (!t) return;
+      t.classList.remove('sounding'); void t.offsetWidth; t.classList.add('sounding');
+      playBlip();
+      speakPhoneme(u);
+      showPuff(t, PHONEME[u] || u);
+    }, delay);
+    delay += 720;
+  });
+}
+
+// ---------- BUILD MODE (mode c) ----------
+function renderBuildSlots() {
+  const row = $('tiles-row');
+  row.innerHTML = '';
+  const units = state.current.units;
+  units.forEach((u, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'letter-tile';
+    slot.style.background = state.buildPicked[i] ? '' : '#FFF6EE';
+    slot.style.borderStyle = state.buildPicked[i] ? 'solid' : 'dashed';
+    slot.style.color = '#6A4E00';
+    slot.textContent = state.buildPicked[i] ? state.buildPicked[i].toUpperCase() : '';
+    if (state.buildPicked[i]) {
+      slot.setAttribute('aria-label', 'Letter ' + state.buildPicked[i].toUpperCase() + ', tap to remove');
+      slot.style.cursor = 'pointer';
+      slot.addEventListener('click', () => {
+        if (state.busy) return;
+        playBlip();
+        state.buildPicked.splice(i, 1);
+        renderBuildSlots(); renderBuildChoices();
+      });
+    } else {
+      slot.setAttribute('aria-label', 'Empty box ' + (i + 1));
+    }
+    row.appendChild(slot);
+  });
+}
+
+function renderBuildChoices() {
+  const wrap = $('choices');
+  wrap.innerHTML = '';
+  const correct = state.current.units;
+  // distractor letters (single letters) not already in word
+  const wordSet = new Set(correct);
+  const alpha = 'abcdefghijklmnopqrstuvwxyz'.split('');
+  const extras = shuffle(alpha.filter(c => !wordSet.has(c))).slice(0, 3);
+  const options = shuffle(correct.concat(extras));
+  options.forEach(u => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'choice-tile';
+    b.textContent = u.toUpperCase();
+    b.setAttribute('aria-label', 'Letter ' + u.toUpperCase() + ', hear its sound and place it');
+    b.addEventListener('click', () => {
+      if (state.busy) return;
+      ensureAudio();
+      // count how many of this letter are still needed
+      const needed = correct.filter(c => c === u).length;
+      const placed = state.buildPicked.filter(c => c === u).length;
+      playBlip();
+      speakPhoneme(u);
+      b.classList.remove('sounding'); void b.offsetWidth; b.classList.add('sounding');
+      if (state.buildPicked.length >= correct.length) return;
+      if (placed >= needed) {
+        // not part of word — gentle nudge, don't place
+        gentle('That sound is not in this word. Try another! 🌟');
+        return;
+      }
+      state.buildPicked.push(u);
+      renderBuildSlots();
+      if (state.buildPicked.length === correct.length) {
+        // check correctness in order
+        if (state.buildPicked.join('') === correct.join('')) {
+          setInstruction('Now tap the pot to blend! 🍲', false);
+          setPotReady();
+        } else {
+          gentle('Hmm, not quite the right order — tap a box to fix it! ✨');
+        }
+      }
+    });
+    wrap.appendChild(b);
+  });
+}
+
+function gentle(msg) {
+  const fb = $('feedback');
+  fb.className = 'feedback gentle';
+  fb.textContent = msg;
+  playGentleTone();
+  speakText(msg.replace(/[^\w !?.,']/g, '').trim());
+}
+
+// ---------- BLEND (tap the pot) ----------
+function blendPot() {
+  if (state.busy || !state.current) return;
+  ensureAudio();
+  // In build mode, require the word to be correctly built first
+  if (state.mode === 'c') {
+    const correct = state.current.units;
+    if (state.buildPicked.length !== correct.length || state.buildPicked.join('') !== correct.join('')) {
+      gentle('Finish building the word first, then tap the pot! 👆');
+      return;
+    }
+  }
+  state.busy = true;
+  cancelSpeech();
+  const potWrap = $('pot-wrap');
+  potWrap.classList.remove('blending'); void potWrap.offsetWidth; potWrap.classList.add('blending');
+  $('pot-hint').className = 'pot-hint';
+  $('pot-hint').textContent = '';
+  setInstruction('Blending the sounds…', false);
+  spawnBubbles();
+  playBubbleSound();
+
+  // animate sounds speeding up and merging, then say the word
+  const units = state.current.units;
+  const tiles = Array.from($('tiles-row').children);
+  let delay = 250;
+  let step = 230;
+  units.forEach((u, i) => {
+    setTimeout(() => {
+      const t = tiles[i];
+      if (t) { t.classList.remove('sounding'); void t.offsetWidth; t.classList.add('sounding'); }
+      playBlip();
+      speakPhoneme(u, 1.15);
+    }, delay);
+    delay += step;
+    step *= 0.8; // speed up
+  });
+
+  // then the full word
+  setTimeout(() => revealWord(), delay + 180);
+}
+
+function revealWord() {
+  const cur = state.current;
+  playCorrect();
+  // spoken word
+  speakText(cur.word, 0.85, 1.1);
+
+  // creature pops out
+  const cre = $('creature-pop');
+  cre.textContent = cur.emoji;
+  cre.style.display = 'block';
+  cre.classList.remove('show'); void cre.offsetWidth; cre.classList.add('show');
+
+  // word banner
+  const wr = $('word-reveal');
+  wr.textContent = cur.word;
+  wr.classList.remove('show'); void wr.offsetWidth; wr.classList.add('show');
+
+  setInstruction('You made the word… ' + cur.word.toUpperCase() + '!', false);
+
+  // celebration
+  const praise = pick(PRAISE);
+  const fb = $('feedback');
+  fb.className = 'feedback good';
+  fb.textContent = praise;
+  showPraisePop(pick(['Yummy!','Delicious!','You did it!','Word Chef!','Hooray!']));
+  bigConfetti();
+  launchFireworks(3);
+  launchStarRise(8);
+  setTimeout(() => speakText(pick(PRAISE_SPOKEN), 0.95, 1.15), 900);
+
+  // collect into recipe book
+  if (!state.collectedSet.has(cur.word)) {
+    state.collectedSet.add(cur.word);
+    state.collection.push({ w: cur.word, e: cur.emoji });
+  }
+  state.made++;
+  updateCount();
+
+  // show next/hear buttons
+  setTimeout(() => {
+    state.busy = false;
+    $('round-actions').style.display = 'flex';
+  }, 1400);
+}
+
+function hearWordAgain() {
+  if (!state.current) return;
+  ensureAudio();
+  speakText(state.current.word, 0.8, 1.1);
+}
+
+function nextRound() {
+  if (state.busy) return;
+  newRound(false);
+}
+
+function updateCount() {
+  $('book-count').textContent = state.collection.length;
+  $('collect-num').textContent = state.collection.length;
+}
+
+// ---------- RECIPE BOOK render ----------
+function renderBook() {
+  const grid = $('book-grid');
+  const empty = $('book-empty');
+  grid.innerHTML = '';
+  if (state.collection.length === 0) {
+    empty.style.display = 'block';
+    $('book-sub').textContent = 'Cook words to fill your cookbook!';
+    return;
+  }
+  empty.style.display = 'none';
+  $('book-sub').textContent = 'Tap a word to hear it again! · ' + state.collection.length + ' collected';
+  state.collection.forEach(item => {
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'book-item';
+    cell.setAttribute('aria-label', item.w + ', tap to hear it');
+    cell.innerHTML = `<div class="bi-emoji">${item.e}</div><div class="bi-word">${item.w}</div>`;
+    cell.addEventListener('click', () => { ensureAudio(); speakText(item.w, 0.8, 1.1); });
+    grid.appendChild(cell);
+  });
+}
+
+// ---------- POT bubbles ----------
+function spawnBubbles() {
+  const stage = $('pot-stage');
+  const potWrap = $('pot-wrap');
+  const stageRect = stage.getBoundingClientRect();
+  const potRect = potWrap.getBoundingClientRect();
+  const centerX = (potRect.left - stageRect.left) + potRect.width / 2;
+  for (let i = 0; i < 14; i++) {
+    setTimeout(() => {
+      const b = document.createElement('div');
+      b.className = 'pot-bubble';
+      const size = 10 + Math.random() * 22;
+      b.style.width = size + 'px';
+      b.style.height = size + 'px';
+      b.style.left = (centerX + (Math.random() * 90 - 45)) + 'px';
+      b.style.bottom = (potRect.bottom - stageRect.top - potRect.height + 30) + 'px';
+      stage.appendChild(b);
+      setTimeout(() => { if (b.parentNode) b.remove(); }, 1400);
+    }, i * 70);
+  }
+}
+
+// ---------- CONFETTI / EFFECTS (carmath/spellabee style) ----------
+const CONFETTI_COLORS = ['#FF6B6B','#FFD93D','#2EC4B6','#FF8A3D','#4CAF50','#2196F3','#FF9A9A'];
+function burstConfetti(x, y, count) {
+  const n = count || 28;
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = x + 'px'; c.style.top = y + 'px';
+    c.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+    document.body.appendChild(c);
+    const angle = Math.random() * Math.PI * 2;
+    const velocity = 80 + Math.random() * 140;
+    const dx = Math.cos(angle) * velocity, dy = Math.sin(angle) * velocity - 80;
+    c.animate([
+      { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+      { transform: 'translate(' + dx + 'px, ' + (dy + 320) + 'px) rotate(' + (Math.random() * 720) + 'deg)', opacity: 0 }
+    ], { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(.2,.6,.4,1)' });
+    setTimeout(() => c.remove(), 1700);
+  }
+}
+function bigConfetti() {
+  const w = window.innerWidth, h = window.innerHeight;
+  burstConfetti(w * 0.25, h * 0.35, 30);
+  setTimeout(() => burstConfetti(w * 0.75, h * 0.35, 30), 160);
+  setTimeout(() => burstConfetti(w * 0.5, h * 0.28, 36), 320);
+}
+function showPraisePop(msg) {
+  const el = document.createElement('div');
+  el.className = 'praise-pop';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { if (el.parentNode) el.remove(); }, 1800);
+}
+function launchFireworks(burstCount = 3) {
+  const colors = CONFETTI_COLORS;
+  for (let b = 0; b < burstCount; b++) {
+    setTimeout(() => {
+      const cx = 80 + Math.random() * Math.max(40, window.innerWidth - 160);
+      const cy = 100 + Math.random() * Math.max(40, window.innerHeight * 0.5);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      playFireworkBoom();
+      const particles = 20;
+      for (let i = 0; i < particles; i++) {
+        const p = document.createElement('div');
+        p.className = 'firework-particle';
+        p.style.left = cx + 'px'; p.style.top = cy + 'px';
+        p.style.background = color; p.style.boxShadow = `0 0 10px ${color}`;
+        const angle = (i / particles) * Math.PI * 2 + Math.random() * 0.2;
+        const dist = 70 + Math.random() * 70;
+        p.style.setProperty('--fx', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--fy', Math.sin(angle) * dist + 'px');
+        document.body.appendChild(p);
+        setTimeout(() => { if (p.parentNode) p.remove(); }, 1300);
+      }
+    }, b * 280);
+  }
+}
+function launchStarRise(count = 8) {
+  const stars = ['⭐','🌟','✨','💫','🎉','🫧'];
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const s = document.createElement('div');
+      s.className = 'star-rise';
+      s.textContent = stars[Math.floor(Math.random() * stars.length)];
+      s.style.left = (Math.random() * (window.innerWidth - 40)) + 'px';
+      s.style.top = (window.innerHeight - 60) + 'px';
+      document.body.appendChild(s);
+      setTimeout(() => { if (s.parentNode) s.remove(); }, 1900);
+    }, i * 90);
+  }
+}
+
+// ====================================================================
+// AUDIO — Web Audio API (sound effects) + Web Speech API (voice)
+// ====================================================================
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { audioCtx = null; }
+  }
+  return audioCtx;
+}
+function ensureAudio() {
+  const ctx = getAudio();
+  if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
+  return ctx;
+}
+function playTone(freq, duration, type = 'sine', vol = 0.25, delay = 0) {
+  if (state.muted) return;
+  try {
+    const ctx = getAudio(); if (!ctx) return;
+    const t0 = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    osc.connect(gain); gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(vol, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+    osc.start(t0); osc.stop(t0 + duration);
+  } catch (e) {}
+}
+function playBlip() { playTone(520, 0.09, 'triangle', 0.16, 0); }
+function playCorrect() {
+  try { playTone(659, 0.12, 'triangle', 0.3, 0); playTone(880, 0.16, 'triangle', 0.3, 0.12); playTone(1175, 0.24, 'triangle', 0.3, 0.27); } catch (e) {}
+}
+function playGentleTone() {
+  if (state.muted) return;
+  try {
+    const ctx = getAudio(); if (!ctx) return;
+    const t0 = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.connect(g); g.connect(ctx.destination);
+    o.frequency.setValueAtTime(392, t0);
+    o.frequency.linearRampToValueAtTime(330, t0 + 0.26);
+    g.gain.setValueAtTime(0.001, t0);
+    g.gain.linearRampToValueAtTime(0.10, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.32);
+    o.start(t0); o.stop(t0 + 0.36);
+  } catch (e) {}
+}
+function playBubbleSound() {
+  if (state.muted) return;
+  try {
+    for (let i = 0; i < 6; i++) {
+      playTone(300 + Math.random() * 500, 0.1, 'sine', 0.10, i * 0.09);
+    }
+  } catch (e) {}
+}
+function playFireworkBoom() {
+  if (state.muted) return;
+  try {
+    const ctx = getAudio(); if (!ctx) return;
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(700, t0);
+    osc.frequency.exponentialRampToValueAtTime(1700, t0 + 0.18);
+    gain.gain.setValueAtTime(0.001, t0);
+    gain.gain.linearRampToValueAtTime(0.09, t0 + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.22);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t0); osc.stop(t0 + 0.24);
+    playTone(110, 0.18, 'sine', 0.16, 0.16);
+  } catch (e) {}
+}
+
+// ---------- Web Speech ----------
+function cancelSpeech() {
+  try { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); } catch (e) {}
+}
+function speakText(text, rate, pitch) {
+  if (state.muted) return;
+  if (!('speechSynthesis' in window)) return;
+  try {
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = rate || 0.9; u.pitch = pitch || 1.05; u.volume = 1;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+// speak a single phoneme slowly (sound, not the letter name)
+function speakPhoneme(unit, rate) {
+  if (state.muted) return;
+  if (!('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const text = PHONEME[unit] || unit;
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = rate || 0.6;   // slow so the sound is clear
+    u.pitch = 1.0; u.volume = 1;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+// ---------- mute ----------
+function toggleMute() {
+  state.muted = !state.muted;
+  $('mute-btn').textContent = state.muted ? '🔇' : '🔊';
+  $('mute-btn').setAttribute('aria-pressed', String(state.muted));
+  if (state.muted) { cancelSpeech(); }
+  else { ensureAudio(); }
+}
+
+// ---------- wire up ----------
+$('pot-wrap').addEventListener('click', blendPot);
+$('pot-wrap').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); blendPot(); }
+});
+
+// home pot preview
+$('home-pot').innerHTML = potSVG(1.15);
+
+// Esc closes modals
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeHowTo(); closeBook(); }
+});
+
+// Resume audio on first user gesture
+document.addEventListener('click', () => {
+  const ctx = getAudio();
+  if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
+}, { once: true });
+</script>
+</body>
+</html>

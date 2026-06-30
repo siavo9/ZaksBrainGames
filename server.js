@@ -94,6 +94,36 @@ app.get(['/color-book', '/color-book/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'color-book', 'index.html'));
 });
 
+// Robo Recess game page (folder-based: /roborecess/index.html)
+app.get(['/roborecess', '/roborecess/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'roborecess', 'index.html'));
+});
+
+// Sound Soup game page (folder-based: /soundsoup/index.html)
+app.get(['/soundsoup', '/soundsoup/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'soundsoup', 'index.html'));
+});
+
+// Pattern Express game page (folder-based: /patternexpress/index.html)
+app.get(['/patternexpress', '/patternexpress/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'patternexpress', 'index.html'));
+});
+
+// Dino Don't! game page (folder-based: /dinodont/index.html)
+app.get(['/dinodont', '/dinodont/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dinodont', 'index.html'));
+});
+
+// Mailbot Maze game page (folder-based: /mailbotmaze/index.html)
+app.get(['/mailbotmaze', '/mailbotmaze/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'mailbotmaze', 'index.html'));
+});
+
+// Echo Beats game page (folder-based: /echobeats/index.html)
+app.get(['/echobeats', '/echobeats/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'echobeats', 'index.html'));
+});
+
 // SEO helpers
 app.get('/robots.txt', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));

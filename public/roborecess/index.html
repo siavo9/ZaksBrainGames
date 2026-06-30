@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Robo Recess — Zak's Brain Games</title>
+<meta name="description" content="Robo Recess teaches coding and logic! Build a program with arrow blocks to drive your robot across the grid to its star. Sequencing, planning, and debugging for ages 4+." />
+<meta name="theme-color" content="#4FC3F7" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A4%96%3C/text%3E%3C/svg%3E" />
+
+<!-- Self-hosted fonts (offline; no external requests) -->
+<style>
+@font-face { font-family:'Fredoka'; font-style:normal; font-weight:300 700; font-display:swap; src:url('../fonts/fredoka.woff2') format('woff2'); }
+@font-face { font-family:'Bubblegum Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('../fonts/bubblegum-sans-400.woff2') format('woff2'); }
+</style>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --blue: #4FC3F7;
+    --blue-dark: #0288D1;
+    --blue-deep: #01579B;
+    --sky1: #B3E5FC;
+    --sky2: #E1F5FE;
+    --sky3: #CFE8FC;
+    --green: #4CAF50;
+    --green-dark: #2E7D32;
+    --orange: #FF9F45;
+    --orange-dark: #E07B1E;
+    --help: #FF6B35;
+    --help-dark: #B33E10;
+    --purple: #B073FF;
+    --yellow: #FFD93D;
+    --dark: #173A56;
+    --ink: #0d2436;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Fredoka', system-ui, sans-serif;
+    color: var(--ink);
+    background: linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 55%, var(--sky3) 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    user-select: none;
+  }
+
+  /* Decorative floating shapes (pushed below fixed nav) */
+  .shape {
+    position: fixed; border-radius: 50%; opacity: 0.28; z-index: 0;
+    animation: float 9s ease-in-out infinite; pointer-events: none;
+  }
+  .shape.s1 { width: 110px; height: 110px; background: var(--blue);   top: 14%; left: 5%;  animation-delay: 0s; }
+  .shape.s2 { width: 70px;  height: 70px;  background: var(--purple); top: 64%; left: 90%; animation-delay: 2s; }
+  .shape.s3 { width: 90px;  height: 90px;  background: var(--yellow); top: 80%; left: 8%;  animation-delay: 4s; }
+  .shape.s4 { width: 60px;  height: 60px;  background: var(--green);  top: 26%; left: 88%; animation-delay: 1s; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-24px) rotate(10deg); }
+  }
+
+  .screen { display: none; min-height: 100vh; padding: 110px 16px 32px; position: relative; z-index: 10; }
+  .screen.active { display: block; animation: screenIn 0.3s ease; }
+  @keyframes screenIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* ===== TOP NAV (persistent across all screens) ===== */
+  #top-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 40;
+    background: rgba(255, 255, 255, 0.92);
+    border-bottom: 4px solid var(--blue-deep);
+    box-shadow: 0 4px 0 rgba(1, 87, 155, 0.2);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #top-nav .nav-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .nav-btn {
+    font-family: inherit;
+    font-size: 1em;
+    padding: 8px 16px;
+    background: white;
+    color: var(--ink);
+    border: 3px solid var(--blue-deep);
+    border-radius: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--blue-deep);
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    transition: transform 0.1s, box-shadow 0.1s;
+    min-height: 44px;
+  }
+  .nav-btn:hover  { transform: translateY(2px); box-shadow: 0 2px 0 var(--blue-deep); }
+  .nav-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--blue-deep); }
+  .nav-btn.home {
+    background: var(--green); color: white;
+    border-color: var(--green-dark); box-shadow: 0 4px 0 var(--green-dark);
+  }
+  .nav-btn.home:hover  { box-shadow: 0 2px 0 var(--green-dark); }
+  .nav-btn.home:active { box-shadow: 0 0 0 var(--green-dark); }
+  .nav-btn.parent {
+    background: #2196F3; color: white;
+    border-color: #0D47A1; box-shadow: 0 4px 0 #0D47A1;
+  }
+  .nav-btn.parent:hover  { box-shadow: 0 2px 0 #0D47A1; }
+  .nav-btn.parent:active { box-shadow: 0 0 0 #0D47A1; }
+  .nav-btn.help {
+    background: var(--help); color: white;
+    border-color: var(--help-dark); box-shadow: 0 4px 0 var(--help-dark);
+  }
+  .nav-btn.help:hover  { box-shadow: 0 2px 0 var(--help-dark); }
+  .nav-btn.help:active { box-shadow: 0 0 0 var(--help-dark); }
+
+  /* ===== HOW TO PLAY modal ===== */
+  #how-modal {
+    position: fixed; inset: 0;
+    background: rgba(1, 36, 64, 0.55);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+  }
+  #how-modal.open { display: flex; }
+  .modal-card {
+    background: white;
+    border: 5px solid var(--blue-deep);
+    border-radius: 24px;
+    padding: 24px 28px 22px;
+    max-width: 540px; width: 100%;
+    box-shadow: 0 9px 0 var(--blue-deep);
+    text-align: left;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-card h2 {
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: 2em;
+    color: var(--blue-dark);
+    text-shadow: 2px 2px 0 #fff, 3px 3px 0 var(--blue-deep);
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .modal-card p { font-size: 1.15em; margin-bottom: 12px; line-height: 1.4; }
+  .modal-card ul { list-style: none; padding-left: 0; margin: 8px 0 16px; }
+  .modal-card li {
+    padding: 10px 14px; margin-bottom: 8px;
+    background: #E1F5FE;
+    border-left: 5px solid var(--blue);
+    border-radius: 10px;
+    font-size: 1.05em; line-height: 1.4;
+  }
+  .modal-close {
+    display: block; margin: 4px auto 0;
+    font-family: inherit; font-size: 1.25em;
+    padding: 12px 28px;
+    background: var(--green); color: white;
+    border: 4px solid var(--green-dark);
+    border-radius: 30px; cursor: pointer;
+    box-shadow: 0 5px 0 var(--green-dark);
+    font-weight: bold; min-height: 52px;
+  }
+  .modal-close:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--green-dark); }
+
+  /* ===== HOME ===== */
+  #home { text-align: center; padding-top: 124px; }
+  #home h1 {
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: clamp(2.8em, 8vw, 5.4em);
+    color: var(--blue-dark);
+    text-shadow: 4px 4px 0 #fff, 7px 7px 0 var(--blue-deep);
+    margin-bottom: 8px;
+    animation: bounce 2.2s ease-in-out infinite;
+  }
+  @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-16px);} }
+  .home-robot {
+    font-size: clamp(4em, 16vw, 7em);
+    display: inline-block;
+    filter: drop-shadow(4px 6px 0 rgba(1,87,155,0.25));
+    animation: robotIdle 2.4s ease-in-out infinite;
+    cursor: pointer;
+    margin: 6px 0 2px;
+  }
+  @keyframes robotIdle {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-12px) rotate(3deg); }
+  }
+  .tagline { font-size: clamp(1.2em, 3.6vw, 1.7em); color: var(--dark); margin: 6px auto 22px; max-width: 560px; font-weight: 500; }
+  .play-btn {
+    font-family: inherit; font-weight: 700;
+    font-size: 2.2em;
+    padding: 18px 56px;
+    background: var(--green); color: white;
+    border: 6px solid var(--green-dark);
+    border-radius: 60px; cursor: pointer;
+    box-shadow: 0 9px 0 var(--green-dark);
+    transition: transform 0.1s, box-shadow 0.1s;
+    margin-top: 6px; min-height: 64px;
+    animation: pulseGlow 2.2s ease-in-out infinite;
+  }
+  @keyframes pulseGlow {
+    0%,100% { box-shadow: 0 9px 0 var(--green-dark), 0 0 0 0 rgba(79,195,247,0.5); }
+    50% { box-shadow: 0 9px 0 var(--green-dark), 0 0 0 18px rgba(79,195,247,0); }
+  }
+  .play-btn:hover  { transform: translateY(3px); box-shadow: 0 6px 0 var(--green-dark); }
+  .play-btn:active { transform: translateY(9px); box-shadow: 0 0 0 var(--green-dark); }
+  .age-note { margin-top: 20px; font-size: 1.1em; color: var(--dark); font-weight: 600; }
+  .home-hear {
+    margin: 18px auto 0;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--blue); color: white; border: none; cursor: pointer;
+    font-family: inherit; font-weight: 700; font-size: 1.05em;
+    padding: 12px 24px; border-radius: 30px;
+    box-shadow: 0 4px 0 var(--blue-dark); min-height: 48px;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .home-hear:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--blue-dark); }
+  .more-games { margin-top: 26px; font-size: 1.1em; color: var(--dark); }
+  .more-games a {
+    color: var(--blue-dark); font-weight: bold; text-decoration: none;
+    border-bottom: 3px dashed var(--blue-dark); padding-bottom: 2px;
+  }
+  .more-games a:hover { color: var(--help); border-bottom-color: var(--help); }
+
+  /* ===== GAME ===== */
+  #game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 6px 8px; margin-bottom: 8px; flex-wrap: wrap; gap: 10px;
+  }
+  #game-title {
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: 2.2em; color: var(--blue-dark);
+    text-shadow: 3px 3px 0 #fff, 4px 4px 0 var(--blue-deep);
+  }
+  .header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  #mute-btn {
+    font-size: 1.5em; background: white; border: 4px solid var(--blue-deep);
+    border-radius: 50%; width: 54px; height: 54px; cursor: pointer;
+    box-shadow: 0 5px 0 var(--blue-deep);
+  }
+  #mute-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--blue-deep); }
+
+  .game-wrap { max-width: 720px; margin: 0 auto; }
+
+  #level-bar {
+    display: flex; justify-content: center; align-items: center; gap: 12px;
+    flex-wrap: wrap; margin-bottom: 12px;
+  }
+  .level-card {
+    background: white; border: 4px solid var(--blue-deep);
+    border-radius: 18px; padding: 8px 18px;
+    box-shadow: 0 5px 0 var(--blue-deep);
+    text-align: center; min-width: 90px;
+  }
+  .level-card .stat-label { font-size: 0.85em; color: #5a7a90; font-weight: bold; }
+  .level-card .stat-value { font-size: 1.5em; font-weight: bold; color: var(--blue-dark); }
+  #goal-banner {
+    background: #FFF8E1; border: 3px solid var(--yellow);
+    border-radius: 16px; padding: 10px 16px;
+    font-size: 1.1em; font-weight: 600; text-align: center;
+    margin: 0 auto 12px; max-width: 600px; line-height: 1.35;
+    color: var(--dark);
+  }
+  #goal-banner .hear-inline {
+    background: var(--blue); color: white; border: none; cursor: pointer;
+    font-family: inherit; font-weight: 700; font-size: 0.85em;
+    padding: 5px 12px; border-radius: 20px; margin-left: 6px;
+    vertical-align: middle; box-shadow: 0 3px 0 var(--blue-dark);
+  }
+  #goal-banner .hear-inline:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--blue-dark); }
+
+  /* ===== GRID ===== */
+  #grid-area {
+    background: rgba(255,255,255,0.7);
+    border-radius: 24px;
+    padding: 16px;
+    margin-bottom: 14px;
+    border: 5px dashed var(--blue);
+    display: flex; justify-content: center;
+  }
+  #grid {
+    display: grid;
+    gap: 6px;
+    background: var(--blue-deep);
+    padding: 6px;
+    border-radius: 16px;
+    box-shadow: 0 6px 0 rgba(1,87,155,0.35);
+  }
+  .cell {
+    background: #E8F6FF;
+    border-radius: 10px;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: inset 0 2px 4px rgba(1,87,155,0.08);
+  }
+  .cell.alt { background: #D4ECFB; }
+  .cell.wall {
+    background: #607D8B;
+    background-image: repeating-linear-gradient(45deg, #546E7A 0 8px, #607D8B 8px 16px);
+    box-shadow: inset 0 0 0 2px #455A64;
+  }
+  .cell .cell-emoji { font-size: 1.9em; line-height: 1; }
+  .cell.wall .cell-emoji { filter: drop-shadow(0 1px 1px rgba(0,0,0,0.4)); }
+  .star-cell .cell-emoji { animation: starPulse 1.4s ease-in-out infinite; }
+  @keyframes starPulse {
+    0%,100% { transform: scale(1) rotate(0); }
+    50% { transform: scale(1.18) rotate(8deg); }
+  }
+  .gem-collected .cell-emoji { animation: gemGone 0.5s ease forwards; }
+  @keyframes gemGone { to { transform: scale(0); opacity: 0; } }
+
+  /* Robot piece — absolutely positioned over the grid, animated by transform */
+  #robot {
+    position: absolute;
+    display: flex; align-items: center; justify-content: center;
+    transition: left 0.42s cubic-bezier(0.34,1.3,0.6,1), top 0.42s cubic-bezier(0.34,1.3,0.6,1);
+    z-index: 5; pointer-events: none;
+  }
+  #robot .robo-glyph {
+    font-size: 1.9em; line-height: 1;
+    transition: transform 0.42s cubic-bezier(0.34,1.3,0.6,1);
+    filter: drop-shadow(0 3px 3px rgba(1,87,155,0.4));
+    display: inline-block;
+  }
+  /* a little direction arrow under the robot so non-readers see facing */
+  #robot .robo-arrow {
+    position: absolute;
+    font-size: 0.85em;
+    bottom: -2px; right: -2px;
+    transition: transform 0.42s ease;
+    pointer-events: none;
+  }
+  #robot.bump .robo-glyph { animation: bumpWiggle 0.5s ease; }
+  @keyframes bumpWiggle {
+    0%,100% { transform: var(--face) translateX(0); }
+    25% { transform: var(--face) translateX(-6px); }
+    75% { transform: var(--face) translateX(6px); }
+  }
+  #robot.cheer .robo-glyph { animation: roboCheer 0.6s ease; }
+  @keyframes roboCheer {
+    0%,100% { transform: var(--face) translateY(0) scale(1); }
+    40% { transform: var(--face) translateY(-10px) scale(1.2); }
+  }
+
+  /* ===== COMMAND STRIP ===== */
+  #strip-label { text-align: center; font-weight: 600; color: var(--dark); margin: 4px 0; font-size: 1.05em; }
+  #command-strip {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    min-height: 70px;
+    background: white;
+    border: 4px solid var(--blue-deep);
+    border-radius: 18px;
+    padding: 10px 12px;
+    margin: 0 auto 12px;
+    box-shadow: 0 5px 0 rgba(1,87,155,0.25);
+    justify-content: center;
+  }
+  #command-strip.empty { color: #90A4AE; font-weight: 600; font-style: italic; }
+  .cmd-chip {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 56px; height: 52px;
+    border-radius: 14px;
+    font-size: 1.7em; line-height: 1;
+    border: 3px solid var(--blue-dark);
+    background: #E1F5FE;
+    box-shadow: 0 3px 0 var(--blue-dark);
+    position: relative;
+    animation: chipPop 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .cmd-chip .chip-num { font-size: 0.4em; font-weight: 700; color: var(--blue-dark); margin-top: 1px; }
+  .cmd-chip.loop { background: #F3E5FF; border-color: var(--purple); box-shadow: 0 3px 0 var(--purple); }
+  .cmd-chip.running { outline: 4px solid var(--orange); outline-offset: 2px; transform: translateY(-4px) scale(1.08); }
+  @keyframes chipPop { 0% { transform: scale(0.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+  /* ===== BLOCK PALETTE ===== */
+  #palette {
+    display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+    margin-bottom: 14px;
+  }
+  .block-btn {
+    font-family: inherit; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    width: 90px; padding: 12px 6px 8px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, #fff 0%, #E1F5FE 100%);
+    border: 4px solid var(--blue-dark);
+    box-shadow: 0 6px 0 var(--blue-dark);
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .block-btn .blk-icon { font-size: 2.1em; line-height: 1; }
+  .block-btn .blk-label { font-size: 0.85em; font-weight: 700; color: var(--blue-dark); }
+  .block-btn:hover { transform: translateY(-3px); box-shadow: 0 9px 0 var(--blue-dark); }
+  .block-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--blue-dark); }
+  .block-btn.loop { background: linear-gradient(180deg, #fff 0%, #F3E5FF 100%); border-color: var(--purple); box-shadow: 0 6px 0 var(--purple); }
+  .block-btn.loop .blk-label { color: var(--purple); }
+  .block-btn.loop:hover { box-shadow: 0 9px 0 var(--purple); }
+  .block-btn.loop:active { box-shadow: 0 2px 0 var(--purple); }
+  .block-btn:disabled { opacity: 0.4; pointer-events: none; }
+
+  /* ===== ACTION ROW ===== */
+  #action-row {
+    display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-items: center;
+    margin-bottom: 8px;
+  }
+  .act-btn {
+    font-family: inherit; font-weight: 700; cursor: pointer;
+    font-size: 1.1em; padding: 14px 22px;
+    border-radius: 18px; min-height: 56px;
+    border: 4px solid var(--blue-deep);
+    background: white; color: var(--ink);
+    box-shadow: 0 6px 0 var(--blue-deep);
+    transition: transform 0.12s, box-shadow 0.12s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .act-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 0 var(--blue-deep); }
+  .act-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 var(--blue-deep); }
+  .act-btn:disabled { opacity: 0.45; pointer-events: none; }
+  .act-btn.go {
+    font-size: 1.5em; padding: 16px 40px;
+    background: var(--green); color: white;
+    border-color: var(--green-dark); box-shadow: 0 7px 0 var(--green-dark);
+  }
+  .act-btn.go:hover { box-shadow: 0 9px 0 var(--green-dark); }
+  .act-btn.go:active { box-shadow: 0 3px 0 var(--green-dark); }
+
+  #feedback {
+    text-align: center; font-size: 1.3em; font-weight: 700;
+    min-height: 40px; margin-top: 10px; line-height: 1.3;
+  }
+  #feedback.good { color: var(--green-dark); animation: bouncePraise 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+  #feedback.gentle { color: var(--purple); }
+  @keyframes bouncePraise { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
+
+  /* ===== WIN SCREEN ===== */
+  #win .panel {
+    background: white; border-radius: 26px; padding: 28px 22px 26px;
+    box-shadow: 0 8px 0 rgba(1,87,155,0.15), 0 14px 30px rgba(1,87,155,0.1);
+    max-width: 560px; margin: 0 auto; text-align: center;
+  }
+  #win .trophy { font-size: 5em; display: inline-block; animation: trophyBounce 1.4s ease-in-out infinite; filter: drop-shadow(4px 6px 0 rgba(1,87,155,0.2)); }
+  @keyframes trophyBounce { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-14px) rotate(6deg); } }
+  #win h2 {
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: clamp(2em, 5vw, 2.6em);
+    color: var(--blue-dark);
+    text-shadow: 3px 3px 0 #fff, 4px 4px 0 var(--blue-deep);
+    margin: 8px 0;
+  }
+  #win .msg {
+    font-size: 1.2em; line-height: 1.5; color: var(--dark);
+    background: #E1F5FE; padding: 16px 18px; border-radius: 18px;
+    margin: 14px auto; max-width: 480px; font-weight: 600;
+  }
+  .win-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .win-btn {
+    font-family: inherit; font-weight: 700; font-size: 1.2em;
+    padding: 16px 30px; border-radius: 40px; cursor: pointer;
+    border: 4px solid; min-height: 56px; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .win-btn.again { background: var(--green); color: white; border-color: var(--green-dark); box-shadow: 0 6px 0 var(--green-dark); }
+  .win-btn.again:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--green-dark); }
+  .win-btn.home2 { background: #2196F3; color: white; border-color: #0D47A1; box-shadow: 0 6px 0 #0D47A1; }
+  .win-btn.home2:active { transform: translateY(3px); box-shadow: 0 2px 0 #0D47A1; }
+
+  /* Confetti */
+  .confetti { position: fixed; width: 12px; height: 12px; pointer-events: none; z-index: 20; border-radius: 2px; animation: fall 3s linear forwards; }
+  @keyframes fall {
+    0% { transform: translateY(-100vh) rotate(0); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* ===== POSITIVE-REINFORCEMENT EFFECTS ===== */
+  .praise-pop {
+    position: fixed; top: 32%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: clamp(2.4em, 8vw, 4.6em);
+    color: var(--blue-dark);
+    text-shadow: 3px 3px 0 #fff, 6px 6px 0 var(--blue-deep);
+    font-weight: bold; z-index: 60; pointer-events: none; opacity: 0;
+    white-space: nowrap;
+    animation: praisePop 1.7s cubic-bezier(0.34, 1.5, 0.6, 1) forwards;
+  }
+  @keyframes praisePop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(-12deg); }
+    20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(4deg); }
+    40%  { transform: translate(-50%, -50%) scale(0.95) rotate(-2deg); }
+    60%  { transform: translate(-50%, -50%) scale(1.05) rotate(1deg); }
+    80%  { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+    100% { opacity: 0; transform: translate(-50%, -75%) scale(0.9); }
+  }
+  .firework-particle {
+    position: fixed; width: 8px; height: 8px; border-radius: 50%;
+    pointer-events: none; z-index: 55;
+    animation: fwExplode 1.2s ease-out forwards;
+  }
+  @keyframes fwExplode {
+    0%   { transform: translate(0, 0) scale(1);   opacity: 1; }
+    70%  { opacity: 1; }
+    100% { transform: translate(var(--fx, 0), calc(var(--fy, 0) + 30px)) scale(0.4); opacity: 0; }
+  }
+  .star-rise {
+    position: fixed; font-size: 2.2em; pointer-events: none; z-index: 55;
+    animation: starRise 1.8s ease-out forwards;
+  }
+  @keyframes starRise {
+    0%   { transform: translateY(0) scale(0.6) rotate(0); opacity: 0; }
+    20%  { opacity: 1; transform: translateY(-30px) scale(1.1) rotate(15deg); }
+    100% { transform: translateY(-220px) scale(0.7) rotate(360deg); opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  @media (max-width: 480px) {
+    .block-btn { width: 78px; }
+    .cmd-chip { width: 48px; height: 46px; font-size: 1.5em; }
+    .act-btn.go { font-size: 1.3em; padding: 14px 30px; }
+    #game-title { font-size: 1.8em; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shape s1"></div>
+<div class="shape s2"></div>
+<div class="shape s3"></div>
+<div class="shape s4"></div>
+
+<!-- ========== PERSISTENT TOP NAV ========== -->
+<nav id="top-nav" aria-label="Game navigation">
+  <div class="nav-group">
+    <a href="#" class="nav-btn home" onclick="goHome(); return false;" aria-label="Go to Robo Recess home page">🏠 Game Home</a>
+    <a href="../index.html" class="nav-btn parent" aria-label="Go to Zak's Brain Games">🧠 More Brain Games</a>
+  </div>
+  <div class="nav-group">
+    <button type="button" class="nav-btn help" onclick="openHowTo()" aria-label="Open How to Play instructions">❓ How to Play</button>
+  </div>
+</nav>
+
+<!-- ========== HOW TO PLAY modal ========== -->
+<div id="how-modal" role="dialog" aria-modal="true" aria-labelledby="how-title" onclick="if(event.target===this) closeHowTo()">
+  <div class="modal-card">
+    <h2 id="how-title">🤖 How to Play</h2>
+    <ul>
+      <li>🤖 Your robot wants to reach the ⭐ star!</li>
+      <li>1. Tap the arrow blocks to add steps: go forward, turn left, or turn right.</li>
+      <li>2. Press the big GO button and watch your robot follow your plan.</li>
+      <li>3. Didn't make it? No problem — fix your steps and try again!</li>
+      <li>Tip: think about which way the robot is facing before you turn.</li>
+    </ul>
+    <button type="button" class="modal-close" onclick="closeHowTo()">Got it! Let's play!</button>
+  </div>
+</div>
+
+<!-- ========== HOME SCREEN ========== -->
+<div id="home" class="screen active">
+  <h1>Robo Recess</h1>
+  <div class="home-robot" id="homeRobot" role="img" aria-label="Friendly robot" onclick="speakHomeIntro()">🤖</div>
+  <div class="tagline">Program your robot to reach its star! ⭐</div>
+  <br>
+  <button class="play-btn" onclick="startGame()">Play Now! ▶</button>
+  <div>
+    <button class="home-hear" type="button" onclick="speakHomeIntro()" aria-label="Hear how to play">🔊 Hear how to play</button>
+  </div>
+  <div class="age-note">🧠 Ages 4+ · Logic &amp; Coding · Plan, code, debug!</div>
+  <div class="more-games">
+    🧠 Try more brain games at
+    <a href="../index.html">Zak's Brain Games</a>
+  </div>
+</div>
+
+<!-- ========== GAME SCREEN ========== -->
+<div id="game" class="screen">
+  <div class="game-wrap">
+    <div id="game-header">
+      <div id="game-title">🤖 Robo Recess</div>
+      <div class="header-controls">
+        <button id="mute-btn" onclick="toggleMute()" aria-label="Mute or unmute sounds" title="Mute/Unmute">🔊</button>
+      </div>
+    </div>
+
+    <div id="level-bar">
+      <div class="level-card">
+        <div class="stat-label">Level</div>
+        <div class="stat-value" id="stat-level">1</div>
+      </div>
+      <div class="level-card">
+        <div class="stat-label">Stars ⭐</div>
+        <div class="stat-value" id="stat-stars">0</div>
+      </div>
+    </div>
+
+    <div id="goal-banner">
+      <span id="goal-text">Drive your robot to the star!</span>
+      <button class="hear-inline" type="button" onclick="speakGoal()" aria-label="Hear the goal again">🔊 Hear</button>
+    </div>
+
+    <div id="grid-area">
+      <div id="grid" role="img" aria-label="Robot maze grid"></div>
+    </div>
+
+    <div id="strip-label">Your program:</div>
+    <div id="command-strip" class="empty" aria-live="polite" aria-label="Your program steps">Tap a block below to add a step ↓</div>
+
+    <div id="palette">
+      <button class="block-btn" id="blk-fwd" type="button" onclick="addCommand('F')" aria-label="Add forward step">
+        <span class="blk-icon">⬆️</span><span class="blk-label">Forward</span>
+      </button>
+      <button class="block-btn" id="blk-left" type="button" onclick="addCommand('L')" aria-label="Add turn left">
+        <span class="blk-icon">↩️</span><span class="blk-label">Turn Left</span>
+      </button>
+      <button class="block-btn" id="blk-right" type="button" onclick="addCommand('R')" aria-label="Add turn right">
+        <span class="blk-icon">↪️</span><span class="blk-label">Turn Right</span>
+      </button>
+      <button class="block-btn loop" id="blk-loop" type="button" onclick="addCommand('P')" aria-label="Add repeat loop block" style="display:none">
+        <span class="blk-icon">🔁</span><span class="blk-label" id="loop-label">Repeat ×2</span>
+      </button>
+    </div>
+
+    <div id="action-row">
+      <button class="act-btn" id="step-btn" type="button" onclick="removeLast()" aria-label="Remove last step">⬅️ Remove</button>
+      <button class="act-btn" id="clear-btn" type="button" onclick="clearProgram()" aria-label="Clear all steps">🧹 Clear</button>
+      <button class="act-btn go" id="go-btn" type="button" onclick="runProgram()" aria-label="Run the program">▶ GO!</button>
+    </div>
+
+    <p id="feedback" aria-live="polite"></p>
+  </div>
+</div>
+
+<!-- ========== WIN / CELEBRATION SCREEN ========== -->
+<div id="win" class="screen">
+  <div class="panel">
+    <div class="trophy">🏆</div>
+    <h2 id="win-title">You did it!</h2>
+    <div class="gallery" style="font-size:2.2em; letter-spacing:6px; margin:8px 0;" aria-hidden="true">🤖 ⭐ 🤖 ⭐ 🤖</div>
+    <p class="msg" id="win-msg">Your robot reached the star! Ready for the next challenge?</p>
+    <div class="win-buttons">
+      <button class="win-btn again" id="next-btn" type="button" onclick="nextLevel()">Next Level ▶</button>
+      <a class="win-btn home2" href="#" onclick="goHome(); return false;">🏠 Game Home</a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   ROBO RECESS — sequencing / coding game for ages 4+
+   ========================================================= */
+
+// Directions: 0=Up, 1=Right, 2=Down, 3=Left
+const DIR_VEC = [ {r:-1,c:0}, {r:0,c:1}, {r:1,c:0}, {r:0,c:-1} ];
+const DIR_ROT = [ 0, 90, 180, 270 ]; // robot glyph faces "up" by default; rotate to face
+
+const state = {
+  muted: false,
+  level: 1,
+  starsEarned: 0,
+  program: [],        // array of 'F','L','R', or {loop:n, body:[...]}
+  loopReps: 2,        // current repeat count offered by loop block
+  running: false,
+  cfg: null,          // current level config
+  robot: null,        // {r,c,dir}
+  gems: [],           // remaining gem cells [{r,c}]
+};
+
+const PRAISE_MESSAGES = [
+  'Great job!', 'Awesome!', 'Way to go!', 'You did it!', 'Brilliant!',
+  'Fantastic!', 'Super coder!', 'Nailed it!', 'Woohoo!', 'Amazing!',
+  'You got it!', 'Robo star!', 'Perfect plan!', 'Smart thinking!', 'High five!'
+];
+function pickPraise() { return PRAISE_MESSAGES[Math.floor(Math.random()*PRAISE_MESSAGES.length)]; }
+
+/* ---------- LEVEL DESIGN (low floor → high ceiling) ----------
+   Each level config: size, robot start {r,c,dir}, star {r,c},
+   optional walls [{r,c}], gems [{r,c}], needAllGems bool, loop bool, goalText.
+   Levels ramp: forward only → a turn → obstacles → collect stars → loop. */
+function buildLevel(n) {
+  // Levels cycle/extend; design first 8 carefully, then scale difficulty.
+  switch (n) {
+    case 1: // 1 forward step, no turns — winnable by a 4-year-old
+      return { size:3, robot:{r:2,c:1,dir:0}, star:{r:1,c:1},
+        goalText:"Tap ⬆️ Forward once, then press GO to reach the star!" };
+    case 2: // 2 forward steps
+      return { size:3, robot:{r:2,c:1,dir:0}, star:{r:0,c:1},
+        goalText:"Go forward two times to reach the star. Tap ⬆️ twice, then GO!" };
+    case 3: // a single turn then forward
+      return { size:3, robot:{r:2,c:0,dir:0}, star:{r:2,c:2},
+        goalText:"The star is to the side! Turn the robot, then go forward." };
+    case 4: // forward, turn, forward
+      return { size:4, robot:{r:3,c:0,dir:0}, star:{r:1,c:2},
+        goalText:"Plan your path: go up, turn, and go across to the star." };
+    case 5: // obstacle to go around
+      return { size:4, robot:{r:3,c:0,dir:0}, star:{r:0,c:3},
+        walls:[{r:2,c:1},{r:1,c:1}],
+        goalText:"Watch out for the walls! Steer your robot around them." };
+    case 6: // collect a gem then reach star
+      return { size:4, robot:{r:3,c:1,dir:0}, star:{r:0,c:1},
+        gems:[{r:2,c:1},{r:1,c:1}], needAllGems:true,
+        goalText:"Collect every 💎 gem, THEN land on the star!" };
+    case 7: // bigger grid, turns + a wall
+      return { size:5, robot:{r:4,c:0,dir:0}, star:{r:0,c:4},
+        walls:[{r:2,c:2},{r:3,c:2},{r:1,c:3}],
+        goalText:"A bigger playground! Plan carefully around the walls." };
+    case 8: // loop introduced — straight line of gems
+      return { size:5, robot:{r:4,c:2,dir:0}, star:{r:0,c:2},
+        gems:[{r:3,c:2},{r:2,c:2},{r:1,c:2}], needAllGems:true,
+        loop:true, loopReps:3,
+        goalText:"New block! 🔁 Repeat saves taps. Collect all gems up to the star." };
+    default: {
+      // Beyond level 8: generate scaling challenges with loop available.
+      const size = Math.min(5, 4 + (n % 2));
+      // simple ring-ish path with a wall and a couple gems
+      const robot = {r:size-1,c:0,dir:0};
+      const star = {r:0,c:size-1};
+      const walls = [{r:Math.floor(size/2), c:Math.floor(size/2)}];
+      const gems = [{r:size-1, c:1}, {r:1, c:size-1}];
+      return { size, robot, star, walls, gems, needAllGems:true, loop:true, loopReps:3,
+        goalText:"Big challenge! Collect the gems and reach the star." };
+    }
+  }
+}
+
+/* ---------- SCREEN HELPERS ---------- */
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function goHome() {
+  state.running = false;
+  if ('speechSynthesis' in window) { try { window.speechSynthesis.cancel(); } catch(e){} }
+  switchScreen('home');
+}
+function openHowTo() { document.getElementById('how-modal').classList.add('open'); }
+function closeHowTo() { document.getElementById('how-modal').classList.remove('open'); }
+
+/* ---------- GAME START ---------- */
+function startGame() {
+  unlockAudio();
+  state.level = 1;
+  state.starsEarned = 0;
+  switchScreen('game');
+  loadLevel(state.level);
+}
+
+function nextLevel() {
+  state.level++;
+  switchScreen('game');
+  loadLevel(state.level);
+}
+
+function loadLevel(n) {
+  state.running = false;
+  state.cfg = buildLevel(n);
+  state.program = [];
+  state.loopReps = state.cfg.loopReps || 2;
+  // deep-copy robot + gems so we can reset between runs
+  state.robot = { r:state.cfg.robot.r, c:state.cfg.robot.c, dir:state.cfg.robot.dir };
+  state.gems = (state.cfg.gems || []).map(g => ({r:g.r, c:g.c}));
+
+  document.getElementById('stat-level').textContent = n;
+  document.getElementById('stat-stars').textContent = state.starsEarned;
+  document.getElementById('goal-text').textContent = state.cfg.goalText;
+
+  // Loop block visibility
+  const loopBtn = document.getElementById('blk-loop');
+  if (state.cfg.loop) {
+    loopBtn.style.display = '';
+    document.getElementById('loop-label').textContent = 'Repeat ×' + state.loopReps;
+  } else {
+    loopBtn.style.display = 'none';
+  }
+
+  buildGrid();
+  renderProgram();
+  setFeedback('', '');
+  // Speak the goal at the start of each round
+  setTimeout(() => speakGoal(), 400);
+}
+
+/* ---------- GRID BUILD / RENDER ---------- */
+function buildGrid() {
+  const cfg = state.cfg;
+  const grid = document.getElementById('grid');
+  // size cells responsively: fit width
+  const maxGrid = Math.min(420, window.innerWidth - 70);
+  const cellSize = Math.floor((maxGrid - (cfg.size+1)*6) / cfg.size);
+  const cs = Math.max(48, Math.min(96, cellSize));
+  grid.style.gridTemplateColumns = `repeat(${cfg.size}, ${cs}px)`;
+  grid.style.gridTemplateRows = `repeat(${cfg.size}, ${cs}px)`;
+  grid.innerHTML = '';
+  grid.dataset.cell = cs;
+
+  const wallSet = new Set((cfg.walls||[]).map(w => w.r+','+w.c));
+
+  for (let r = 0; r < cfg.size; r++) {
+    for (let c = 0; c < cfg.size; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell' + (((r+c)%2) ? ' alt' : '');
+      cell.style.width = cs + 'px';
+      cell.style.height = cs + 'px';
+      cell.dataset.r = r; cell.dataset.c = c;
+      const key = r+','+c;
+      if (wallSet.has(key)) {
+        cell.classList.add('wall');
+        cell.innerHTML = '<span class="cell-emoji">🧱</span>';
+      } else if (cfg.star.r === r && cfg.star.c === c) {
+        cell.classList.add('star-cell');
+        cell.innerHTML = '<span class="cell-emoji">⭐</span>';
+      }
+      grid.appendChild(cell);
+    }
+  }
+
+  // Robot piece overlay
+  const robot = document.createElement('div');
+  robot.id = 'robot';
+  robot.innerHTML = '<span class="robo-glyph">🤖</span>';
+  grid.appendChild(robot);
+  positionRobot(false);
+  renderGems();
+}
+
+function cellPixel(r, c) {
+  const cs = parseInt(document.getElementById('grid').dataset.cell, 10);
+  const gap = 6, pad = 6;
+  return { x: pad + c*(cs+gap), y: pad + r*(cs+gap), cs };
+}
+
+function positionRobot(animate) {
+  const robot = document.getElementById('robot');
+  if (!robot) return;
+  const { x, y, cs } = cellPixel(state.robot.r, state.robot.c);
+  robot.style.width = cs + 'px';
+  robot.style.height = cs + 'px';
+  if (!animate) robot.style.transition = 'none';
+  robot.style.left = x + 'px';
+  robot.style.top = y + 'px';
+  if (!animate) { void robot.offsetWidth; robot.style.transition = ''; }
+  const glyph = robot.querySelector('.robo-glyph');
+  const rot = DIR_ROT[state.robot.dir];
+  glyph.style.setProperty('--face', `rotate(${rot}deg)`);
+  glyph.style.transform = `rotate(${rot}deg)`;
+}
+
+function renderGems() {
+  // place gem emojis into their cells (only if not collected)
+  document.querySelectorAll('#grid .cell .gem-glyph').forEach(g => g.remove());
+  state.gems.forEach(g => {
+    const cell = cellAt(g.r, g.c);
+    if (cell && !cell.classList.contains('star-cell')) {
+      const span = document.createElement('span');
+      span.className = 'cell-emoji gem-glyph';
+      span.textContent = '💎';
+      cell.appendChild(span);
+    } else if (cell && cell.classList.contains('star-cell')) {
+      // gem on star cell — show both stacked small
+      const span = document.createElement('span');
+      span.className = 'cell-emoji gem-glyph';
+      span.textContent = '💎';
+      span.style.position = 'absolute';
+      span.style.fontSize = '1.1em';
+      span.style.bottom = '2px';
+      cell.appendChild(span);
+    }
+  });
+}
+
+function cellAt(r, c) {
+  return document.querySelector(`#grid .cell[data-r="${r}"][data-c="${c}"]`);
+}
+
+/* ---------- COMMAND STRIP ---------- */
+function addCommand(type) {
+  if (state.running) return;
+  unlockAudio();
+  if (type === 'P') {
+    // loop block wraps... for simplicity it repeats the WHOLE program body that
+    // follows? Simpler & kid-friendly: a loop chip = "repeat the next forward".
+    // We implement loop as a standalone block that repeats a single Forward,
+    // shown as 🔁×N. It expands to N forwards at run time.
+    state.program.push({ loop: state.loopReps });
+  } else {
+    state.program.push(type);
+  }
+  playClick();
+  renderProgram();
+}
+
+function removeLast() {
+  if (state.running || state.program.length === 0) return;
+  state.program.pop();
+  playClick();
+  renderProgram();
+  setFeedback('', '');
+}
+
+function clearProgram() {
+  if (state.running) return;
+  state.program = [];
+  playClick();
+  renderProgram();
+  setFeedback('', '');
+}
+
+function chipFor(cmd) {
+  if (typeof cmd === 'object' && cmd.loop) {
+    return `<span class="cmd-chip loop" aria-label="Repeat forward ${cmd.loop} times">🔁<span class="chip-num">×${cmd.loop}</span></span>`;
+  }
+  if (cmd === 'F') return `<span class="cmd-chip" aria-label="Forward">⬆️</span>`;
+  if (cmd === 'L') return `<span class="cmd-chip" aria-label="Turn left">↩️</span>`;
+  if (cmd === 'R') return `<span class="cmd-chip" aria-label="Turn right">↪️</span>`;
+  return '';
+}
+
+function renderProgram() {
+  const strip = document.getElementById('command-strip');
+  if (state.program.length === 0) {
+    strip.className = 'empty';
+    strip.textContent = 'Tap a block below to add a step ↓';
+  } else {
+    strip.className = '';
+    strip.innerHTML = state.program.map(chipFor).join('');
+  }
+  document.getElementById('go-btn').disabled = (state.program.length === 0);
+}
+
+/* Expand program into a flat list of atomic steps for execution. */
+function expandProgram() {
+  const steps = [];
+  state.program.forEach((cmd, idx) => {
+    if (typeof cmd === 'object' && cmd.loop) {
+      for (let i = 0; i < cmd.loop; i++) steps.push({ act:'F', chip:idx });
+    } else {
+      steps.push({ act:cmd, chip:idx });
+    }
+  });
+  return steps;
+}
+
+/* ---------- RUN THE PROGRAM ---------- */
+function setPaletteEnabled(on) {
+  ['blk-fwd','blk-left','blk-right','blk-loop','step-btn','clear-btn','go-btn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = !on;
+  });
+}
+
+async function runProgram() {
+  if (state.running || state.program.length === 0) return;
+  state.running = true;
+  setPaletteEnabled(false);
+  setFeedback('Running your plan… ▶', '');
+  if ('speechSynthesis' in window) { try { window.speechSynthesis.cancel(); } catch(e){} }
+
+  // reset robot + gems to level start before each run
+  state.robot = { r:state.cfg.robot.r, c:state.cfg.robot.c, dir:state.cfg.robot.dir };
+  state.gems = (state.cfg.gems || []).map(g => ({r:g.r, c:g.c}));
+  positionRobot(false);
+  renderGems();
+
+  const steps = expandProgram();
+  const wallSet = new Set((state.cfg.walls||[]).map(w => w.r+','+w.c));
+  let bumped = false;
+
+  for (let i = 0; i < steps.length; i++) {
+    if (!state.running) return; // aborted (went home)
+    highlightChip(steps[i].chip);
+    const act = steps[i].act;
+
+    if (act === 'L' || act === 'R') {
+      state.robot.dir = (state.robot.dir + (act === 'L' ? 3 : 1)) % 4;
+      playTurn();
+      positionRobot(true);
+    } else if (act === 'F') {
+      const v = DIR_VEC[state.robot.dir];
+      const nr = state.robot.r + v.r, nc = state.robot.c + v.c;
+      const offGrid = nr < 0 || nc < 0 || nr >= state.cfg.size || nc >= state.cfg.size;
+      const intoWall = wallSet.has(nr+','+nc);
+      if (offGrid || intoWall) {
+        bumped = true;
+        playBump();
+        bumpRobot();
+        await wait(520);
+        break;
+      }
+      state.robot.r = nr; state.robot.c = nc;
+      playStep();
+      positionRobot(true);
+      await wait(440);
+      collectGemHere();
+    }
+    await wait(act === 'F' ? 60 : 440);
+  }
+
+  clearChipHighlight();
+  finishRun(bumped);
+}
+
+function collectGemHere() {
+  const idx = state.gems.findIndex(g => g.r === state.robot.r && g.c === state.robot.c);
+  if (idx >= 0) {
+    state.gems.splice(idx, 1);
+    playGem();
+    // pop animation on the cell's gem glyph
+    const cell = cellAt(state.robot.r, state.robot.c);
+    if (cell) {
+      const g = cell.querySelector('.gem-glyph');
+      if (g) { g.style.transition = 'transform 0.4s, opacity 0.4s'; g.style.transform = 'scale(0)'; g.style.opacity = '0'; setTimeout(()=>g.remove(), 420); }
+    }
+  }
+}
+
+function finishRun(bumped) {
+  const cfg = state.cfg;
+  const onStar = (state.robot.r === cfg.star.r && state.robot.c === cfg.star.c);
+  const gemsLeft = state.gems.length;
+  const needGems = !!cfg.needAllGems;
+
+  if (bumped) {
+    gentleRetry("Oops, let's fix it! Your robot bumped something. Edit your steps and try again.");
+    return;
+  }
+  if (onStar && (!needGems || gemsLeft === 0)) {
+    win();
+    return;
+  }
+  if (onStar && needGems && gemsLeft > 0) {
+    gentleRetry("So close! Collect all the gems first, then land on the star. Fix your steps and try again!");
+    return;
+  }
+  // didn't reach star — waddle back gently
+  gentleRetry("Oops, let's fix it! The robot didn't reach the star. Change your steps and try again!");
+}
+
+function gentleRetry(msg) {
+  setFeedback(msg, 'gentle');
+  speak(msg);
+  playWrong();
+  // waddle the robot back to start so the child can re-plan (no penalty)
+  setTimeout(() => {
+    state.robot = { r:state.cfg.robot.r, c:state.cfg.robot.c, dir:state.cfg.robot.dir };
+    state.gems = (state.cfg.gems || []).map(g => ({r:g.r, c:g.c}));
+    positionRobot(true);
+    renderGems();
+    state.running = false;
+    setPaletteEnabled(true);
+  }, 900);
+}
+
+function win() {
+  state.starsEarned++;
+  document.getElementById('stat-stars').textContent = state.starsEarned;
+  state.running = false;
+
+  // robot cheers on the star
+  const robot = document.getElementById('robot');
+  if (robot) { robot.classList.add('cheer'); setTimeout(()=>robot.classList.remove('cheer'), 650); }
+
+  const praise = pickPraise();
+  setFeedback('🎉 ' + praise + ' You reached the star!', 'good');
+  showPraisePop(praise);
+  launchFireworks(3);
+  launchStarRise(8);
+  bigConfetti();
+  playCorrect();
+  speak(praise + ' Your robot reached the star!');
+
+  // Show the win screen after a short celebration so kids see the result
+  setTimeout(() => {
+    document.getElementById('win-title').textContent = praise;
+    document.getElementById('win-msg').textContent =
+      'Your robot reached the star on level ' + state.level + '! Stars collected: ' + state.starsEarned + '. Ready for the next challenge?';
+    switchScreen('win');
+    launchStarRise(6);
+  }, 1700);
+}
+
+/* ---------- CHIP HIGHLIGHT (one block per step) ---------- */
+function highlightChip(idx) {
+  clearChipHighlight();
+  const chips = document.querySelectorAll('#command-strip .cmd-chip');
+  if (chips[idx]) chips[idx].classList.add('running');
+}
+function clearChipHighlight() {
+  document.querySelectorAll('#command-strip .cmd-chip.running').forEach(c => c.classList.remove('running'));
+}
+
+function bumpRobot() {
+  const robot = document.getElementById('robot');
+  if (robot) { robot.classList.add('bump'); setTimeout(()=>robot.classList.remove('bump'), 520); }
+}
+
+function wait(ms) { return new Promise(res => setTimeout(res, ms)); }
+
+/* ---------- FEEDBACK ---------- */
+function setFeedback(msg, cls) {
+  const fb = document.getElementById('feedback');
+  fb.textContent = msg;
+  fb.className = '';
+  void fb.offsetWidth;
+  if (cls) fb.className = cls;
+}
+
+/* ---------- POSITIVE REINFORCEMENT EFFECTS ---------- */
+function showPraisePop(msg) {
+  const el = document.createElement('div');
+  el.className = 'praise-pop';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { if (el.parentNode) el.remove(); }, 1800);
+}
+function launchFireworks(burstCount = 3) {
+  const colors = ['#FFD93D', '#4FC3F7', '#4CAF50', '#2196F3', '#B073FF', '#FF9F45'];
+  for (let b = 0; b < burstCount; b++) {
+    setTimeout(() => {
+      const cx = 80 + Math.random() * Math.max(40, window.innerWidth - 160);
+      const cy = 100 + Math.random() * Math.max(40, window.innerHeight * 0.5);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      playFireworkBoom();
+      const particles = 18;
+      for (let i = 0; i < particles; i++) {
+        const p = document.createElement('div');
+        p.className = 'firework-particle';
+        p.style.left = cx + 'px'; p.style.top = cy + 'px';
+        p.style.background = color; p.style.boxShadow = `0 0 10px ${color}`;
+        const angle = (i / particles) * Math.PI * 2 + Math.random() * 0.2;
+        const dist = 70 + Math.random() * 60;
+        p.style.setProperty('--fx', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--fy', Math.sin(angle) * dist + 'px');
+        document.body.appendChild(p);
+        setTimeout(() => { if (p.parentNode) p.remove(); }, 1300);
+      }
+    }, b * 280);
+  }
+}
+function launchStarRise(count = 8) {
+  const stars = ['⭐','🌟','✨','💫','🎉','🤖'];
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const s = document.createElement('div');
+      s.className = 'star-rise';
+      s.textContent = stars[Math.floor(Math.random() * stars.length)];
+      s.style.left = (Math.random() * (window.innerWidth - 40)) + 'px';
+      s.style.top = (window.innerHeight - 60) + 'px';
+      document.body.appendChild(s);
+      setTimeout(() => { if (s.parentNode) s.remove(); }, 1900);
+    }, i * 90);
+  }
+}
+const CONFETTI_COLORS = ['#FFD93D','#4FC3F7','#4CAF50','#2196F3','#B073FF','#FF9F45'];
+function burstConfetti(x, y, count) {
+  const n = count || 28;
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = x + 'px'; c.style.top = y + 'px';
+    c.style.background = CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)];
+    document.body.appendChild(c);
+    const angle = Math.random() * Math.PI * 2;
+    const velocity = 80 + Math.random() * 140;
+    const dx = Math.cos(angle) * velocity, dy = Math.sin(angle) * velocity - 80;
+    c.animate([
+      { transform:'translate(0,0) rotate(0deg)', opacity:1 },
+      { transform:'translate('+dx+'px,'+(dy+320)+'px) rotate('+(Math.random()*720)+'deg)', opacity:0 }
+    ], { duration: 1300 + Math.random()*400, easing:'cubic-bezier(.2,.6,.4,1)' });
+    setTimeout(() => c.remove(), 1700);
+  }
+}
+function bigConfetti() {
+  const w = window.innerWidth, h = window.innerHeight;
+  burstConfetti(w*0.25, h*0.32, 30);
+  setTimeout(() => burstConfetti(w*0.75, h*0.32, 30), 160);
+  setTimeout(() => burstConfetti(w*0.5, h*0.26, 36), 320);
+}
+
+/* ---------- SOUND (Web Audio API) ---------- */
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { return null; }
+  }
+  return audioCtx;
+}
+function unlockAudio() {
+  const ctx = getAudio();
+  if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch(e){} }
+}
+function playTone(freq, duration, type = 'sine', vol = 0.25, delay = 0) {
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    osc.connect(gain); gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(vol, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+    osc.start(t0); osc.stop(t0 + duration);
+  } catch (e) {}
+}
+function playClick() { playTone(660, 0.06, 'triangle', 0.18, 0); }
+function playStep()  { playTone(523, 0.10, 'square', 0.16, 0); }     // beep per step
+function playTurn()  { playTone(392, 0.10, 'triangle', 0.16, 0); }
+function playGem()   { playTone(880, 0.09, 'triangle', 0.2, 0); playTone(1175, 0.12, 'triangle', 0.2, 0.09); }
+function playBump() {
+  if (state.muted) return;
+  const ctx = getAudio(); if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, t0);
+    osc.frequency.exponentialRampToValueAtTime(90, t0 + 0.25);
+    gain.gain.setValueAtTime(0.2, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.28);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t0); osc.stop(t0 + 0.3);
+  } catch(e){}
+}
+function playWrong() { playTone(300, 0.16, 'sine', 0.14, 0); playTone(240, 0.22, 'sine', 0.14, 0.12); }
+function playCorrect() {
+  playTone(659, 0.12, 'triangle', 0.28, 0);
+  playTone(880, 0.16, 'triangle', 0.28, 0.12);
+  playTone(1175, 0.24, 'triangle', 0.28, 0.26);
+}
+function playFireworkBoom() {
+  if (state.muted) return;
+  const ctx = getAudio(); if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(700, t0);
+    osc.frequency.exponentialRampToValueAtTime(1700, t0 + 0.18);
+    gain.gain.setValueAtTime(0.001, t0);
+    gain.gain.linearRampToValueAtTime(0.09, t0 + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.22);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t0); osc.stop(t0 + 0.24);
+    playTone(110, 0.18, 'sine', 0.16, 0.16);
+  } catch(e){}
+}
+function toggleMute() {
+  state.muted = !state.muted;
+  document.getElementById('mute-btn').textContent = state.muted ? '🔇' : '🔊';
+  document.getElementById('mute-btn').setAttribute('aria-label', state.muted ? 'Unmute sounds' : 'Mute sounds');
+  if (state.muted && 'speechSynthesis' in window) { try { window.speechSynthesis.cancel(); } catch(e){} }
+  unlockAudio();
+}
+
+/* ---------- SPEECH (Web Speech API) ---------- */
+function speak(text) {
+  if (state.muted) return;
+  if (!('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.92; u.pitch = 1.15; u.volume = 1;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+function speakGoal() {
+  unlockAudio();
+  if (state.cfg) speak(state.cfg.goalText);
+}
+function speakHomeIntro() {
+  unlockAudio();
+  speak("Welcome to Robo Recess! Program your robot to reach its star. Tap the arrow blocks to add steps, then press GO!");
+}
+
+/* ---------- INIT / GLOBAL LISTENERS ---------- */
+// Esc closes the How-to-Play modal
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeHowTo();
+});
+// Resume audio on first user gesture (browsers require a gesture)
+document.addEventListener('click', () => { unlockAudio(); }, { once: true });
+document.addEventListener('touchstart', () => { unlockAudio(); }, { once: true });
+
+// Rebuild grid sizing if window resizes while playing
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  if (!document.getElementById('game').classList.contains('active') || !state.cfg) return;
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => { if (!state.running) buildGrid(); }, 200);
+});
+</script>
+
+</body>
+</html>

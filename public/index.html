@@ -40,10 +40,15 @@
       { "@type": "Game", "name": "Community Helpers", "url": "communityhelpers/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Feelings Friends", "url": "feelingsfriends/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Balance Bazaar", "url": "balancebazaar/index.html", "typicalAgeRange": "4-" },
+      { "@type": "Game", "name": "Robo Recess", "url": "roborecess/index.html", "typicalAgeRange": "4-" },
+      { "@type": "Game", "name": "Sound Soup", "url": "soundsoup/index.html", "typicalAgeRange": "4-" },
+      { "@type": "Game", "name": "Pattern Express", "url": "patternexpress/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Animal Kingdom Sort", "url": "animalkingdomsort/index.html", "typicalAgeRange": "5-" },
       { "@type": "Game", "name": "Coin Counter Cafe", "url": "coincountercafe/index.html", "typicalAgeRange": "5-" },
       { "@type": "Game", "name": "Spell-a-Bee", "url": "spellabee/index.html", "typicalAgeRange": "5-" },
       { "@type": "Game", "name": "Monster Truck Builder", "url": "monstertruckbuilder/index.html", "typicalAgeRange": "5-" },
+      { "@type": "Game", "name": "Dino Don't!", "url": "dinodont/index.html", "typicalAgeRange": "5-" },
+      { "@type": "Game", "name": "Mailbot Maze", "url": "mailbotmaze/index.html", "typicalAgeRange": "5-" },
       { "@type": "Game", "name": "World Explorer", "url": "worldexplorer/index.html", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Tick-Tock Clock Quest", "url": "ticktockclockquest/index.html", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Word Trio", "url": "wordtrio.html", "typicalAgeRange": "6-" },
@@ -53,6 +58,7 @@
       { "@type": "Game", "name": "Shape Shifter", "url": "shapeshifter/index.html", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Memory Match Safari", "url": "memorysafari/index.html", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Play Hue", "url": "playhue/index.html", "typicalAgeRange": "6-" },
+      { "@type": "Game", "name": "Echo Beats", "url": "echobeats/index.html", "typicalAgeRange": "6-" },
       { "@type": "Game", "name": "Four Circles", "url": "fourcircles/index.html", "typicalAgeRange": "10-" }
     ]
   }
@@ -565,6 +571,201 @@
   <script>
     // ---------- Game previews (mini illustrations of each game's actual visuals) ----------
     const PREVIEWS = {
+      roboRecess: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="rr-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity="0.25"/>
+            </filter>
+          </defs>
+          <!-- 3x3 grid board -->
+          <g filter="url(#rr-sh)">
+            <rect x="34" y="26" width="150" height="150" rx="14" fill="#fff"/>
+          </g>
+          <g stroke="#CDE9FB" stroke-width="3">
+            <line x1="84" y1="32" x2="84" y2="170"/>
+            <line x1="134" y1="32" x2="134" y2="170"/>
+            <line x1="40" y1="76" x2="178" y2="76"/>
+            <line x1="40" y1="126" x2="178" y2="126"/>
+          </g>
+          <!-- goal star top-right cell -->
+          <text x="159" y="62" text-anchor="middle" font-size="30">⭐</text>
+          <!-- dotted planned path -->
+          <path d="M59,151 L59,101 L109,101 L109,51 L150,51" fill="none" stroke="#FF9F45" stroke-width="4" stroke-dasharray="3 7" stroke-linecap="round"/>
+          <!-- robot bottom-left cell -->
+          <g transform="translate(59,151)" filter="url(#rr-sh)">
+            <rect x="-19" y="-20" width="38" height="34" rx="8" fill="#4FC3F7" stroke="#2D2D5F" stroke-width="3"/>
+            <circle cx="-8" cy="-5" r="5" fill="#fff" stroke="#2D2D5F" stroke-width="2"/>
+            <circle cx="8" cy="-5" r="5" fill="#fff" stroke="#2D2D5F" stroke-width="2"/>
+            <circle cx="-8" cy="-5" r="2" fill="#2D2D5F"/><circle cx="8" cy="-5" r="2" fill="#2D2D5F"/>
+            <rect x="-7" y="5" width="14" height="4" rx="2" fill="#2D2D5F"/>
+            <line x1="0" y1="-20" x2="0" y2="-28" stroke="#2D2D5F" stroke-width="3"/>
+            <circle cx="0" cy="-30" r="3.5" fill="#FFD93D" stroke="#2D2D5F" stroke-width="2"/>
+          </g>
+          <!-- command blocks strip -->
+          <g filter="url(#rr-sh)">
+            <rect x="206" y="58" width="44" height="44" rx="10" fill="#fff"/>
+            <text x="228" y="89" text-anchor="middle" font-size="24">⬆️</text>
+            <rect x="206" y="110" width="44" height="44" rx="10" fill="#fff"/>
+            <text x="228" y="141" text-anchor="middle" font-size="24">↪️</text>
+            <rect x="258" y="84" width="48" height="44" rx="12" fill="#6BE6A8" stroke="#2D2D5F" stroke-width="2.5"/>
+            <text x="282" y="113" text-anchor="middle" font-size="15" font-family="Bubblegum Sans, cursive" fill="#1B6B45">GO</text>
+          </g>
+        </svg>`,
+
+      soundSoup: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="ss-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity="0.25"/>
+            </filter>
+          </defs>
+          <!-- steam -->
+          <g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.8">
+            <path d="M120,40 Q112,28 120,18"/>
+            <path d="M160,34 Q152,20 160,8"/>
+            <path d="M200,40 Q208,28 200,18"/>
+          </g>
+          <!-- letter tiles dropping -->
+          <g filter="url(#ss-sh)" font-family="Bubblegum Sans, cursive">
+            <g transform="translate(96,46) rotate(-10)">
+              <rect width="42" height="46" rx="9" fill="#FFD93D" stroke="#C99700" stroke-width="3"/>
+              <text x="21" y="34" text-anchor="middle" font-size="26" fill="#6A4E00">C</text>
+            </g>
+            <g transform="translate(140,40)">
+              <rect width="42" height="46" rx="9" fill="#6BE6A8" stroke="#1FB97A" stroke-width="3"/>
+              <text x="21" y="34" text-anchor="middle" font-size="26" fill="#0C5E3C">A</text>
+            </g>
+            <g transform="translate(184,46) rotate(10)">
+              <rect width="42" height="46" rx="9" fill="#4FC3F7" stroke="#0288D1" stroke-width="3"/>
+              <text x="21" y="34" text-anchor="middle" font-size="26" fill="#06436B">T</text>
+            </g>
+          </g>
+          <!-- pot -->
+          <g filter="url(#ss-sh)">
+            <ellipse cx="160" cy="118" rx="78" ry="16" fill="#C0392B"/>
+            <path d="M84,116 Q84,182 110,184 L210,184 Q236,182 236,116 Z" fill="#E74C3C" stroke="#922B21" stroke-width="4"/>
+            <rect x="60" y="106" width="30" height="14" rx="7" fill="#922B21"/>
+            <rect x="230" y="106" width="30" height="14" rx="7" fill="#922B21"/>
+            <ellipse cx="160" cy="116" rx="74" ry="13" fill="#FF8A65"/>
+            <text x="160" y="170" text-anchor="middle" font-size="34">🐱</text>
+          </g>
+        </svg>`,
+
+      patternExpress: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="pe-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity="0.25"/>
+            </filter>
+          </defs>
+          <!-- track -->
+          <rect x="0" y="150" width="320" height="10" fill="#7C5C2E"/>
+          <g fill="#5C4420"><rect x="20" y="160" width="14" height="8"/><rect x="80" y="160" width="14" height="8"/><rect x="140" y="160" width="14" height="8"/><rect x="200" y="160" width="14" height="8"/><rect x="260" y="160" width="14" height="8"/></g>
+          <!-- engine -->
+          <g transform="translate(14,92)" filter="url(#pe-sh)">
+            <rect x="0" y="20" width="64" height="38" rx="8" fill="#2196F3" stroke="#2D2D5F" stroke-width="3"/>
+            <rect x="40" y="-2" width="24" height="26" rx="5" fill="#1565C0" stroke="#2D2D5F" stroke-width="3"/>
+            <rect x="8" y="2" width="16" height="20" rx="3" fill="#90CAF9" stroke="#2D2D5F" stroke-width="2.5"/>
+            <circle cx="16" cy="60" r="10" fill="#2D2D5F"/><circle cx="50" cy="60" r="10" fill="#2D2D5F"/>
+            <circle cx="16" cy="60" r="4" fill="#bbb"/><circle cx="50" cy="60" r="4" fill="#bbb"/>
+          </g>
+          <!-- pattern cars: red blue red blue ? -->
+          <g filter="url(#pe-sh)">
+            <g transform="translate(88,116)"><rect width="34" height="34" rx="7" fill="#FF6B6B" stroke="#2D2D5F" stroke-width="3"/><circle cx="9" cy="40" r="7" fill="#2D2D5F"/><circle cx="25" cy="40" r="7" fill="#2D2D5F"/></g>
+            <g transform="translate(128,116)"><rect width="34" height="34" rx="7" fill="#4FC3F7" stroke="#2D2D5F" stroke-width="3"/><circle cx="9" cy="40" r="7" fill="#2D2D5F"/><circle cx="25" cy="40" r="7" fill="#2D2D5F"/></g>
+            <g transform="translate(168,116)"><rect width="34" height="34" rx="7" fill="#FF6B6B" stroke="#2D2D5F" stroke-width="3"/><circle cx="9" cy="40" r="7" fill="#2D2D5F"/><circle cx="25" cy="40" r="7" fill="#2D2D5F"/></g>
+            <g transform="translate(208,116)"><rect width="34" height="34" rx="7" fill="#4FC3F7" stroke="#2D2D5F" stroke-width="3"/><circle cx="9" cy="40" r="7" fill="#2D2D5F"/><circle cx="25" cy="40" r="7" fill="#2D2D5F"/></g>
+            <g transform="translate(248,116)"><rect width="34" height="34" rx="7" fill="#fff" stroke="#2D2D5F" stroke-width="3" stroke-dasharray="5 4"/><text x="17" y="26" text-anchor="middle" font-size="24" font-family="Bubblegum Sans, cursive" fill="#FF9F45">?</text><circle cx="9" cy="40" r="7" fill="#2D2D5F"/><circle cx="25" cy="40" r="7" fill="#2D2D5F"/></g>
+          </g>
+        </svg>`,
+
+      dinoDont: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="dd-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity="0.25"/>
+            </filter>
+          </defs>
+          <!-- picnic blanket checks -->
+          <rect x="0" y="150" width="320" height="50" fill="#FFE894"/>
+          <g fill="#FFD93D"><rect x="20" y="150" width="30" height="50"/><rect x="80" y="150" width="30" height="50"/><rect x="140" y="150" width="30" height="50"/><rect x="200" y="150" width="30" height="50"/><rect x="260" y="150" width="30" height="50"/></g>
+          <!-- green hungry dino with TAP check -->
+          <g transform="translate(86,104)" filter="url(#dd-sh)">
+            <ellipse cx="0" cy="44" rx="40" ry="12" fill="#000" opacity="0.08"/>
+            <text x="0" y="20" text-anchor="middle" font-size="74" style="filter:hue-rotate(0)">🦖</text>
+            <circle cx="34" cy="-30" r="16" fill="#6BE6A8" stroke="#1FB97A" stroke-width="3"/>
+            <path d="M27,-30 l5,6 l9,-12" fill="none" stroke="#0C5E3C" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
+          <!-- red full dino with NO sign -->
+          <g transform="translate(210,104)" filter="url(#dd-sh)">
+            <ellipse cx="0" cy="44" rx="36" ry="11" fill="#000" opacity="0.08"/>
+            <text x="0" y="22" text-anchor="middle" font-size="66" fill="#E74C3C">🦕</text>
+            <circle cx="30" cy="-24" r="16" fill="#FF6B6B" stroke="#C0392B" stroke-width="3"/>
+            <line x1="22" y1="-32" x2="38" y2="-16" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+          </g>
+        </svg>`,
+
+      mailbotMaze: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="mz-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity="0.22"/>
+            </filter>
+          </defs>
+          <!-- maze board -->
+          <g filter="url(#mz-sh)"><rect x="20" y="18" width="280" height="164" rx="16" fill="#fff"/></g>
+          <!-- streets / walls -->
+          <g stroke="#CFEDDD" stroke-width="14" stroke-linecap="round" fill="none">
+            <path d="M52,150 L52,50 L120,50 L120,150 L200,150 L200,50 L268,50"/>
+            <path d="M200,100 L268,100 L268,150"/>
+          </g>
+          <!-- delivered path -->
+          <path d="M52,150 L52,50 L120,50 L120,150 L200,150 L200,50 L268,50" fill="none" stroke="#6BE6A8" stroke-width="5" stroke-dasharray="2 9" stroke-linecap="round"/>
+          <!-- mail truck start -->
+          <g transform="translate(40,138)">
+            <rect x="-12" y="-10" width="30" height="20" rx="4" fill="#4FC3F7" stroke="#2D2D5F" stroke-width="2.5"/>
+            <rect x="-12" y="-4" width="12" height="12" fill="#90CAF9" stroke="#2D2D5F" stroke-width="2"/>
+            <text x="9" y="4" text-anchor="middle" font-size="11">✉️</text>
+            <circle cx="-4" cy="12" r="4.5" fill="#2D2D5F"/><circle cx="11" cy="12" r="4.5" fill="#2D2D5F"/>
+          </g>
+          <!-- destination house -->
+          <text x="268" y="44" text-anchor="middle" font-size="26">🏠</text>
+          <text x="120" y="58" text-anchor="middle" font-size="20">📦</text>
+        </svg>`,
+
+      echoBeats: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="eb-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity="0.28"/>
+            </filter>
+          </defs>
+          <!-- floating music notes -->
+          <g fill="#fff" opacity="0.85" font-size="26" font-family="Bubblegum Sans, cursive">
+            <text x="36" y="44">♪</text><text x="284" y="40">♫</text><text x="160" y="28">♪</text>
+          </g>
+          <!-- four animal pads -->
+          <g filter="url(#eb-sh)">
+            <g transform="translate(56,72)">
+              <rect width="86" height="50" rx="14" fill="#FF6B6B" stroke="#fff" stroke-width="4"/>
+              <text x="43" y="38" text-anchor="middle" font-size="30">🐸</text>
+            </g>
+            <g transform="translate(178,72)">
+              <rect width="86" height="50" rx="14" fill="#FFD93D" stroke="#fff" stroke-width="4"/>
+              <text x="43" y="38" text-anchor="middle" font-size="30">🐤</text>
+            </g>
+            <g transform="translate(56,132)">
+              <rect width="86" height="50" rx="14" fill="#4FC3F7" stroke="#fff" stroke-width="4"/>
+              <text x="43" y="38" text-anchor="middle" font-size="30">🐱</text>
+            </g>
+            <g transform="translate(178,132)">
+              <rect width="86" height="50" rx="14" fill="#6BE6A8" stroke="#fff" stroke-width="4"/>
+              <text x="43" y="38" text-anchor="middle" font-size="30">🐘</text>
+            </g>
+          </g>
+        </svg>`,
+
       colorBook: `
         <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -1582,6 +1783,36 @@
         theme: 'card-purple'
       },
       {
+        name: 'Robo Recess',
+        url: 'roborecess/index.html',
+        emoji: '🤖',
+        preview: PREVIEWS.roboRecess,
+        desc: 'Program a friendly robot to reach its star! Drag arrow steps, press GO, and watch your plan come to life. A first taste of coding and planning.',
+        badge: '🧩 Logic & Coding',
+        age: 'Ages 4+',
+        theme: 'card-blue'
+      },
+      {
+        name: 'Sound Soup',
+        url: 'soundsoup/index.html',
+        emoji: '🔤',
+        preview: PREVIEWS.soundSoup,
+        desc: 'Drop letters in the pot, hear each sound, then BLEND them to make a word — and a silly creature pops out! A playful first step into sounding out words.',
+        badge: '📖 Words & Reading',
+        age: 'Ages 4+',
+        theme: 'card-coral'
+      },
+      {
+        name: 'Pattern Express',
+        url: 'patternexpress/index.html',
+        emoji: '🚂',
+        preview: PREVIEWS.patternExpress,
+        desc: 'Keep the train rolling! Spot the pattern and pick the next car. A fun way to build the pattern-and-logic skills that lead to math.',
+        badge: '🔢 Patterns & Math',
+        age: 'Ages 4+',
+        theme: 'card-yellow'
+      },
+      {
         name: 'Animal Kingdom Sort',
         url: 'animalkingdomsort/index.html',
         emoji: '🦁',
@@ -1620,6 +1851,26 @@
         badge: '🐝 Spelling & Reading',
         age: 'Ages 5+',
         theme: 'card-pink'
+      },
+      {
+        name: 'Dino Don\'t!',
+        url: 'dinodont/index.html',
+        emoji: '🦖',
+        preview: PREVIEWS.dinoDont,
+        desc: 'Feed the hungry green dinos — but DON\'T tap the full red ones! A giggly test of focus and self-control that strengthens the "thinking brain".',
+        badge: '⚡ Focus & Self-Control',
+        age: 'Ages 5+',
+        theme: 'card-orange'
+      },
+      {
+        name: 'Mailbot Maze',
+        url: 'mailbotmaze/index.html',
+        emoji: '🗺️',
+        preview: PREVIEWS.mailbotMaze,
+        desc: 'Help the mail truck deliver the letter! Trace a path through the streets, dodge dead ends, and plan the perfect route. Builds spatial smarts.',
+        badge: '🧭 Mazes & Maps',
+        age: 'Ages 5+',
+        theme: 'card-mint'
       },
       {
         name: 'World Explorer',
@@ -1710,6 +1961,16 @@
         badge: '🎨 Color & Creativity',
         age: 'Ages 6+',
         theme: 'card-pink'
+      },
+      {
+        name: 'Echo Beats',
+        url: 'echobeats/index.html',
+        emoji: '🥁',
+        preview: PREVIEWS.echoBeats,
+        desc: 'Listen to the animal band\'s beat, then tap it back! Each round adds a sound and builds your own song. Grows your memory and your sense of rhythm.',
+        badge: '🎵 Music & Memory',
+        age: 'Ages 6+',
+        theme: 'card-purple'
       },
       {
         name: 'Four Circles',

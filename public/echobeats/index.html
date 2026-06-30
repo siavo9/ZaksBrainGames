@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Echo Beats — Zak's Brain Games</title>
+  <meta name="description" content="Echo Beats is a musical memory game! The animal band plays a beat, then you tap it back. Builds working memory, rhythm, and listening. Ages 6+." />
+  <meta name="theme-color" content="#B073FF" />
+  <link rel="canonical" href="https://zaksbraingames.app/echobeats/" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A5%81%3C/text%3E%3C/svg%3E" />
+
+  <!-- Self-hosted fonts (offline; no external requests) -->
+  <style>
+  @font-face { font-family:'Fredoka'; font-style:normal; font-weight:300 700; font-display:swap; src:url('../fonts/fredoka.woff2') format('woff2'); }
+  @font-face { font-family:'Bubblegum Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('../fonts/bubblegum-sans-400.woff2') format('woff2'); }
+  </style>
+
+  <style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --purple: #B073FF;
+    --purple-deep: #7A3FD6;
+    --purple-dark: #5A249E;
+    --grape: #6A2FB8;
+    --green: #4CAF50;
+    --green-dark: #2E7D32;
+    --blue: #2196F3;
+    --blue-dark: #0D47A1;
+    --orange: #FF8A3D;
+    --orange-dark: #C25A12;
+    --dark: #2D1B4E;
+    --cream: #FDF6FF;
+  }
+  body {
+    font-family: 'Fredoka', system-ui, sans-serif;
+    color: var(--dark);
+    background: linear-gradient(160deg, #efe0ff 0%, #f6ecff 45%, #e7e0ff 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    user-select: none;
+  }
+
+  /* Decorative floating notes (pushed below the fixed nav) */
+  .float-note {
+    position: fixed; z-index: 1; opacity: 0.28; pointer-events: none;
+    font-size: 2.6em;
+    animation: floaty 9s ease-in-out infinite;
+  }
+  .fn1 { top: 130px; left: 6%;  animation-delay: 0s;   color: #B073FF; }
+  .fn2 { top: 200px; right: 8%; animation-delay: 2s;   color: #7A3FD6; }
+  .fn3 { top: 300px; left: 12%; animation-delay: 4s;   color: #9C6BFF; }
+  .fn4 { top: 160px; left: 60%; animation-delay: 1.4s; color: #C39BFF; }
+  .fn5 { top: 360px; right: 14%; animation-delay: 3.2s; color: #8E5BE0; }
+  @keyframes floaty {
+    0%,100% { transform: translateY(0) rotate(-6deg); }
+    50%     { transform: translateY(-26px) rotate(10deg); }
+  }
+
+  .screen { display: none; min-height: 100vh; padding: 110px 18px 36px; position: relative; z-index: 10; }
+  .screen.active { display: block; animation: screenIn 0.3s ease; }
+  @keyframes screenIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  /* ===== TOP NAV (persistent across all screens) ===== */
+  #top-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 40;
+    background: rgba(255, 255, 255, 0.93);
+    border-bottom: 4px solid var(--purple-dark);
+    box-shadow: 0 4px 0 rgba(90, 36, 158, 0.18);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  #top-nav .nav-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .nav-btn {
+    font-family: inherit;
+    font-size: 1em;
+    padding: 8px 16px;
+    background: white;
+    color: var(--dark);
+    border: 3px solid var(--purple-dark);
+    border-radius: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 var(--purple-dark);
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .nav-btn:hover  { transform: translateY(2px); box-shadow: 0 2px 0 var(--purple-dark); }
+  .nav-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--purple-dark); }
+  .nav-btn.home {
+    background: var(--green); color: white;
+    border-color: var(--green-dark); box-shadow: 0 4px 0 var(--green-dark);
+  }
+  .nav-btn.home:hover  { box-shadow: 0 2px 0 var(--green-dark); }
+  .nav-btn.home:active { box-shadow: 0 0 0 var(--green-dark); }
+  .nav-btn.parent {
+    background: var(--blue); color: white;
+    border-color: var(--blue-dark); box-shadow: 0 4px 0 var(--blue-dark);
+  }
+  .nav-btn.parent:hover  { box-shadow: 0 2px 0 var(--blue-dark); }
+  .nav-btn.parent:active { box-shadow: 0 0 0 var(--blue-dark); }
+  .nav-btn.help {
+    background: var(--orange); color: white;
+    border-color: var(--orange-dark); box-shadow: 0 4px 0 var(--orange-dark);
+  }
+  .nav-btn.help:hover  { box-shadow: 0 2px 0 var(--orange-dark); }
+  .nav-btn.help:active { box-shadow: 0 0 0 var(--orange-dark); }
+
+  /* ===== HOW TO PLAY modal ===== */
+  #how-modal {
+    position: fixed; inset: 0;
+    background: rgba(45, 27, 78, 0.6);
+    display: none; align-items: center; justify-content: center;
+    z-index: 100; padding: 20px;
+  }
+  #how-modal.open { display: flex; }
+  .modal-card {
+    background: white;
+    border: 5px solid var(--purple-dark);
+    border-radius: 24px;
+    padding: 24px 28px 22px;
+    max-width: 540px; width: 100%;
+    box-shadow: 0 9px 0 var(--purple-dark);
+    text-align: left;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-card h2 {
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: 2em;
+    color: var(--purple-deep);
+    text-shadow: 2px 2px 0 #fff, 3px 3px 0 var(--purple-dark);
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  .modal-card p { font-size: 1.15em; margin-bottom: 12px; line-height: 1.4; }
+  .modal-card ul { list-style: none; padding-left: 0; margin: 8px 0 16px; }
+  .modal-card li {
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    background: #F3EBFF;
+    border-left: 5px solid var(--purple);
+    border-radius: 10px;
+    font-size: 1.05em;
+  }
+  .modal-close {
+    display: block;
+    margin: 4px auto 0;
+    font-family: inherit;
+    font-size: 1.25em;
+    padding: 10px 28px;
+    background: var(--green);
+    color: white;
+    border: 4px solid var(--green-dark);
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 5px 0 var(--green-dark);
+    font-weight: bold;
+  }
+  .modal-close:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--green-dark); }
+
+  /* ===== HOME ===== */
+  #home { text-align: center; padding-top: 120px; }
+  #home h1 {
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: clamp(3em, 9vw, 6em);
+    color: var(--purple-deep);
+    text-shadow: 4px 4px 0 #fff, 7px 7px 0 var(--purple-dark);
+    margin-bottom: 8px;
+    animation: bounce 2s ease-in-out infinite;
+    letter-spacing: 1px;
+  }
+  @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-16px);} }
+  .tagline { font-size: clamp(1.2em, 3.5vw, 1.7em); color: var(--dark); margin-bottom: 8px; font-weight: 600; }
+  .age-note { font-size: 1.05em; color: var(--grape); margin-bottom: 18px; font-weight: 600; }
+  #home-band {
+    display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+    margin: 18px auto 24px; max-width: 520px;
+  }
+  .home-pad {
+    width: 90px; height: 90px; border-radius: 24px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3em;
+    border: 4px solid rgba(0,0,0,0.18);
+    box-shadow: 0 7px 0 rgba(0,0,0,0.18);
+    animation: homePulse 2.4s ease-in-out infinite;
+  }
+  @keyframes homePulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+  .play-btn {
+    font-family: inherit;
+    font-size: 2.2em;
+    padding: 18px 56px;
+    background: var(--green);
+    color: white;
+    border: 6px solid var(--green-dark);
+    border-radius: 60px;
+    cursor: pointer;
+    box-shadow: 0 9px 0 var(--green-dark);
+    transition: transform 0.1s, box-shadow 0.1s;
+    margin-top: 8px;
+    font-weight: bold;
+  }
+  .play-btn:hover  { transform: translateY(3px); box-shadow: 0 6px 0 var(--green-dark); }
+  .play-btn:active { transform: translateY(9px); box-shadow: 0 0 0 var(--green-dark); }
+  .more-games { margin-top: 34px; font-size: 1.15em; color: var(--dark); }
+  .more-games a {
+    color: var(--purple-deep); font-weight: bold; text-decoration: none;
+    border-bottom: 3px dashed var(--purple-deep); padding-bottom: 2px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .more-games a:hover { color: var(--orange); border-bottom-color: var(--orange); }
+
+  /* ===== GAME HEADER ===== */
+  #game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 4px 8px; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;
+  }
+  #game-title {
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: 2.2em; color: var(--purple-deep);
+    text-shadow: 3px 3px 0 #fff, 4px 4px 0 var(--purple-dark);
+  }
+  .header-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .toggle-btn {
+    font-family: inherit; font-size: 1em;
+    padding: 10px 18px;
+    background: white; color: var(--dark);
+    border: 4px solid var(--purple-dark); border-radius: 30px;
+    cursor: pointer; box-shadow: 0 5px 0 var(--purple-dark);
+    font-weight: bold; transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .toggle-btn.on {
+    background: var(--purple); color: white;
+    border-color: var(--purple-dark); box-shadow: 0 5px 0 var(--purple-dark);
+  }
+  .toggle-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--purple-dark); }
+
+  #mute-btn {
+    font-size: 1.6em; background: white; border: 4px solid var(--purple-dark);
+    border-radius: 50%; width: 55px; height: 55px; cursor: pointer;
+    box-shadow: 0 5px 0 var(--purple-dark);
+  }
+  #mute-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--purple-dark); }
+
+  /* ===== STATS BAR ===== */
+  #stats-bar {
+    display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .stat-card {
+    background: white; border: 4px solid var(--purple-dark); border-radius: 18px;
+    padding: 6px 18px; box-shadow: 0 5px 0 var(--purple-dark);
+    min-width: 96px; text-align: center;
+  }
+  .stat-card .stat-label { font-size: 0.9em; color: var(--grape); font-weight: bold; }
+  .stat-card .stat-value { font-size: 1.7em; font-weight: bold; color: var(--dark); }
+  .stat-card.round .stat-value { color: var(--purple-deep); }
+  .stat-card.length .stat-value { color: var(--green-dark); }
+  .stat-card.best .stat-value { color: var(--orange-dark); }
+
+  /* ===== STATUS / CONDUCTOR ===== */
+  #status {
+    text-align: center;
+    font-size: clamp(1.2em, 4vw, 1.7em);
+    font-weight: 700;
+    min-height: 44px;
+    margin: 4px auto 12px;
+    color: var(--purple-deep);
+    line-height: 1.25;
+    max-width: 640px;
+  }
+  #status.watch  { color: var(--blue-dark); }
+  #status.your   { color: var(--green-dark); animation: yourPulse 1.2s ease-in-out infinite; }
+  #status.oops   { color: var(--orange-dark); }
+  @keyframes yourPulse { 0%,100%{opacity:1;} 50%{opacity:0.6;} }
+
+  /* ===== BAND STAGE (pads) ===== */
+  #stage-area {
+    background: rgba(255,255,255,0.62);
+    border-radius: 28px;
+    padding: 22px 16px;
+    margin: 0 auto 16px;
+    border: 5px dashed var(--purple);
+    max-width: 680px;
+    position: relative;
+    overflow: hidden;
+  }
+  #pads {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  #pads.cols-3 { grid-template-columns: repeat(3, 1fr); max-width: 560px; }
+  #pads.cols-2 { grid-template-columns: repeat(2, 1fr); max-width: 440px; }
+
+  .pad {
+    position: relative;
+    border: none;
+    border-radius: 26px;
+    padding: 0;
+    aspect-ratio: 1 / 1;
+    min-height: 110px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    color: #fff;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.22), inset 0 0 0 4px rgba(255,255,255,0.25);
+    transition: transform 0.08s, box-shadow 0.08s, filter 0.12s;
+    filter: brightness(0.82) saturate(0.85);
+    overflow: hidden;
+  }
+  .pad .pad-emoji { font-size: clamp(2.4em, 9vw, 3.6em); line-height: 1; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25)); }
+  .pad .pad-name { font-size: 0.95em; font-weight: 700; text-shadow: 0 2px 2px rgba(0,0,0,0.3); }
+  .pad:active { transform: translateY(4px); box-shadow: 0 4px 0 rgba(0,0,0,0.22), inset 0 0 0 4px rgba(255,255,255,0.25); }
+  .pad:focus-visible { outline: 4px solid #fff; outline-offset: 3px; }
+
+  /* The lit / playing state: bright glow + pop. Shared by band playback and taps. */
+  .pad.lit {
+    filter: brightness(1.18) saturate(1.2);
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 0 12px 0 rgba(0,0,0,0.22),
+                0 0 34px 8px var(--glow, #fff),
+                inset 0 0 0 4px rgba(255,255,255,0.55);
+    animation: padPop 0.34s ease;
+  }
+  @keyframes padPop {
+    0% { transform: translateY(0) scale(1); }
+    40% { transform: translateY(-6px) scale(1.1); }
+    100% { transform: translateY(-4px) scale(1.04); }
+  }
+  /* Ripple ring shown on each hit for an extra visual cue */
+  .pad .ripple {
+    position: absolute; left: 50%; top: 50%;
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 4px solid rgba(255,255,255,0.85);
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0; pointer-events: none;
+  }
+  .pad .ripple.go { animation: rippleOut 0.55s ease-out; }
+  @keyframes rippleOut {
+    0%   { opacity: 0.9; transform: translate(-50%,-50%) scale(0.4); }
+    100% { opacity: 0;   transform: translate(-50%,-50%) scale(4); }
+  }
+  .pad.disabled { cursor: default; }
+  .pad.wiggle { animation: padWiggle 0.5s ease-in-out; }
+  @keyframes padWiggle {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-7px) rotate(-2deg); }
+    75% { transform: translateX(7px) rotate(2deg); }
+  }
+
+  /* "Now playing" caption strip (caption for audio, helps sound-off play) */
+  #caption {
+    text-align: center; font-size: 1.15em; font-weight: 700;
+    min-height: 30px; margin: 4px auto 6px; color: var(--grape);
+    letter-spacing: 1px;
+  }
+
+  /* Song builder: little stacked bars that grow as the beat grows */
+  #song-builder {
+    display: flex; gap: 5px; justify-content: center; align-items: flex-end;
+    height: 40px; margin: 6px auto 2px; flex-wrap: wrap;
+  }
+  .song-bar {
+    width: 12px; border-radius: 6px 6px 2px 2px;
+    background: linear-gradient(180deg, var(--purple) 0%, var(--purple-deep) 100%);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+    animation: barRise 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes barRise { 0% { transform: scaleY(0); transform-origin: bottom; } 100% { transform: scaleY(1); } }
+
+  /* ===== MAIN ACTION BUTTONS ===== */
+  .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+  .action-btn {
+    font-family: inherit; font-size: 1.2em; font-weight: bold;
+    padding: 14px 26px;
+    color: white; border: 4px solid;
+    border-radius: 40px; cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .action-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .action-btn.replay { background: var(--blue); border-color: var(--blue-dark); box-shadow: 0 6px 0 var(--blue-dark); }
+  .action-btn.replay:not(:disabled):active { transform: translateY(4px); box-shadow: 0 2px 0 var(--blue-dark); }
+  .action-btn.mode { background: var(--purple); border-color: var(--purple-dark); box-shadow: 0 6px 0 var(--purple-dark); }
+  .action-btn.mode:not(:disabled):active { transform: translateY(4px); box-shadow: 0 2px 0 var(--purple-dark); }
+  .action-btn.free { background: var(--orange); border-color: var(--orange-dark); box-shadow: 0 6px 0 var(--orange-dark); }
+  .action-btn.free:not(:disabled):active { transform: translateY(4px); box-shadow: 0 2px 0 var(--orange-dark); }
+
+  #freeplay-note {
+    text-align: center; color: var(--grape); font-weight: 600;
+    margin-top: 8px; min-height: 22px; font-size: 1.05em;
+  }
+
+  /* ===== Confetti ===== */
+  .confetti { position: fixed; width: 12px; height: 12px; pointer-events: none; z-index: 20; border-radius: 2px; }
+
+  /* ===== POSITIVE-REINFORCEMENT EFFECTS ===== */
+  .praise-pop {
+    position: fixed; top: 34%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Bubblegum Sans', cursive;
+    font-size: clamp(2.4em, 8vw, 4.6em);
+    color: var(--purple-deep);
+    text-shadow: 3px 3px 0 #fff, 6px 6px 0 var(--purple-dark);
+    font-weight: bold; z-index: 60; pointer-events: none; opacity: 0;
+    white-space: nowrap;
+    animation: praisePop 1.7s cubic-bezier(0.34, 1.5, 0.6, 1) forwards;
+  }
+  @keyframes praisePop {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.4) rotate(-12deg); }
+    20%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(4deg); }
+    40%  { transform: translate(-50%, -50%) scale(0.95) rotate(-2deg); }
+    60%  { transform: translate(-50%, -50%) scale(1.05) rotate(1deg); }
+    80%  { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); }
+    100% { opacity: 0; transform: translate(-50%, -75%) scale(0.9); }
+  }
+  .firework-particle {
+    position: fixed; width: 8px; height: 8px; border-radius: 50%;
+    pointer-events: none; z-index: 55;
+    animation: fwExplode 1.2s ease-out forwards;
+  }
+  @keyframes fwExplode {
+    0%   { transform: translate(0, 0) scale(1);   opacity: 1; }
+    70%  { opacity: 1; }
+    100% { transform: translate(var(--fx, 0), calc(var(--fy, 0) + 30px)) scale(0.4); opacity: 0; }
+  }
+  .star-rise {
+    position: fixed; font-size: 2.2em; pointer-events: none; z-index: 55;
+    animation: starRise 1.8s ease-out forwards;
+  }
+  @keyframes starRise {
+    0%   { transform: translateY(0) scale(0.6) rotate(0); opacity: 0; }
+    20%  { opacity: 1; transform: translateY(-30px) scale(1.1) rotate(15deg); }
+    100% { transform: translateY(-220px) scale(0.7) rotate(360deg); opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+  }
+  @media (max-width: 480px) {
+    .screen { padding-top: 100px; }
+    #pads { gap: 12px; }
+    .pad { min-height: 96px; border-radius: 22px; }
+    .home-pad { width: 72px; height: 72px; font-size: 2.4em; }
+  }
+  </style>
+</head>
+<body>
+
+<!-- ========== PERSISTENT TOP NAV (shows on every screen) ========== -->
+<nav id="top-nav" aria-label="Game navigation">
+  <div class="nav-group">
+    <a href="#" class="nav-btn home" onclick="goHome(); return false;" aria-label="Go to Echo Beats home page">🏠 Game Home</a>
+    <a href="../index.html" class="nav-btn parent" aria-label="Go to Zak's Brain Games">🧠 More Brain Games</a>
+  </div>
+  <div class="nav-group">
+    <button type="button" class="nav-btn help" onclick="openHowTo()" aria-label="Open How to Play instructions">❓ How to Play</button>
+  </div>
+</nav>
+
+<!-- ========== HOW TO PLAY modal (available from every screen) ========== -->
+<div id="how-modal" role="dialog" aria-modal="true" aria-labelledby="how-title" onclick="if(event.target===this) closeHowTo()">
+  <div class="modal-card">
+    <h2 id="how-title">🥁 How to Play</h2>
+    <p>🥁 The animal band wants to play with you!</p>
+    <ul>
+      <li>1. Watch and listen as the band plays a beat.</li>
+      <li>2. Tap the same animals in the same order to play it back.</li>
+      <li>3. Get it right and the beat grows — build your own song!</li>
+      <li>Tip: hum or say the sounds in order to help you remember.</li>
+    </ul>
+    <button type="button" class="modal-close" onclick="closeHowTo()">Got it! Let's play!</button>
+  </div>
+</div>
+
+<!-- Decorative floating notes -->
+<div class="float-note fn1" aria-hidden="true">🎵</div>
+<div class="float-note fn2" aria-hidden="true">🎶</div>
+<div class="float-note fn3" aria-hidden="true">🎵</div>
+<div class="float-note fn4" aria-hidden="true">🎶</div>
+<div class="float-note fn5" aria-hidden="true">🎵</div>
+
+<!-- ========== HOME SCREEN ========== -->
+<div id="home" class="screen active">
+  <h1>Echo Beats</h1>
+  <div class="tagline">🥁 Listen to the beat, then tap it back! 🎶</div>
+  <div class="age-note">Ages 6+ · Music &amp; Memory</div>
+  <div id="home-band" aria-hidden="true"></div>
+  <button class="play-btn" onclick="startGame()">Play Now!</button>
+  <div class="more-games">
+    🧠 Try more brain games at
+    <a href="https://zaksbraingames.com/">zaksbraingames.com</a>
+  </div>
+</div>
+
+<!-- ========== GAME SCREEN ========== -->
+<div id="game" class="screen">
+  <div id="game-header">
+    <div id="game-title">Echo Beats</div>
+    <div class="header-controls">
+      <button id="mute-btn" onclick="toggleMute()" title="Mute/Unmute" aria-label="Mute or unmute sounds">🔊</button>
+    </div>
+  </div>
+
+  <div id="stats-bar">
+    <div class="stat-card round">
+      <div class="stat-label">Round 🎼</div>
+      <div class="stat-value" id="stat-round">1</div>
+    </div>
+    <div class="stat-card length">
+      <div class="stat-label">Beats 🥁</div>
+      <div class="stat-value" id="stat-length">2</div>
+    </div>
+    <div class="stat-card best">
+      <div class="stat-label">Best ⭐</div>
+      <div class="stat-value" id="stat-best">0</div>
+    </div>
+  </div>
+
+  <div id="status" aria-live="polite">Tap Play to start the band!</div>
+
+  <div id="stage-area">
+    <div id="caption" aria-live="polite"></div>
+    <div id="pads" role="group" aria-label="Animal instrument pads"></div>
+    <div id="song-builder" aria-hidden="true"></div>
+  </div>
+
+  <div class="actions">
+    <button class="action-btn replay" id="replay-btn" onclick="replaySequence()" aria-label="Hear the beat again">🔁 Hear it Again</button>
+    <button class="action-btn free" id="free-btn" onclick="toggleFreePlay()" aria-label="Free play, make your own beat">🎹 Free Jam</button>
+  </div>
+  <div id="freeplay-note"></div>
+</div>
+
+<script>
+/* =========================================================
+   ECHO BEATS — a musical Simon. Listen, then tap it back.
+   Auditory sequence memory + rhythm. Ages 6+.
+   ========================================================= */
+
+/* ---- The animal band. Each pad: emoji, name, color, glow, base freq. ---- */
+const BAND = [
+  { id: 0, emoji: '🐸', name: 'Frog Drum',    color: '#5FBF4F', dark: '#2E7D32', glow: '#9CFF7A', freq: 196.00, kind: 'drum'  }, // G3
+  { id: 1, emoji: '🐤', name: 'Bird Chime',   color: '#FFD23D', dark: '#C99700', glow: '#FFF59A', freq: 523.25, kind: 'chime' }, // C5
+  { id: 2, emoji: '🐱', name: 'Cat Bongo',    color: '#FF8A3D', dark: '#C25A12', glow: '#FFC79A', freq: 329.63, kind: 'bongo' }, // E4
+  { id: 3, emoji: '🐘', name: 'Elephant Bass',color: '#7A8CFF', dark: '#3A4CC2', glow: '#B7C2FF', freq: 110.00, kind: 'bass'  }, // A2
+  { id: 4, emoji: '🐵', name: 'Monkey Wood',  color: '#C77BFF', dark: '#7A3FD6', glow: '#E6C2FF', freq: 392.00, kind: 'wood'  }, // G4
+  { id: 5, emoji: '🐯', name: 'Tiger Gong',   color: '#FF6FA3', dark: '#C23E70', glow: '#FFB3CE', freq: 261.63, kind: 'gong'  }, // C4
+];
+
+const PRAISE_MESSAGES = [
+  'Great job!','Awesome!','Way to go!','Beat star!','Brilliant!','Fantastic!',
+  'You rock!','Nailed it!','Woohoo!','You got it!','Encore!','So groovy!',
+  'Music whiz!','Spot on!','Amazing!','Super!','Jammin\'!','Right on beat!'
+];
+function pickPraise() { return PRAISE_MESSAGES[Math.floor(Math.random() * PRAISE_MESSAGES.length)]; }
+
+const state = {
+  muted: false,
+  busy: false,        // true while the band is playing — blocks taps
+  awaiting: false,    // true while waiting for the child to tap back
+  freePlay: false,
+  round: 1,
+  padCount: 3,        // how many pads are active (more = harder)
+  sequence: [],       // the beat to echo (array of pad ids)
+  inputPos: 0,        // how many correct taps so far this turn
+  best: 0,            // longest beat completed
+  timers: [],         // in-flight setTimeout ids
+};
+
+/* Cancel any in-flight playback timeouts and clean up effects. */
+function seqTimeout(fn, ms) {
+  const id = setTimeout(() => {
+    state.timers = state.timers.filter(t => t !== id);
+    fn();
+  }, ms);
+  state.timers.push(id);
+  return id;
+}
+function cancelTimers() {
+  state.timers.forEach(t => clearTimeout(t));
+  state.timers = [];
+  document.querySelectorAll('.praise-pop, .firework-particle, .star-rise, .confetti')
+    .forEach(el => el.remove());
+  document.querySelectorAll('.pad.lit').forEach(p => p.classList.remove('lit'));
+}
+
+/* ---------- SCREEN HELPERS ---------- */
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ---------- NAVIGATION ---------- */
+function goHome() {
+  cancelTimers();
+  try { window.speechSynthesis.cancel(); } catch (e) {}
+  state.busy = false;
+  state.awaiting = false;
+  state.freePlay = false;
+  switchScreen('home');
+}
+function openHowTo() { document.getElementById('how-modal').classList.add('open'); }
+function closeHowTo() { document.getElementById('how-modal').classList.remove('open'); }
+
+/* ---------- BUILD PADS ---------- */
+function buildPads() {
+  const wrap = document.getElementById('pads');
+  wrap.innerHTML = '';
+  wrap.classList.toggle('cols-3', state.padCount >= 5);
+  wrap.classList.toggle('cols-2', state.padCount < 5);
+  for (let i = 0; i < state.padCount; i++) {
+    const b = BAND[i];
+    const pad = document.createElement('button');
+    pad.type = 'button';
+    pad.className = 'pad';
+    pad.id = 'pad-' + b.id;
+    pad.style.background = `linear-gradient(160deg, ${b.color} 0%, ${b.dark} 100%)`;
+    pad.style.setProperty('--glow', b.glow);
+    pad.setAttribute('aria-label', b.name);
+    pad.innerHTML =
+      `<span class="pad-emoji">${b.emoji}</span>` +
+      `<span class="pad-name">${b.name}</span>` +
+      `<span class="ripple"></span>`;
+    pad.addEventListener('click', () => onPadTap(b.id));
+    wrap.appendChild(pad);
+  }
+}
+
+/* ---------- VISUAL: light a pad (always shown, even when muted) ---------- */
+function flashPad(id, durMs) {
+  const pad = document.getElementById('pad-' + id);
+  if (!pad) return;
+  pad.classList.remove('lit');
+  void pad.offsetWidth; // restart animation
+  pad.classList.add('lit');
+  // ripple ring
+  const ripple = pad.querySelector('.ripple');
+  if (ripple) { ripple.classList.remove('go'); void ripple.offsetWidth; ripple.classList.add('go'); }
+  setTimeout(() => pad.classList.remove('lit'), durMs || 320);
+}
+
+function showCaption(text) {
+  document.getElementById('caption').textContent = text;
+}
+
+/* ---------- PLAY ONE PAD (sound + light + caption) ---------- */
+function strikePad(id, durMs) {
+  const b = BAND[id];
+  flashPad(id, durMs);
+  showCaption(b.emoji + ' ' + b.name);
+  playPadSound(id);
+}
+
+/* ---------- GAME FLOW ---------- */
+function startGame() {
+  cancelTimers();
+  unlockAudio();
+  state.round = 1;
+  state.padCount = 3;
+  state.best = 0;
+  state.freePlay = false;
+  state.sequence = [];
+  switchScreen('game');
+  document.getElementById('free-btn').textContent = '🎹 Free Jam';
+  document.getElementById('freeplay-note').textContent = '';
+  buildPads();
+  updateStats();
+  speak('Listen to the band, then tap the beat back!');
+  // First sequence starts at length 2.
+  seqTimeout(() => startRound(true), 700);
+}
+
+function padCountForRound(round) {
+  // More choices as the child advances (low floor -> high ceiling).
+  if (round <= 2) return 3;
+  if (round <= 4) return 4;
+  if (round <= 7) return 5;
+  return 6;
+}
+
+function startRound(isFirst) {
+  if (state.freePlay) return;
+  state.awaiting = false;
+  state.inputPos = 0;
+
+  // Set how many pads are in play this round, rebuild if it changed.
+  const want = padCountForRound(state.round);
+  if (want !== state.padCount) {
+    state.padCount = want;
+    buildPads();
+  }
+
+  // Target length: starts at 2, grows by one per success.
+  const targetLen = state.round + 1; // round 1 -> 2 beats
+  // Extend the sequence to the target length (keep existing so the song "builds").
+  while (state.sequence.length < targetLen) {
+    state.sequence.push(Math.floor(Math.random() * state.padCount));
+  }
+  // If pad count shrank somehow, clamp existing ids (defensive).
+  state.sequence = state.sequence.map(x => x % state.padCount);
+
+  updateStats();
+  renderSongBuilder();
+  playSequence();
+}
+
+/* Play the whole beat with a little backing groove that gets richer. */
+function playSequence() {
+  if (state.freePlay) return;
+  state.busy = true;
+  state.awaiting = false;
+  setStatus('👀 Watch and listen…', 'watch');
+  setPadsDisabled(true);
+  document.getElementById('replay-btn').disabled = true;
+
+  // Backing groove: a soft pulse on each step. Richer (more layers) each round.
+  const stepMs = 620;
+  const startDelay = 260;
+
+  // Light metronome pulse underneath, denser as rounds grow.
+  playBackingGroove(state.sequence.length, stepMs, startDelay);
+
+  state.sequence.forEach((id, i) => {
+    seqTimeout(() => {
+      strikePad(id, 360);
+    }, startDelay + i * stepMs);
+  });
+
+  // After the beat, hand over to the child.
+  const total = startDelay + state.sequence.length * stepMs + 200;
+  seqTimeout(() => {
+    state.busy = false;
+    beginInput();
+  }, total);
+}
+
+function beginInput() {
+  if (state.freePlay) return;
+  state.awaiting = true;
+  state.inputPos = 0;
+  showCaption('');
+  setStatus('🎤 Your turn — tap the beat!', 'your');
+  setPadsDisabled(false);
+  document.getElementById('replay-btn').disabled = false;
+  speak('Your turn!');
+}
+
+function replaySequence() {
+  if (state.freePlay || state.busy) return;
+  if (!state.sequence.length) return;
+  state.awaiting = false;
+  playSequence();
+}
+
+/* ---------- HANDLE A TAP ---------- */
+function onPadTap(id) {
+  unlockAudio();
+  if (state.freePlay) { strikePad(id, 320); return; }
+  if (state.busy || !state.awaiting) return;
+
+  // Always give immediate feedback on the tap.
+  strikePad(id, 320);
+
+  const expected = state.sequence[state.inputPos];
+  if (id === expected) {
+    state.inputPos++;
+    if (state.inputPos >= state.sequence.length) {
+      // Whole beat echoed correctly!
+      roundWin();
+    }
+  } else {
+    roundHiccup();
+  }
+}
+
+/* ---------- SUCCESS ---------- */
+function roundWin() {
+  state.awaiting = false;
+  state.busy = true;
+  setPadsDisabled(true);
+  document.getElementById('replay-btn').disabled = true;
+
+  if (state.sequence.length > state.best) state.best = state.sequence.length;
+  updateStats();
+
+  const praise = pickPraise();
+  setStatus('🎉 ' + praise + ' The beat grows!', '');
+  playWinChord();
+  showPraisePop(praise);
+  launchFireworks(3);
+  launchStarRise(8);
+  burstConfetti(window.innerWidth / 2, window.innerHeight * 0.32, 30);
+  speak(praise + ' The beat grows!');
+
+  // Play back the song they just built as a reward (quick).
+  seqTimeout(() => {
+    state.round++;
+    startRound(false);
+  }, 1700);
+}
+
+/* ---------- FRIENDLY HICCUP (no harsh fail) ---------- */
+function roundHiccup() {
+  state.awaiting = false;
+  state.busy = true;
+  setPadsDisabled(true);
+  document.getElementById('replay-btn').disabled = true;
+  setStatus('🎵 Little hiccup! Let\'s hear it again…', 'oops');
+  playHiccup();
+  // Wiggle the active pads gently.
+  document.querySelectorAll('#pads .pad').forEach(p => {
+    p.classList.remove('wiggle'); void p.offsetWidth; p.classList.add('wiggle');
+  });
+  speak('Oops, little hiccup. Listen again!');
+  // Replay the SAME sequence — no game over, length stays the same.
+  seqTimeout(() => { playSequence(); }, 1300);
+}
+
+/* ---------- FREE-PLAY / COMPOSE MODE ---------- */
+function toggleFreePlay() {
+  state.freePlay = !state.freePlay;
+  cancelTimers();
+  try { window.speechSynthesis.cancel(); } catch (e) {}
+  state.busy = false;
+  state.awaiting = false;
+  const btn = document.getElementById('free-btn');
+  const note = document.getElementById('freeplay-note');
+  if (state.freePlay) {
+    // Show ALL pads to jam with.
+    state.padCount = BAND.length;
+    buildPads();
+    setPadsDisabled(false);
+    btn.textContent = '🥁 Back to Game';
+    document.getElementById('replay-btn').disabled = true;
+    setStatus('🎹 Free Jam! Tap any animal, make your own beat!', '');
+    note.textContent = 'Tap the animals to play your own song. Tap “Back to Game” when ready.';
+    showCaption('');
+    document.getElementById('song-builder').innerHTML = '';
+    speak('Free jam! Make your own beat!');
+  } else {
+    btn.textContent = '🎹 Free Jam';
+    note.textContent = '';
+    // Resume the challenge from the current round.
+    state.padCount = padCountForRound(state.round);
+    buildPads();
+    updateStats();
+    document.getElementById('replay-btn').disabled = false;
+    setStatus('Welcome back! Here comes your beat…', '');
+    seqTimeout(() => startRound(false), 800);
+  }
+}
+
+/* ---------- UI HELPERS ---------- */
+function setStatus(msg, cls) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = cls || '';
+}
+function setPadsDisabled(disabled) {
+  document.querySelectorAll('#pads .pad').forEach(p => {
+    p.classList.toggle('disabled', disabled);
+    if (disabled) p.setAttribute('tabindex', '-1');
+    else p.removeAttribute('tabindex');
+  });
+}
+function updateStats() {
+  document.getElementById('stat-round').textContent = state.round;
+  document.getElementById('stat-length').textContent = Math.max(2, state.sequence.length || (state.round + 1));
+  document.getElementById('stat-best').textContent = state.best;
+}
+function renderSongBuilder() {
+  const sb = document.getElementById('song-builder');
+  sb.innerHTML = '';
+  // One bar per beat in the sequence; heights vary by pad for a "song" feel.
+  state.sequence.forEach((id) => {
+    const bar = document.createElement('div');
+    bar.className = 'song-bar';
+    const h = 16 + ((id * 7) % 24);
+    bar.style.height = h + 'px';
+    const b = BAND[id];
+    bar.style.background = `linear-gradient(180deg, ${b.color} 0%, ${b.dark} 100%)`;
+    sb.appendChild(bar);
+  });
+}
+
+/* ====================================================================
+   AUDIO — Web Audio API synthesis. All in try/catch, respects mute.
+   ==================================================================== */
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { return null; }
+  }
+  return audioCtx;
+}
+function unlockAudio() {
+  const ctx = getAudio();
+  if (ctx && ctx.state === 'suspended') { try { ctx.resume(); } catch (e) {} }
+}
+
+/* Generic tone helper. */
+function playTone(freq, duration, type = 'sine', vol = 0.25, delay = 0) {
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    osc.connect(gain); gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(vol, t0 + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+    osc.start(t0); osc.stop(t0 + duration + 0.02);
+  } catch (e) {}
+}
+
+/* Short filtered-noise burst (used for drums/percussion). */
+function playNoise(duration, vol, filterFreq, type = 'lowpass', delay = 0) {
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime + delay;
+    const n = Math.max(1, Math.floor(ctx.sampleRate * duration));
+    const buffer = ctx.createBuffer(1, n, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < n; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = type; filter.frequency.value = filterFreq;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(vol, t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+    src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    src.start(t0); src.stop(t0 + duration + 0.02);
+  } catch (e) {}
+}
+
+/* Each animal pad has its own distinct synthesized voice. */
+function playPadSound(id) {
+  if (state.muted) return;
+  const b = BAND[id];
+  if (!b) return;
+  const f = b.freq;
+  switch (b.kind) {
+    case 'drum': // frog drum: pitched membrane thump
+      playTone(f, 0.28, 'sine', 0.32, 0);
+      playTone(f * 1.5, 0.14, 'triangle', 0.14, 0);
+      playNoise(0.08, 0.18, 600, 'lowpass', 0);
+      break;
+    case 'chime': // bird chime: bright bell, two harmonics
+      playTone(f, 0.5, 'triangle', 0.24, 0);
+      playTone(f * 2.01, 0.4, 'sine', 0.12, 0);
+      playTone(f * 3.0, 0.3, 'sine', 0.06, 0.01);
+      break;
+    case 'bongo': // cat bongo: tight mid tom
+      playTone(f, 0.2, 'sine', 0.3, 0);
+      playTone(f * 1.4, 0.1, 'triangle', 0.14, 0);
+      playNoise(0.05, 0.16, 1200, 'bandpass', 0);
+      break;
+    case 'bass': // elephant bass: deep round low note
+      playTone(f, 0.5, 'sine', 0.42, 0);
+      playTone(f * 2, 0.3, 'sine', 0.12, 0);
+      break;
+    case 'wood': // monkey wood block: short clicky pluck
+      playTone(f, 0.16, 'square', 0.18, 0);
+      playTone(f * 2, 0.1, 'triangle', 0.12, 0);
+      playNoise(0.04, 0.12, 2200, 'highpass', 0);
+      break;
+    case 'gong': // tiger gong: shimmering metallic
+      playTone(f, 0.6, 'sine', 0.22, 0);
+      playTone(f * 1.48, 0.5, 'sine', 0.12, 0);
+      playTone(f * 2.76, 0.45, 'triangle', 0.07, 0);
+      break;
+    default:
+      playTone(f, 0.3, 'sine', 0.25, 0);
+  }
+}
+
+/* Soft backing groove under the band's playback; richer each round. */
+function playBackingGroove(steps, stepMs, startDelay) {
+  if (state.muted) return;
+  const stepS = stepMs / 1000;
+  const start = startDelay / 1000;
+  // Always a soft kick on each step.
+  for (let i = 0; i < steps; i++) {
+    playNoise(0.06, 0.10, 220, 'lowpass', start + i * stepS);
+    // From round 3, add a light hat on the off-beats.
+    if (state.round >= 3) {
+      playNoise(0.03, 0.05, 7000, 'highpass', start + i * stepS + stepS / 2);
+    }
+    // From round 5, add a soft bass pulse for a fuller groove.
+    if (state.round >= 5) {
+      playTone(98, 0.18, 'sine', 0.10, start + i * stepS);
+    }
+  }
+}
+
+function playWinChord() {
+  // Bright ascending arpeggio (C-E-G-C).
+  playTone(523.25, 0.16, 'triangle', 0.3, 0);
+  playTone(659.25, 0.16, 'triangle', 0.3, 0.12);
+  playTone(783.99, 0.18, 'triangle', 0.3, 0.24);
+  playTone(1046.5, 0.34, 'triangle', 0.3, 0.38);
+}
+function playHiccup() {
+  // Gentle, non-scary "boing" — two soft descending notes.
+  playTone(392, 0.18, 'sine', 0.18, 0);
+  playTone(294, 0.26, 'sine', 0.18, 0.14);
+}
+function playFireworkBoom() {
+  if (state.muted) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(700, t0);
+    osc.frequency.exponentialRampToValueAtTime(1700, t0 + 0.18);
+    gain.gain.setValueAtTime(0.001, t0);
+    gain.gain.linearRampToValueAtTime(0.10, t0 + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.22);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t0); osc.stop(t0 + 0.24);
+  } catch (e) {}
+  playTone(110, 0.18, 'sine', 0.16, 0.16);
+}
+
+function toggleMute() {
+  state.muted = !state.muted;
+  document.getElementById('mute-btn').textContent = state.muted ? '🔇' : '🔊';
+  unlockAudio();
+  if (state.muted) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+}
+
+/* ---------- SPEECH (spoken instructions / praise) ---------- */
+function speak(text) {
+  if (state.muted) return;
+  if (!('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.95; u.pitch = 1.15; u.volume = 1;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+/* ====================================================================
+   CELEBRATION EFFECTS
+   ==================================================================== */
+function showPraisePop(msg) {
+  const el = document.createElement('div');
+  el.className = 'praise-pop';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { if (el.parentNode) el.remove(); }, 1800);
+}
+function launchFireworks(burstCount = 3) {
+  const colors = ['#B073FF', '#7A3FD6', '#FFD23D', '#5FBF4F', '#FF8A3D', '#FF6FA3', '#7A8CFF'];
+  for (let b = 0; b < burstCount; b++) {
+    setTimeout(() => {
+      const cx = 80 + Math.random() * Math.max(40, window.innerWidth - 160);
+      const cy = 100 + Math.random() * Math.max(40, window.innerHeight * 0.55);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      playFireworkBoom();
+      const particles = 20;
+      for (let i = 0; i < particles; i++) {
+        const p = document.createElement('div');
+        p.className = 'firework-particle';
+        p.style.left = cx + 'px';
+        p.style.top = cy + 'px';
+        p.style.background = color;
+        p.style.boxShadow = `0 0 10px ${color}`;
+        const angle = (i / particles) * Math.PI * 2 + Math.random() * 0.2;
+        const dist = 70 + Math.random() * 70;
+        p.style.setProperty('--fx', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--fy', Math.sin(angle) * dist + 'px');
+        document.body.appendChild(p);
+        setTimeout(() => { if (p.parentNode) p.remove(); }, 1300);
+      }
+    }, b * 280);
+  }
+}
+function launchStarRise(count = 8) {
+  const stars = ['⭐','🌟','✨','💫','🎵','🎶'];
+  for (let i = 0; i < count; i++) {
+    setTimeout(() => {
+      const s = document.createElement('div');
+      s.className = 'star-rise';
+      s.textContent = stars[Math.floor(Math.random() * stars.length)];
+      s.style.left = (Math.random() * (window.innerWidth - 40)) + 'px';
+      s.style.top = (window.innerHeight - 60) + 'px';
+      document.body.appendChild(s);
+      setTimeout(() => { if (s.parentNode) s.remove(); }, 1900);
+    }, i * 90);
+  }
+}
+const CONFETTI_COLORS = ['#B073FF','#7A3FD6','#FFD23D','#5FBF4F','#FF8A3D','#FF6FA3','#7A8CFF'];
+function burstConfetti(x, y, count) {
+  const n = count || 28;
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = x + 'px'; c.style.top = y + 'px';
+    c.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+    document.body.appendChild(c);
+    const angle = Math.random() * Math.PI * 2;
+    const velocity = 80 + Math.random() * 150;
+    const dx = Math.cos(angle) * velocity, dy = Math.sin(angle) * velocity - 90;
+    c.animate([
+      { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+      { transform: 'translate(' + dx + 'px, ' + (dy + 340) + 'px) rotate(' + (Math.random() * 720) + 'deg)', opacity: 0 }
+    ], { duration: 1300 + Math.random() * 400, easing: 'cubic-bezier(.2,.6,.4,1)' });
+    setTimeout(() => c.remove(), 1750);
+  }
+}
+
+/* ====================================================================
+   INIT
+   ==================================================================== */
+// Home-screen band preview.
+(function buildHomeBand() {
+  const wrap = document.getElementById('home-band');
+  [0,1,2,3].forEach((i, idx) => {
+    const b = BAND[i];
+    const d = document.createElement('div');
+    d.className = 'home-pad';
+    d.style.background = `linear-gradient(160deg, ${b.color} 0%, ${b.dark} 100%)`;
+    d.style.animationDelay = (idx * 0.3) + 's';
+    d.textContent = b.emoji;
+    wrap.appendChild(d);
+  });
+})();
+
+// Keyboard: number keys 1..6 trigger pads; Esc closes modal.
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { closeHowTo(); return; }
+  if (document.getElementById('game').classList.contains('active')) {
+    const n = parseInt(e.key, 10);
+    if (!isNaN(n) && n >= 1 && n <= state.padCount) {
+      onPadTap(n - 1);
+    }
+  }
+});
+
+// Resume audio on first user gesture (browsers require this).
+document.addEventListener('click', () => { unlockAudio(); }, { once: true });
+document.addEventListener('touchstart', () => { unlockAudio(); }, { once: true, passive: true });
+
+// Warm up speech voices list (some browsers load async).
+if ('speechSynthesis' in window) {
+  try { window.speechSynthesis.getVoices(); } catch (e) {}
+}
+</script>
+
+</body>
+</html>
