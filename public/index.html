@@ -67,6 +67,9 @@
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%A0%3C/text%3E%3C/svg%3E" />
 
 
+    <!-- Zak Rad mascot system (shared styles) -->
+  <link rel="stylesheet" href="assets/zakrad/zak-rad.css" />
+
     <!-- Self-hosted fonts (offline; no external requests) -->
   <style>
   @font-face { font-family:'Fredoka'; font-style:normal; font-weight:300 700; font-display:swap; src:url('fonts/fredoka.woff2') format('woff2'); }
@@ -146,6 +149,14 @@
       margin-top: 8px;
     }
     .tagline span { color: var(--pink); font-weight: 700; }
+    .mascot .zak-img { width: clamp(120px, 26vw, 168px); }
+    .zak-greeting {
+      font-family: 'Bubblegum Sans', cursive;
+      font-size: clamp(1.05rem, 2.6vw, 1.4rem);
+      color: var(--purple);
+      margin-top: 10px;
+    }
+    @media (prefers-reduced-motion: reduce) { .mascot { animation: none; } }
 
     /* ---------- Brain Fact Banner ---------- */
     .fact-banner {
@@ -525,15 +536,32 @@
 
   <div class="container">
     <header>
-      <div class="mascot" id="mascot" title="Click me!" role="img" aria-label="Brain mascot">🧠</div>
+      <div class="mascot" id="mascot" title="Click me for a new fact!" role="img" aria-label="Zak Rad the fox, your friendly guide">
+        <img class="zak-img" src="assets/zakrad/zakrad-hero.svg" alt="Zak Rad the fox wearing a graduation cap, waving hello" />
+      </div>
       <h1>Zak's Brain Games</h1>
       <p class="tagline">Fun games that make you <span>smarter!</span> 🚀</p>
+      <p class="zak-greeting">Hi, I'm Zak Rad! Let's play and grow your brain. 🦊🎓</p>
     </header>
 
-    <!-- Brain Fact of the Day -->
-    <div class="fact-banner" id="factBanner" role="region" aria-label="Brain fact of the day">
-      <span class="label">🧠 Brain Fact of the Day</span>
-      <p class="fact" id="factText">Loading a cool brain fact…</p>
+    <!-- Zak's Did You Know? — daily fact card -->
+    <div class="zak-fact-card" id="factCard" role="region" aria-label="Zak Rad's did you know fact of the day">
+      <div class="zak-fact-art">
+        <img class="zak-img" src="assets/zakrad/zakrad-sitting.svg" alt="Zak Rad the fox sitting and sharing a fun fact" width="130" height="159" loading="lazy" decoding="async" />
+      </div>
+      <div class="zak-fact-body">
+        <span class="zak-fact-label">🦊 Zak's Did You Know?</span>
+        <p class="zak-fact-text" id="factText">Loading a fun fact…</p>
+        <p class="zak-fact-sig">Tap me for another fun fact!</p>
+      </div>
+    </div>
+
+    <!-- Zak guides you to the games -->
+    <div class="zak-guide" aria-hidden="true">
+      <div class="zak-guide-art">
+        <img class="zak-img zak-bob" src="assets/zakrad/zakrad-walking.svg" alt="" width="120" height="147" loading="lazy" decoding="async" />
+      </div>
+      <p class="zak-guide-text">Pick a game below — I'll cheer you on! 🎉</p>
     </div>
 
     <!-- Games -->
@@ -561,12 +589,20 @@
   </div>
 
   <footer>
+    <div class="zak-signoff">
+      <img class="zak-img zak-signoff-art" src="assets/zakrad/zakrad-thumbsup.svg" alt="Zak Rad the fox giving a thumbs up" width="90" height="110" loading="lazy" decoding="async" />
+      <img class="zak-wordmark" src="assets/zakrad/zakrad-wordmark.svg" alt="Zak's Brain Games" loading="lazy" decoding="async" />
+      <p>Keep being curious — see you next time! — Zak Rad 🦊</p>
+    </div>
     <p>Made with <span class="heart">❤️</span> for curious minds</p>
     <p class="footer-links" style="margin-top:8px;">
       <a href="privacy.html">Privacy Policy</a> ·
       &copy; <span id="year"></span> Zak's Brain Games
     </p>
   </footer>
+
+  <!-- Zak Rad mascot module (daily fact, encouragement, celebrations) -->
+  <script src="assets/zakrad/zak-rad.js"></script>
 
   <script>
     // ---------- Game previews (mini illustrations of each game's actual visuals) ----------
@@ -1984,32 +2020,28 @@
       }
     ];
 
-    // ---------- Brain Facts ----------
-    const FACTS = [
-      "Your brain has about 86 billion neurons — that's more than the stars you can see at night!",
-      "Your brain uses about 20% of your body's energy, even though it's only 2% of your weight.",
-      "Playing games can actually grow your brain! Learning new things makes new connections.",
-      "Your brain works faster than the fastest computer for many tasks.",
-      "Laughing is great for your brain — it boosts memory and learning.",
-      "When you sleep, your brain cleans itself up like a tiny janitor at night.",
-      "Reading and puzzles help build a stronger, smarter brain.",
-      "Your brain keeps learning your whole life — it never gets too old!",
-      "Drinking water helps your brain think more clearly.",
-      "Music makes lots of brain areas light up at the same time.",
-      "Daydreaming helps your brain solve tricky problems.",
-      "Exercise makes your brain release happy chemicals.",
-      "Every time you learn something new, your brain literally rewires itself.",
-      "Your brain can store about 2.5 million gigabytes of information!",
-      "Curiosity is your brain's superpower — it makes you remember things better."
-    ];
-
-    // ---------- Render fact ----------
+    // ---------- Zak's Did You Know? — deterministic daily fact ----------
+    // The fact is chosen by ZakRad (zak-rad.js) using the day-of-year, so
+    // everyone sees the same fact on a given day. Tapping shows a bonus fact.
     const factEl = document.getElementById('factText');
-    function showRandomFact() {
-      factEl.textContent = FACTS[Math.floor(Math.random() * FACTS.length)];
+    function showDailyFact() {
+      if (window.ZakRad) factEl.textContent = window.ZakRad.dailyFact();
     }
-    showRandomFact();
-    document.getElementById('factBanner').addEventListener('click', showRandomFact);
+    function showRandomFact() {
+      if (window.ZakRad && window.ZakRad.facts.length) {
+        const f = window.ZakRad.facts;
+        factEl.textContent = f[Math.floor(Math.random() * f.length)];
+      }
+    }
+    showDailyFact();
+    const factCard = document.getElementById('factCard');
+    factCard.setAttribute('role', 'button');
+    factCard.setAttribute('tabindex', '0');
+    factCard.style.cursor = 'pointer';
+    factCard.addEventListener('click', showRandomFact);
+    factCard.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); showRandomFact(); }
+    });
 
     // ---------- Render game cards ----------
     const grid = document.getElementById('gamesGrid');

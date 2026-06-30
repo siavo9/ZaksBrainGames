@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 440" role="img" aria-label="Zak Rad the fox sitting calmly">
+  <defs>
+    <linearGradient id="fur" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFB05C"/><stop offset="1" stop-color="#FF9F45"/>
+    </linearGradient>
+  </defs>
+  <!-- Tail curled to the side -->
+  <path d="M250 330 q86 6 76 78 q-8 44 -60 36 q-40 -10 -16 -64 q-22 0 -38 -22z" fill="url(#fur)" stroke="#E07B2E" stroke-width="5"/>
+  <path d="M312 380 q20 12 12 42 q-26 8 -38 -16 q12 -16 26 -26z" fill="#FFF3E0"/>
+  <!-- Seated lower body (wide base) -->
+  <path d="M104 300 q76 -22 152 0 q34 64 14 120 q-90 24 -194 0 q-20 -56 28 -120z" fill="url(#fur)" stroke="#E07B2E" stroke-width="5"/>
+  <!-- Front paws/feet resting -->
+  <ellipse cx="120" cy="416" rx="26" ry="15" fill="url(#fur)" stroke="#E07B2E" stroke-width="5"/>
+  <ellipse cx="216" cy="416" rx="26" ry="15" fill="url(#fur)" stroke="#E07B2E" stroke-width="5"/>
+  <!-- Belly -->
+  <path d="M150 312 q30 -12 60 0 q14 44 2 88 q-32 12 -64 0 q-12 -44 2 -88z" fill="#FFF3E0"/>
+  <!-- Arms resting in lap -->
+  <path d="M120 320 q-22 26 -8 58 q30 6 50 -16 q-18 -24 -42 -42z" fill="url(#fur)" stroke="#E07B2E" stroke-width="5"/>
+  <path d="M240 320 q22 26 8 58 q-30 6 -50 -16 q18 -24 42 -42z" fill="url(#fur)" stroke="#E07B2E" stroke-width="5"/>
+  <g>
+    <path d="M96 150 L70 50 q40 14 66 56z" fill="url(#fur)" stroke="#E07B2E" stroke-width="5"/>
+    <path d="M264 150 L290 50 q-40 14 -66 56z" fill="url(#fur)" stroke="#E07B2E" stroke-width="5"/>
+    <path d="M96 138 L82 78 q22 10 38 38z" fill="#FF7A6B"/>
+    <path d="M264 138 L278 78 q-22 10 -38 38z" fill="#FF7A6B"/>
+    <path d="M180 110 q78 0 86 78 q6 76 -86 90 q-92 -14 -86 -90 q8 -78 86 -78z" fill="url(#fur)" stroke="#E07B2E" stroke-width="5"/>
+    <path d="M96 196 q-22 4 -16 26 q20 6 32 -8z" fill="#FFF3E0"/>
+    <path d="M264 196 q22 4 16 26 q-20 6 -32 -8z" fill="#FFF3E0"/>
+    <path d="M180 196 q54 0 54 38 q0 38 -54 44 q-54 -6 -54 -44 q0 -38 54 -38z" fill="#FFF3E0"/>
+    <ellipse cx="126" cy="208" rx="15" ry="10" fill="#FFB6C9" opacity=".75"/>
+    <ellipse cx="234" cy="208" rx="15" ry="10" fill="#FFB6C9" opacity=".75"/>
+    <ellipse cx="150" cy="180" rx="13" ry="16" fill="#2D2D5F"/>
+    <ellipse cx="210" cy="180" rx="13" ry="16" fill="#2D2D5F"/>
+    <circle cx="154" cy="174" r="4.5" fill="#fff"/>
+    <circle cx="214" cy="174" r="4.5" fill="#fff"/>
+    <path d="M180 206 q14 0 14 11 q0 11 -14 14 q-14 -3 -14 -14 q0 -11 14 -11z" fill="#2D2D5F"/>
+    <path d="M180 231 q-12 16 -26 8 M180 231 q12 16 26 8" fill="none" stroke="#2D2D5F" stroke-width="4" stroke-linecap="round"/>
+    <rect x="150" y="116" width="60" height="22" rx="8" fill="#3A4178" stroke="#2D2D5F" stroke-width="3"/>
+    <polygon points="180,86 252,112 180,138 108,112" fill="#2D3561" stroke="#2D2D5F" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="180" cy="112" r="6" fill="#FFD93D"/>
+    <path d="M180 112 q44 0 44 14 l0 30" fill="none" stroke="#FFD93D" stroke-width="4"/>
+    <g fill="#FFD93D"><path d="M218 154 l8 0 -4 22z"/><circle cx="222" cy="180" r="7"/></g>
+  </g>
+</svg>
