@@ -128,7 +128,7 @@
   // ---- Helpers ----
   function poseUrl(name) {
     if (POSES.indexOf(name) === -1) name = 'hero';
-    return BASE + 'zakrad-' + name + '.svg';
+    return BASE + 'zakrad-' + name + '.png';
   }
   function wordmarkUrl() { return BASE + 'zakrad-wordmark.svg'; }
   function altFor(name) { return ALT[name] || 'Zak Rad the fox'; }
