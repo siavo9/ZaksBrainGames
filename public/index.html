@@ -35,6 +35,7 @@
       { "@type": "Game", "name": "Color Book", "url": "color-book/index.html", "typicalAgeRange": "3-" },
       { "@type": "Game", "name": "Car Math", "url": "carmath/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Stop the Fire", "url": "stopthefire/index.html", "typicalAgeRange": "4-" },
+      { "@type": "Game", "name": "Keepy Uppy", "url": "keepy-uppy/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "HangCar", "url": "hangcar.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Rhyme Time Rocket", "url": "rhymetimerocket/index.html", "typicalAgeRange": "4-" },
       { "@type": "Game", "name": "Community Helpers", "url": "communityhelpers/index.html", "typicalAgeRange": "4-" },
@@ -619,6 +620,56 @@
   <script>
     // ---------- Game previews (mini illustrations of each game's actual visuals) ----------
     const PREVIEWS = {
+      keepyUppy: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="ku-sh" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-opacity="0.25"/>
+            </filter>
+            <radialGradient id="ku-bal" cx="40%" cy="35%" r="70%">
+              <stop offset="0%" stop-color="#fff0a8"/>
+              <stop offset="55%" stop-color="#ff9ec4"/>
+              <stop offset="100%" stop-color="#c98bd6"/>
+            </radialGradient>
+          </defs>
+          <!-- sky -->
+          <rect x="0" y="0" width="320" height="200" fill="#cfeeff"/>
+          <!-- sun -->
+          <circle cx="44" cy="40" r="22" fill="#ffe9a8"/>
+          <!-- clouds -->
+          <g fill="#ffffff" opacity="0.9">
+            <circle cx="150" cy="42" r="14"/><circle cx="168" cy="46" r="18"/><circle cx="188" cy="42" r="13"/>
+            <circle cx="250" cy="30" r="11"/><circle cx="264" cy="34" r="14"/>
+          </g>
+          <!-- hills -->
+          <ellipse cx="80" cy="200" rx="150" ry="70" fill="#cdeeb6"/>
+          <ellipse cx="250" cy="200" rx="150" ry="56" fill="#bfe7a8"/>
+          <!-- ground -->
+          <rect x="0" y="170" width="320" height="30" fill="#a8e08a"/>
+          <!-- balloon -->
+          <g filter="url(#ku-sh)">
+            <path d="M232,96 q4,10 -4,16" fill="none" stroke="#b79ad0" stroke-width="2"/>
+            <ellipse cx="232" cy="74" rx="24" ry="27" fill="url(#ku-bal)"/>
+            <path d="M228,100 l8,0 l-4,7 z" fill="#c98bd6"/>
+            <ellipse cx="224" cy="66" rx="5" ry="8" fill="rgba(255,255,255,0.6)"/>
+          </g>
+          <!-- blue cat leaping up to bop it -->
+          <g filter="url(#ku-sh)" transform="translate(150,150)">
+            <ellipse cx="0" cy="30" rx="26" ry="7" fill="#3a3550" opacity="0.15"/>
+            <rect x="-14" y="4" width="10" height="16" rx="4" fill="#6f8fd0"/>
+            <rect x="4" y="4" width="10" height="16" rx="4" fill="#6f8fd0"/>
+            <ellipse cx="0" cy="-14" rx="24" ry="27" fill="#9db8e8"/>
+            <ellipse cx="0" cy="-8" rx="13" ry="16" fill="#cfe0f7"/>
+            <ellipse cx="2" cy="-44" rx="20" ry="19" fill="#9db8e8"/>
+            <path d="M-10,-58 l9,11 l-15,2 z" fill="#9db8e8"/>
+            <path d="M14,-58 l-9,11 l15,2 z" fill="#9db8e8"/>
+            <circle cx="-4" cy="-46" r="2.6" fill="#3a3550"/>
+            <circle cx="8" cy="-46" r="2.6" fill="#3a3550"/>
+            <circle cx="-6" cy="-38" r="3.4" fill="rgba(255,150,170,0.5)"/>
+            <circle cx="10" cy="-38" r="3.4" fill="rgba(255,150,170,0.5)"/>
+          </g>
+        </svg>`,
+
       roboRecess: `
         <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -1779,6 +1830,16 @@
         badge: '⚡ Reflexes & Focus',
         age: 'Ages 4+',
         theme: 'card-orange'
+      },
+      {
+        name: 'Keepy Uppy',
+        url: 'keepy-uppy/index.html',
+        emoji: '🎈',
+        preview: PREVIEWS.keepyUppy,
+        desc: 'Bop the balloon and keep it off the ground! Pick your animal, grab boosts, and race the computer to 3 points.',
+        badge: '⚡ Reflexes & Fun',
+        age: 'Ages 4+',
+        theme: 'card-blue'
       },
       {
         name: 'HangCar',
