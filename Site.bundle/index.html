@@ -935,6 +935,50 @@
           </g>
         </svg>`,
 
+      demolitionDerby: `
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="dd-sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#1a0a2e"/>
+              <stop offset="0.55" stop-color="#16213e"/>
+              <stop offset="1" stop-color="#0f3460"/>
+            </linearGradient>
+            <linearGradient id="dd-flame" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0" stop-color="#ff6b35"/>
+              <stop offset="1" stop-color="#f7c948"/>
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="320" height="200" fill="url(#dd-sky)"/>
+          <!-- arena floor -->
+          <path d="M0,150 L320,150 L320,200 L0,200 Z" fill="#3a2a1c"/>
+          <ellipse cx="160" cy="150" rx="150" ry="20" fill="#4a3524"/>
+          <!-- fence flames along the back -->
+          <g>
+            <path d="M20,150 q-8,-22 6,-30 q-2,14 8,16 q10,-6 4,-22 q16,10 8,34 Z" fill="url(#dd-flame)"/>
+            <path d="M292,150 q-8,-22 6,-30 q-2,14 8,16 q10,-6 4,-22 q16,10 8,34 Z" fill="url(#dd-flame)"/>
+          </g>
+          <!-- flattened victim car -->
+          <g transform="translate(206,120)">
+            <rect x="0" y="20" width="70" height="16" rx="6" fill="#5b9bd5" stroke="#0a0a1a" stroke-width="3"/>
+            <circle cx="16" cy="38" r="9" fill="#1d1f26" stroke="#34373f" stroke-width="3"/>
+            <circle cx="54" cy="38" r="9" fill="#1d1f26" stroke="#34373f" stroke-width="3"/>
+          </g>
+          <!-- monster truck -->
+          <g transform="translate(40,58)">
+            <rect x="18" y="34" width="104" height="30" rx="8" fill="#cc1100" stroke="#0a0a1a" stroke-width="3.5"/>
+            <path d="M40,34 L52,14 L104,14 L116,34 Z" fill="#e23a26" stroke="#0a0a1a" stroke-width="3.5" stroke-linejoin="round"/>
+            <rect x="58" y="18" width="40" height="14" rx="3" fill="#bfe9ff" stroke="#0a0a1a" stroke-width="2.5"/>
+            <circle cx="34" cy="72" r="26" fill="#1d1f26"/>
+            <circle cx="34" cy="72" r="26" fill="none" stroke="#34373f" stroke-width="6" stroke-dasharray="9 10"/>
+            <circle cx="34" cy="72" r="10" fill="#cfd4de"/>
+            <circle cx="106" cy="72" r="26" fill="#1d1f26"/>
+            <circle cx="106" cy="72" r="26" fill="none" stroke="#34373f" stroke-width="6" stroke-dasharray="9 10"/>
+            <circle cx="106" cy="72" r="10" fill="#cfd4de"/>
+          </g>
+          <!-- impact spark -->
+          <path d="M186,96 l10,-16 l4,14 l16,-6 l-12,14 l16,6 l-18,4 l6,16 l-16,-10 l-8,14 l-2,-18 l-16,4 l12,-14 Z" fill="#FFD93D" stroke="#ff6b35" stroke-width="2.5" stroke-linejoin="round"/>
+        </svg>`,
+
       learnTheWords: `
         <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -2090,6 +2134,16 @@
         badge: '🧩 Logic & Patterns',
         age: 'Ages 10+',
         theme: 'card-blue'
+      },
+      {
+        name: 'Demolition Derby',
+        url: 'demolitionderby/index.html',
+        emoji: '🏎️',
+        preview: PREVIEWS.demolitionDerby,
+        desc: 'Climb into a 3D monster truck and smash your way through the Thunder Hollow arena. Boost, jump, and be the last one standing!',
+        badge: '💥 Action & 3D',
+        age: 'Ages 10+',
+        theme: 'card-coral'
       }
     ];
 
