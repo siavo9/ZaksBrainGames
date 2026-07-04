@@ -197,7 +197,26 @@
   // ================= PICTURES =================
   // Coloring pages are image files served from /pictures.
   // Add new pages by dropping .svg or .png files into public/pictures.
-  var pictures = ["blank"];
+  //
+  // This list is embedded directly in the page so the picture picker works
+  // OFFLINE inside the iOS/iPad app. The app loads over the file:// protocol,
+  // where fetch()/XHR of a local manifest (pictures.json) is blocked by
+  // WKWebView's cross-origin rules — so we cannot rely on fetch alone. On the
+  // live website the fetch below still runs and can extend/refresh this list,
+  // but the embedded copy guarantees pictures always appear in the app.
+  var EMBEDDED_PICTURES = [
+    "Untitled-2-02.svg", "Untitled-2-04.svg", "Untitled-2-06.svg", "Untitled-2-08.svg", "Untitled-2-10.svg", "Untitled-2-11.svg",
+    "Untitled-2-15.svg", "Untitled-2-19.svg", "Untitled-2-34.svg", "Untitled-2-37.svg", "Untitled-2-39.svg", "Untitled-2-49.svg",
+    "Untitled-2-50.svg", "Untitled-2-53.svg", "Untitled-2-65.svg", "Untitled-2-68.svg", "Untitled-2-69.svg", "Untitled-2-70.svg",
+    "bfly.svg", "bike.svg", "boat.svg", "bridge.svg", "bunny.svg", "bus.svg",
+    "cabin.svg", "cakshop.svg", "car.svg", "car2.svg", "chipmunk.svg", "couch.svg",
+    "deer.svg", "dining.svg", "dump.svg", "flower.svg", "frog.svg", "garbage.svg",
+    "gardefnshop.svg", "hedgehog.svg", "helio.svg", "mt1.svg", "mt2.svg", "mt3.svg",
+    "mt4.svg", "mt5.svg", "plane.svg", "policecar.svg", "poy.svg", "road.svg",
+    "rocket.svg", "scooter.svg", "stuff.svg", "sub.svg", "sweater.svg", "town.svg",
+    "tracter.svg", "train.svg", "truck.svg", "umbrella.svg"
+  ];
+  var pictures = ["blank"].concat(EMBEDDED_PICTURES);
   var pictureIndex = 0;
   // History of pictures the child has viewed, so the Previous button can
   // step back through them. Starts on the "blank" page (index 0).
@@ -501,23 +520,29 @@
   updateToolButtons();
   resizeAll(false);
 
-  // Load the list of available coloring pictures.
-  // Works two ways: the Express server's /api/pictures endpoint (auto-lists the
-  // folder), or a static pictures.json manifest (for plain static hosting).
+  // Refresh the list of available coloring pictures when running on the live
+  // website. This is a progressive enhancement on top of EMBEDDED_PICTURES:
+  // the Express server's /api/pictures endpoint (auto-lists the folder) or a
+  // static pictures.json manifest can pick up pictures added after this page
+  // was built. Inside the offline iOS app these fetches are blocked by the
+  // file:// origin and simply fail — the embedded list already covers us, so
+  // we never clear the pictures on failure.
   function applyList(list) {
     if (Array.isArray(list) && list.length) {
       pictures = ["blank"].concat(list);
     }
   }
-  fetch("api/pictures")
-    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-    .then(applyList)
-    .catch(function () {
-      fetch("pictures.json")
-        .then(function (r) { return r.json(); })
-        .then(applyList)
-        .catch(function () {});
-    });
+  try {
+    fetch("api/pictures")
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(applyList)
+      .catch(function () {
+        fetch("pictures.json")
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+          .then(applyList)
+          .catch(function () {});
+      });
+  } catch (e) { /* fetch unavailable — embedded list is used */ }
 })();
 </script>
   <script defer src="../assets/zakrad/zak-celebrate.js"></script>
