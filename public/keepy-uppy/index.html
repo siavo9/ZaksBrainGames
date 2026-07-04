@@ -33,7 +33,7 @@
   #app {
     min-height: 100%;
     display: flex;
-    align-items: center;
+    align-items: flex-start;   /* top-align so tall content never slides under the fixed nav */
     justify-content: center;
     padding: 16px;
   }
@@ -66,6 +66,18 @@
     gap: 14px;
   }
   .hidden { display: none !important; }
+
+  /* The start screen holds the most content (rules panel), so let it grow
+     downward from the top of the play area and push page scroll instead of
+     centering — otherwise the title/subtitle slide up under the fixed nav. */
+  #startScreen {
+    justify-content: flex-start;
+    top: 0; bottom: auto;
+    height: auto;
+    min-height: 100%;
+    padding-top: 22px;
+    padding-bottom: 30px;
+  }
 
   .title {
     font-size: clamp(34px, 7vw, 64px);
