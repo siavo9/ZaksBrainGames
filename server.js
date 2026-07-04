@@ -24,6 +24,11 @@ app.get('/wordtrio', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'wordtrio.html'));
 });
 
+// Keepy Uppy game page (folder-based: /keepy-uppy/index.html)
+app.get(['/keepy-uppy', '/keepy-uppy/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'keepy-uppy', 'index.html'));
+});
+
 // Story Spark game page (folder-based: /storyspark/index.html)
 app.get(['/storyspark', '/storyspark/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'storyspark', 'index.html'));
