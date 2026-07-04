@@ -162,38 +162,6 @@
   .btn-menu:hover { border-color: #ffc46b; transform: translateY(-2px); }
   .btn-menu.primary { background: linear-gradient(180deg, #ffd277, #ffb24d); border-color: transparent; color: #7a4a00; }
 
-  /* ---------- In-game controls (visible during play) ---------- */
-  #gameControls {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    display: flex;
-    gap: 8px;
-    z-index: 20;
-  }
-  .ctrl-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255, 255, 255, 0.94);
-    border: 3px solid #eadff7;
-    border-radius: 999px;
-    padding: 8px 14px;
-    font-family: inherit;
-    font-size: 15px;
-    font-weight: bold;
-    color: var(--ink);
-    cursor: pointer;
-    box-shadow: 0 4px 12px var(--shadow);
-    transition: transform .1s ease, border-color .1s ease, box-shadow .1s ease;
-  }
-  .ctrl-btn:hover { border-color: #ffc46b; transform: translateY(-2px); }
-  .ctrl-btn:active { transform: translateY(1px); box-shadow: 0 2px 6px var(--shadow); }
-  .ctrl-btn .ctrl-label { font-size: 14px; }
-  @media (max-width: 520px) {
-    .ctrl-btn { padding: 8px 12px; }
-    .ctrl-btn .ctrl-label { display: none; } /* icon-only on small screens */
-  }
 
   /* ---------- How-to-play rules panel ---------- */
   .rules { text-align: left; }
@@ -257,10 +225,32 @@
   }
   .nav-btn:hover  { transform: translateY(2px); box-shadow: 0 2px 0 #3aa66f; }
   .nav-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #3aa66f; }
+
+  /* In-game control buttons live in the nav (never over the play area) */
+  #gameControls { display: inline-flex; gap: 8px; align-items: center; }
+  #gameControls.hidden { display: none !important; }
+  .nav-ctrl {
+    font-family: 'Fredoka', system-ui, sans-serif;
+    font-size: 1em; font-weight: 700;
+    padding: 8px 16px;
+    background: #fff;
+    color: #7e76b0;
+    border: 3px solid #cdbff0;
+    border-radius: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #b7a6e6;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .nav-ctrl .lbl { margin-left: 5px; }
+  .nav-ctrl:hover  { transform: translateY(2px); box-shadow: 0 2px 0 #b7a6e6; }
+  .nav-ctrl:active { transform: translateY(4px); box-shadow: 0 0 0 #b7a6e6; }
+
   /* Push the play area below the fixed nav so it never overlaps the canvas */
   #app { padding-top: 72px; }
   @media (max-width: 520px) {
     #top-nav .nav-title { font-size: 1.1em; }
+    #top-nav .nav-btn, .nav-ctrl { padding: 8px 12px; }
+    .nav-ctrl .lbl { display: none; } /* icon-only on small screens to save room */
     #app { padding-top: 84px; }
   }
 </style>
@@ -271,6 +261,15 @@
 <nav id="top-nav" aria-label="Site navigation">
   <div class="nav-group">
     <a href="../index.html" class="nav-btn home" aria-label="Back to Zak's Brain Games home">🏠 All Games</a>
+    <!-- In-game controls: sit in the nav so they never cover the play area -->
+    <span id="gameControls" class="hidden">
+      <button type="button" id="pauseBtn" class="nav-ctrl" aria-label="Pause game" title="Pause (P)">
+        <span aria-hidden="true">⏸️</span><span class="lbl">Pause</span>
+      </button>
+      <button type="button" id="homeBtn" class="nav-ctrl" aria-label="Back to Keepy Uppy menu" title="Back to menu">
+        <span aria-hidden="true">🏠</span><span class="lbl">Menu</span>
+      </button>
+    </span>
   </div>
   <div class="nav-group">
     <span class="nav-title">🎈 Keepy Uppy</span>
@@ -281,16 +280,6 @@
   <div class="stage">
     <div class="overlay">
       <canvas id="game" width="800" height="660"></canvas>
-
-      <!-- IN-GAME CONTROLS (visible only while playing) -->
-      <div id="gameControls" class="hidden">
-        <button type="button" id="pauseBtn" class="ctrl-btn" aria-label="Pause game" title="Pause (P)">
-          <span aria-hidden="true">⏸️</span><span class="ctrl-label">Pause</span>
-        </button>
-        <button type="button" id="homeBtn" class="ctrl-btn" aria-label="Back to Keepy Uppy menu" title="Back to menu">
-          <span aria-hidden="true">🏠</span><span class="ctrl-label">Menu</span>
-        </button>
-      </div>
 
       <!-- START SCREEN -->
       <div id="startScreen" class="screen">
