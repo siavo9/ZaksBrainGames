@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Keepy Uppy — Zak's Brain Games</title>
+<meta name="description" content="Keepy Uppy is a bouncy balloon arcade game! Pick a pastel animal, grab boosts, and take turns with the computer to keep the balloon off the ground. First to 3 points wins. Ages 4+." />
+<meta name="theme-color" content="#ff9fb2" />
+<link rel="canonical" href="https://zaksbraingames.app/keepy-uppy/" />
+
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%88%3C/text%3E%3C/svg%3E" />
+
+<!-- Self-hosted fonts (offline; no external requests) -->
+<style>
+@font-face { font-family:'Fredoka'; font-style:normal; font-weight:300 700; font-display:swap; src:url('../fonts/fredoka.woff2') format('woff2'); }
+@font-face { font-family:'Bubblegum Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('../fonts/bubblegum-sans-400.woff2') format('woff2'); }
+</style>
+
+<style>
+  :root {
+    --ink: #5a5470;
+    --panel: #fffdf8;
+    --shadow: rgba(120, 110, 150, 0.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    font-family: 'Comic Sans MS', 'Baloo', 'Segoe UI', system-ui, sans-serif;
+    color: var(--ink);
+    background: linear-gradient(160deg, #fbeffb 0%, #eaf3fb 45%, #eafbf2 100%);
+    -webkit-font-smoothing: antialiased;
+  }
+  #app {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .stage {
+    width: 100%;
+    max-width: 820px;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 22px;
+    box-shadow: 0 16px 40px var(--shadow);
+    background: #dff1ff;
+    touch-action: manipulation;
+  }
+  /* ---------- Overlays ---------- */
+  .overlay {
+    position: relative;
+  }
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 18px;
+    gap: 14px;
+  }
+  .hidden { display: none !important; }
+
+  .title {
+    font-size: clamp(34px, 7vw, 64px);
+    letter-spacing: 1px;
+    color: #ff9fb2;
+    text-shadow: 0 3px 0 #fff, 0 6px 10px var(--shadow);
+  }
+  .subtitle { font-size: clamp(14px, 2.4vw, 19px); color: var(--ink); opacity: 0.8; }
+
+  .panel {
+    background: var(--panel);
+    border-radius: 22px;
+    padding: 18px 20px;
+    box-shadow: 0 10px 30px var(--shadow);
+    width: min(560px, 92%);
+  }
+  .section-label { font-size: 14px; opacity: 0.7; margin-bottom: 10px; }
+
+  .char-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .char-pick {
+    background: #fff;
+    border: 4px solid transparent;
+    border-radius: 18px;
+    padding: 8px 6px 6px;
+    cursor: pointer;
+    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+    width: 104px;
+    box-shadow: 0 5px 14px var(--shadow);
+  }
+  .char-pick:hover { transform: translateY(-4px); }
+  .char-pick.selected {
+    border-color: #ffc46b;
+    box-shadow: 0 8px 22px rgba(255, 180, 90, 0.5);
+    transform: translateY(-4px) scale(1.03);
+  }
+  .char-pick canvas { width: 84px; height: 84px; box-shadow: none; border-radius: 12px; background: #f4f8ff; }
+  .char-name { font-size: 12px; margin-top: 4px; }
+
+  .diff-row { display: flex; gap: 10px; justify-content: center; margin-top: 4px; }
+  .diff-btn {
+    background: #fff;
+    border: 3px solid #eadff7;
+    border-radius: 14px;
+    padding: 9px 16px;
+    cursor: pointer;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--ink);
+    transition: all .12s ease;
+  }
+  .diff-btn.selected { background: #6fcf97; border-color: #3aa66f; color: #fff; font-weight: bold; box-shadow: 0 4px 10px rgba(111,207,151,0.5); }
+
+  .btn-play, .btn-again {
+    margin-top: 4px;
+    background: linear-gradient(180deg, #ffd277, #ffb24d);
+    border: none;
+    border-radius: 999px;
+    padding: 14px 40px;
+    font-size: clamp(18px, 3vw, 24px);
+    font-family: inherit;
+    color: #7a4a00;
+    cursor: pointer;
+    box-shadow: 0 8px 0 #e08e2e, 0 12px 22px var(--shadow);
+    transition: transform .08s ease, box-shadow .08s ease;
+  }
+  .btn-play:active, .btn-again:active { transform: translateY(4px); box-shadow: 0 4px 0 #e08e2e, 0 8px 14px var(--shadow); }
+
+  .hint { font-size: 13px; opacity: 0.75; margin-top: 6px; line-height: 1.5; }
+
+  .winline { font-size: clamp(26px, 5vw, 44px); color: #ff9fb2; text-shadow: 0 3px 0 #fff; }
+  .scoreline { font-size: 20px; opacity: 0.85; }
+
+  /* Pause overlay sits on a dimmed backdrop */
+  #pauseScreen { background: rgba(90, 84, 112, 0.32); border-radius: 22px; }
+  .pause-card { background: var(--panel); border-radius: 22px; padding: 22px 26px; box-shadow: 0 12px 34px var(--shadow); display: flex; flex-direction: column; gap: 12px; align-items: center; }
+  .pause-title { font-size: clamp(26px, 5vw, 40px); color: #7e76b0; }
+  .btn-menu {
+    background: #fff; border: 3px solid #eadff7; border-radius: 999px;
+    padding: 12px 30px; font-family: inherit; font-size: clamp(15px, 2.6vw, 19px);
+    color: var(--ink); cursor: pointer; min-width: 220px; transition: all .12s ease;
+  }
+  .btn-menu:hover { border-color: #ffc46b; transform: translateY(-2px); }
+  .btn-menu.primary { background: linear-gradient(180deg, #ffd277, #ffb24d); border-color: transparent; color: #7a4a00; }
+</style>
+
+<!-- ===== Site chrome: shared top nav (matches other Zak's Brain Games pages) ===== -->
+<style>
+  #top-nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 60;
+    background: rgba(255, 255, 255, 0.93);
+    border-bottom: 4px solid #e08e2e;
+    box-shadow: 0 4px 0 rgba(224, 142, 46, 0.18);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-family: 'Fredoka', system-ui, sans-serif;
+  }
+  #top-nav .nav-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  #top-nav .nav-title {
+    font-family: 'Bubblegum Sans', 'Fredoka', cursive;
+    font-size: 1.35em; color: #ff8fa6; letter-spacing: .5px;
+  }
+  .nav-btn {
+    font-family: 'Fredoka', system-ui, sans-serif;
+    font-size: 1em; font-weight: 700;
+    padding: 8px 18px;
+    background: #6fcf97;
+    color: #fff;
+    border: 3px solid #3aa66f;
+    border-radius: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #3aa66f;
+    text-decoration: none;
+    display: inline-block;
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .nav-btn:hover  { transform: translateY(2px); box-shadow: 0 2px 0 #3aa66f; }
+  .nav-btn:active { transform: translateY(4px); box-shadow: 0 0 0 #3aa66f; }
+  /* Push the play area below the fixed nav so it never overlaps the canvas */
+  #app { padding-top: 72px; }
+  @media (max-width: 520px) {
+    #top-nav .nav-title { font-size: 1.1em; }
+    #app { padding-top: 84px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ========== PERSISTENT TOP NAV (site chrome) ========== -->
+<nav id="top-nav" aria-label="Site navigation">
+  <div class="nav-group">
+    <a href="../index.html" class="nav-btn home" aria-label="Back to Zak's Brain Games home">🏠 All Games</a>
+  </div>
+  <div class="nav-group">
+    <span class="nav-title">🎈 Keepy Uppy</span>
+  </div>
+</nav>
+
+<div id="app">
+  <div class="stage">
+    <div class="overlay">
+      <canvas id="game" width="800" height="660"></canvas>
+
+      <!-- START SCREEN -->
+      <div id="startScreen" class="screen">
+        <div class="title">Keepy&nbsp;Uppy</div>
+        <div class="subtitle">Bop the balloon &mdash; don&rsquo;t let it touch the ground!</div>
+        <div class="panel">
+          <div class="section-label">1 &middot; Pick your character</div>
+          <div id="charRow" class="char-row"></div>
+        </div>
+        <div class="panel">
+          <div class="section-label">2 &middot; Pick a difficulty</div>
+          <div id="diffRow" class="diff-row">
+            <button type="button" class="diff-btn" data-diff="easy">Easy</button>
+            <button type="button" class="diff-btn selected" data-diff="medium">Medium</button>
+            <button type="button" class="diff-btn" data-diff="hard">Hard</button>
+          </div>
+        </div>
+        <button id="playBtn" class="btn-play">Play&nbsp;Game</button>
+        <div class="hint">Move with &larr; &rarr; &nbsp;&bull;&nbsp; Jump with &uarr; or Spacebar &nbsp;&bull;&nbsp; <b>Enter</b> = boost &nbsp;&bull;&nbsp; <b>P</b> = pause<br>Take turns: only YOUR character moves on your turn. Hit 3 times to earn a boost. First to 3 points wins!</div>
+      </div>
+
+      <!-- PAUSE SCREEN -->
+      <div id="pauseScreen" class="screen hidden">
+        <div class="pause-card">
+          <div class="pause-title">Paused</div>
+          <button type="button" id="resumeBtn" class="btn-menu primary">Resume</button>
+          <button type="button" id="restartBtn" class="btn-menu">Restart Game</button>
+          <button type="button" id="quitBtn" class="btn-menu">Quit to Main Menu</button>
+        </div>
+      </div>
+
+      <!-- GAME OVER SCREEN -->
+      <div id="overScreen" class="screen hidden">
+        <div id="winLine" class="winline">You win!</div>
+        <div id="scoreLine" class="scoreline">3 &ndash; 1</div>
+        <button id="againBtn" class="btn-again">Play&nbsp;Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------------------
+  // Config
+  // ---------------------------------------------------------------------------
+  const W = 800, H = 660;
+  const GROUND_Y = 600;            // y of the floor line
+  const WIN_SCORE = 3;
+
+  const GRAV_BALLOON = 0.11;       // gentle float-down
+  const GRAV_CHAR = 0.72;
+  const JUMP_V = -13.2;
+  const MOVE_SPEED = 4.2;
+  const BALLOON_R = 26;
+
+  const CHARACTERS = [
+    { name: "Blue Cat",        type: "cat",      body: "#9db8e8", belly: "#cfe0f7", dark: "#6f8fd0" },
+    { name: "Red Dog",         type: "dog",      body: "#f1a59c", belly: "#fcd6d0", dark: "#d9786d" },
+    { name: "Purple Elephant", type: "elephant", body: "#c9b3e8", belly: "#e6d9f7", dark: "#a585d6" },
+    { name: "Yellow Horse",    type: "horse",    body: "#f2dd92", belly: "#fbf1c4", dark: "#d9bf5f" }
+  ];
+
+  const DIFF = {
+    easy:   { speed: 2.4, react: 28, miss: 0.34, jumpWindow: 76, grav: 0.016, maxFall: 1.4, boostChance: 0.15 },
+    medium: { speed: 3.4, react: 16, miss: 0.16, jumpWindow: 62, grav: 0.028, maxFall: 2.0, boostChance: 0.30 },
+    hard:   { speed: 4.6, react: 8,  miss: 0.05, jumpWindow: 52, grav: 0.046, maxFall: 2.9, boostChance: 0.50 }
+  };
+
+  const THEMES = ["park", "living", "playground", "den", "school"];
+
+  // ---------------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------------
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+
+  let screenState = "start";       // start | playing | over
+  let selectedChar = 0;
+  let difficulty = "medium";
+  let theme = "park";
+
+  let player, computer, balloon;
+  let activeTurn = "player";       // whose turn (only they may move / score a hit)
+  let currentServer = "player";    // who served the current rally
+  let gameStartServer = "player";  // who serves first; flips each new game
+  let scores = { player: 0, computer: 0 };
+  let banner = { text: "", color: "#5a5470", timer: 0 };
+  let servePause = 0;              // frames to wait before the ball is "live"
+  let hitCooldown = 0;
+  let aiTimer = 0;                 // reaction delay counter
+  let winner = null;
+  let confetti = [];
+
+  let paused = false;              // P key pause
+  // boosts are tracked per side (player and computer use the same system)
+  let pHits = 0, pBoosts = 0, pArmed = false;   // player
+  let cHits = 0, cBoosts = 0, cArmed = false;   // computer
+  const MAX_BOOSTS = 3;
+  const HITS_PER_BOOST = 3;
+
+  const keys = {};
+
+  // ---------------------------------------------------------------------------
+  // Sound (Web Audio, generated in-code)
+  // ---------------------------------------------------------------------------
+  let audioCtx = null;
+  function initAudio() {
+    if (!audioCtx) {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch (e) { audioCtx = null; }
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  }
+  function tone(freq, dur, type, gain, slideTo) {
+    if (!audioCtx) return;
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.setValueAtTime(freq, t);
+    if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(gain || 0.2, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start(t); osc.stop(t + dur + 0.02);
+  }
+  function sfxBoing() { tone(520, 0.18, "sine", 0.25, 240); }
+  function sfxScore() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, 0.16, "triangle", 0.22), i * 90)); }
+  function sfxWin()   { [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => tone(f, 0.22, "triangle", 0.24), i * 120)); }
+  function sfxBoostEarn() { [784, 1047].forEach((f, i) => setTimeout(() => tone(f, 0.14, "triangle", 0.2), i * 80)); }
+  function sfxBoostHit() { tone(180, 0.28, "sawtooth", 0.22, 900); }
+
+  // ---------------------------------------------------------------------------
+  // Drawing helpers
+  // ---------------------------------------------------------------------------
+  function roundRect(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  // Draw a cute placeholder character. (cx, feetY) = standing point.
+  // facing: 1 = right, -1 = left. squash: jump stretch factor.
+  function drawCharacter(c, cfg, cx, feetY, facing, squash) {
+    squash = squash || 1;
+    c.save();
+    c.translate(cx, feetY);
+
+    // shadow on ground
+    c.save();
+    c.globalAlpha = 0.18;
+    c.fillStyle = "#3a3550";
+    c.beginPath();
+    c.ellipse(0, 2, 30, 8, 0, 0, Math.PI * 2);
+    c.fill();
+    c.restore();
+
+    c.scale(facing, 1);
+    const sx = 1 / squash, sy = squash; // jump stretch (taller, thinner)
+
+    // legs
+    c.fillStyle = cfg.dark;
+    roundRect(c, -16, -16, 11, 18, 5); c.fill();
+    roundRect(c, 5, -16, 11, 18, 5); c.fill();
+
+    // body
+    c.fillStyle = cfg.body;
+    c.beginPath();
+    c.ellipse(0, -42 * sy, 26 * sx, 30 * sy, 0, 0, Math.PI * 2);
+    c.fill();
+    // belly
+    c.fillStyle = cfg.belly;
+    c.beginPath();
+    c.ellipse(0, -34 * sy, 14 * sx, 18 * sy, 0, 0, Math.PI * 2);
+    c.fill();
+
+    // tail (simple)
+    c.strokeStyle = cfg.dark;
+    c.lineWidth = 6; c.lineCap = "round";
+    c.beginPath();
+    c.moveTo(-22, -48 * sy);
+    c.quadraticCurveTo(-40, -52 * sy, -36, -34 * sy);
+    c.stroke();
+
+    // head
+    const hy = -74 * sy;
+    c.fillStyle = cfg.body;
+    c.beginPath();
+    c.ellipse(2, hy, 22 * sx, 21 * sy, 0, 0, Math.PI * 2);
+    c.fill();
+
+    // ears / type features
+    c.fillStyle = cfg.body;
+    if (cfg.type === "cat") {
+      c.beginPath(); c.moveTo(-12, hy - 16); c.lineTo(-2, hy - 4); c.lineTo(-18, hy - 2); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(16, hy - 16); c.lineTo(6, hy - 4); c.lineTo(22, hy - 2); c.closePath(); c.fill();
+    } else if (cfg.type === "dog") {
+      c.fillStyle = cfg.dark;
+      roundRect(c, -22, hy - 10, 12, 26, 6); c.fill();
+      roundRect(c, 14, hy - 10, 12, 26, 6); c.fill();
+      c.fillStyle = cfg.body;
+    } else if (cfg.type === "elephant") {
+      c.fillStyle = cfg.dark;
+      c.beginPath(); c.ellipse(-16, hy + 2, 14, 16, 0, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.ellipse(20, hy + 2, 14, 16, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = cfg.body;
+      // trunk
+      c.strokeStyle = cfg.body; c.lineWidth = 10;
+      c.beginPath(); c.moveTo(14, hy + 6); c.quadraticCurveTo(30, hy + 18, 24, hy + 32); c.stroke();
+    } else if (cfg.type === "horse") {
+      c.fillStyle = cfg.dark;
+      roundRect(c, -14, hy - 18, 9, 16, 4); c.fill();
+      roundRect(c, 10, hy - 18, 9, 16, 4); c.fill();
+      c.fillStyle = cfg.body;
+      // snout
+      c.beginPath(); c.ellipse(18, hy + 6, 11, 9, 0, 0, Math.PI * 2); c.fill();
+      // mane
+      c.fillStyle = cfg.dark;
+      c.beginPath(); c.moveTo(-12, hy - 14); c.quadraticCurveTo(-26, hy, -16, hy + 18); c.lineTo(-8, hy + 12); c.closePath(); c.fill();
+      c.fillStyle = cfg.body;
+    }
+
+    // eyes (facing forward / right)
+    c.fillStyle = "#3a3550";
+    c.beginPath(); c.arc(6, hy - 2, 3, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(16, hy - 2, 3, 0, Math.PI * 2); c.fill();
+    // cheeks
+    c.fillStyle = "rgba(255,150,170,0.45)";
+    c.beginPath(); c.arc(4, hy + 7, 4, 0, Math.PI * 2); c.fill();
+    c.beginPath(); c.arc(18, hy + 7, 4, 0, Math.PI * 2); c.fill();
+    // nose
+    c.fillStyle = cfg.dark;
+    c.beginPath(); c.arc(12, hy + 3, 2.4, 0, Math.PI * 2); c.fill();
+
+    c.restore();
+  }
+
+  function drawBalloon(c, b) {
+    // deflation: the balloon gets visibly a little smaller as it loses air
+    const R = BALLOON_R * Math.max(0.72, 1 - (b.hitCount || 0) * 0.025);
+    // boosted: fiery glow + motion streak
+    if (b.boosted) {
+      c.save();
+      c.globalAlpha = 0.5;
+      c.fillStyle = "#ff7a3d";
+      for (let i = 1; i <= 3; i++) {
+        c.beginPath();
+        c.ellipse(b.x - b.vx * i * 1.4, b.y - b.vy * i * 1.4, R - i * 4, R + 4 - i * 4, 0, 0, Math.PI * 2);
+        c.fill();
+      }
+      c.restore();
+      c.save();
+      c.shadowColor = "rgba(255,120,60,0.9)";
+      c.shadowBlur = 22;
+    }
+    // string
+    c.strokeStyle = "rgba(120,110,150,0.5)";
+    c.lineWidth = 1.5;
+    c.beginPath();
+    c.moveTo(b.x, b.y + R);
+    c.quadraticCurveTo(b.x + 6, b.y + R + 14, b.x - 2, b.y + R + 26);
+    c.stroke();
+    // body
+    const grad = c.createRadialGradient(b.x - 8, b.y - 10, 4, b.x, b.y, R + 6);
+    if (b.boosted) {
+      grad.addColorStop(0, "#fff0a8");
+      grad.addColorStop(0.5, "#ff9a3d");
+      grad.addColorStop(1, "#e2452b");
+    } else {
+      grad.addColorStop(0, "#fff0a8");
+      grad.addColorStop(0.5, "#ff9ec4");
+      grad.addColorStop(1, "#c98bd6");
+    }
+    c.fillStyle = grad;
+    c.beginPath();
+    c.ellipse(b.x, b.y, R, R + 4, 0, 0, Math.PI * 2);
+    c.fill();
+    if (b.boosted) c.restore(); // end glow
+    // knot
+    c.fillStyle = "#c98bd6";
+    c.beginPath(); c.moveTo(b.x - 4, b.y + R + 2); c.lineTo(b.x + 4, b.y + R + 2); c.lineTo(b.x, b.y + R + 8); c.closePath(); c.fill();
+    // shine
+    c.fillStyle = "rgba(255,255,255,0.55)";
+    c.beginPath(); c.ellipse(b.x - 9, b.y - 9, 5, 8, -0.5, 0, Math.PI * 2); c.fill();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Backgrounds (pastel, drawn in code)
+  // ---------------------------------------------------------------------------
+  function cloud(c, x, y, s) {
+    c.fillStyle = "rgba(255,255,255,0.9)";
+    c.beginPath();
+    c.arc(x, y, 16 * s, 0, Math.PI * 2);
+    c.arc(x + 18 * s, y + 4 * s, 20 * s, 0, Math.PI * 2);
+    c.arc(x + 40 * s, y, 15 * s, 0, Math.PI * 2);
+    c.arc(x + 20 * s, y - 10 * s, 16 * s, 0, Math.PI * 2);
+    c.fill();
+  }
+  function drawBackground(c, t) {
+    if (t === "park") {
+      let g = c.createLinearGradient(0, 0, 0, GROUND_Y);
+      g.addColorStop(0, "#bfe7ff"); g.addColorStop(1, "#e7f7ff");
+      c.fillStyle = g; c.fillRect(0, 0, W, GROUND_Y);
+      c.fillStyle = "#ffe9a8"; c.beginPath(); c.arc(110, 90, 42, 0, Math.PI * 2); c.fill();
+      cloud(c, 300, 80, 1.1); cloud(c, 560, 120, 0.9);
+      // hills
+      c.fillStyle = "#cdeeb6"; c.beginPath(); c.ellipse(220, GROUND_Y, 260, 120, 0, 0, Math.PI * 2); c.fill();
+      c.fillStyle = "#bfe7a8"; c.beginPath(); c.ellipse(620, GROUND_Y, 280, 100, 0, 0, Math.PI * 2); c.fill();
+      // trees
+      [[120, "#a7d98c"], [690, "#9ed085"]].forEach(([x, col]) => {
+        c.fillStyle = "#cdaa7a"; c.fillRect(x - 6, GROUND_Y - 70, 12, 70);
+        c.fillStyle = col; c.beginPath(); c.arc(x, GROUND_Y - 78, 36, 0, Math.PI * 2); c.fill();
+      });
+      c.fillStyle = "#a8e08a"; c.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+    } else if (t === "living") {
+      c.fillStyle = "#f3e3d3"; c.fillRect(0, 0, W, GROUND_Y);
+      c.fillStyle = "#e7d2bd"; c.fillRect(0, GROUND_Y, W, H - GROUND_Y); // floor
+      c.fillStyle = "#c79c6e"; c.fillRect(0, GROUND_Y - 6, W, 6);
+      // window
+      c.fillStyle = "#bfe7ff"; roundRect(c, 80, 70, 150, 120, 10); c.fill();
+      c.strokeStyle = "#fff"; c.lineWidth = 8; c.strokeRect(80, 70, 150, 120);
+      c.beginPath(); c.moveTo(155, 70); c.lineTo(155, 190); c.moveTo(80, 130); c.lineTo(230, 130); c.stroke();
+      // sofa
+      c.fillStyle = "#9fb8d8"; roundRect(c, 470, GROUND_Y - 80, 250, 80, 18); c.fill();
+      c.fillStyle = "#b6cce8"; roundRect(c, 470, GROUND_Y - 50, 250, 50, 14); c.fill();
+      // rug
+      c.fillStyle = "#e7b7c4"; c.beginPath(); c.ellipse(W / 2, H - 26, 200, 26, 0, 0, Math.PI * 2); c.fill();
+    } else if (t === "playground") {
+      let g = c.createLinearGradient(0, 0, 0, GROUND_Y);
+      g.addColorStop(0, "#cfe6ff"); g.addColorStop(1, "#eaf6ff");
+      c.fillStyle = g; c.fillRect(0, 0, W, GROUND_Y);
+      cloud(c, 180, 90, 1); cloud(c, 600, 70, 0.85);
+      c.fillStyle = "#f6dca8"; c.fillRect(0, GROUND_Y, W, H - GROUND_Y); // sand
+      // slide
+      c.strokeStyle = "#7fc7e8"; c.lineWidth = 14; c.lineCap = "round";
+      c.beginPath(); c.moveTo(120, GROUND_Y - 120); c.lineTo(230, GROUND_Y); c.stroke();
+      c.fillStyle = "#cdaa7a"; c.fillRect(110, GROUND_Y - 120, 12, 120);
+      // swing frame
+      c.strokeStyle = "#f3a3b4"; c.lineWidth = 10;
+      c.beginPath(); c.moveTo(560, GROUND_Y); c.lineTo(620, GROUND_Y - 130); c.lineTo(700, GROUND_Y); c.stroke();
+      c.strokeStyle = "#bbb"; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(640, GROUND_Y - 120); c.lineTo(632, GROUND_Y - 40); c.moveTo(672, GROUND_Y - 120); c.lineTo(664, GROUND_Y - 40); c.stroke();
+      c.fillStyle = "#f3a3b4"; roundRect(c, 628, GROUND_Y - 40, 44, 8, 4); c.fill();
+    } else if (t === "den") {
+      c.fillStyle = "#e9d9c6"; c.fillRect(0, 0, W, GROUND_Y);
+      c.fillStyle = "#b98c63"; c.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+      // bookshelf
+      c.fillStyle = "#a9784f"; roundRect(c, 60, GROUND_Y - 150, 150, 150, 6); c.fill();
+      const cols = ["#d98c8c", "#8cb6d9", "#d9c08c", "#9ed0a0"];
+      for (let s = 0; s < 3; s++) for (let i = 0; i < 7; i++) {
+        c.fillStyle = cols[(s + i) % cols.length];
+        c.fillRect(70 + i * 19, GROUND_Y - 142 + s * 48, 15, 40);
+      }
+      // fireplace
+      c.fillStyle = "#c9a98c"; roundRect(c, 560, GROUND_Y - 130, 180, 130, 10); c.fill();
+      c.fillStyle = "#3a2e2e"; roundRect(c, 590, GROUND_Y - 90, 120, 90, 8); c.fill();
+      c.fillStyle = "#ff9f5b"; c.beginPath(); c.moveTo(650, GROUND_Y); c.quadraticCurveTo(620, GROUND_Y - 50, 650, GROUND_Y - 64); c.quadraticCurveTo(680, GROUND_Y - 50, 650, GROUND_Y); c.fill();
+      c.fillStyle = "#ffd07b"; c.beginPath(); c.moveTo(650, GROUND_Y); c.quadraticCurveTo(636, GROUND_Y - 30, 650, GROUND_Y - 40); c.quadraticCurveTo(664, GROUND_Y - 30, 650, GROUND_Y); c.fill();
+      // rug
+      c.fillStyle = "#c98ca0"; c.beginPath(); c.ellipse(W / 2, H - 24, 210, 24, 0, 0, Math.PI * 2); c.fill();
+    } else { // school
+      c.fillStyle = "#dbeede"; c.fillRect(0, 0, W, GROUND_Y);
+      c.fillStyle = "#cdb89a"; c.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+      // chalkboard
+      c.fillStyle = "#3f6b52"; roundRect(c, 70, 70, 320, 150, 10); c.fill();
+      c.strokeStyle = "#cdaa7a"; c.lineWidth = 8; c.strokeRect(70, 70, 320, 150);
+      c.strokeStyle = "rgba(255,255,255,0.8)"; c.lineWidth = 3; c.font = "26px 'Comic Sans MS', sans-serif"; c.fillStyle = "rgba(255,255,255,0.85)";
+      c.fillText("A B C", 110, 130); c.fillText("1 2 3", 110, 180);
+      // clock
+      c.fillStyle = "#fff"; c.beginPath(); c.arc(620, 110, 34, 0, Math.PI * 2); c.fill();
+      c.strokeStyle = "#5a5470"; c.lineWidth = 3; c.beginPath(); c.arc(620, 110, 34, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.moveTo(620, 110); c.lineTo(620, 90); c.moveTo(620, 110); c.lineTo(636, 116); c.stroke();
+      // desk
+      c.fillStyle = "#c79c6e"; roundRect(c, 520, GROUND_Y - 60, 200, 18, 5); c.fill();
+      c.fillRect(540, GROUND_Y - 42, 12, 42); c.fillRect(688, GROUND_Y - 42, 12, 42);
+    }
+    // ground line
+    ctx.fillStyle = "rgba(90,84,112,0.12)";
+    ctx.fillRect(0, GROUND_Y, W, 3);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Game setup
+  // ---------------------------------------------------------------------------
+  function makeChar(cfgIndex, x) {
+    return { cfg: CHARACTERS[cfgIndex], x: x, y: GROUND_Y, vx: 0, vy: 0, onGround: true, facing: 1, squash: 1 };
+  }
+
+  function startGame() {
+    initAudio();
+    theme = THEMES[(Math.random() * THEMES.length) | 0];
+    // computer uses a different character than the player
+    let compIndex = (selectedChar + 1 + ((Math.random() * 3) | 0)) % CHARACTERS.length;
+    if (compIndex === selectedChar) compIndex = (compIndex + 1) % CHARACTERS.length;
+
+    player = makeChar(selectedChar, 240);
+    player.facing = 1;
+    computer = makeChar(compIndex, 560);
+    computer.facing = -1;
+
+    scores = { player: 0, computer: 0 };
+    winner = null;
+    confetti = [];
+    paused = false;
+    pHits = 0; pBoosts = 0; pArmed = false;
+    cHits = 0; cBoosts = 0; cArmed = false;
+    document.getElementById("startScreen").classList.add("hidden");
+    document.getElementById("overScreen").classList.add("hidden");
+    document.getElementById("pauseScreen").classList.add("hidden");
+    screenState = "playing";
+    serveBalloon(gameStartServer, true);
+    // alternate who starts the next game
+    gameStartServer = gameStartServer === "player" ? "computer" : "player";
+  }
+
+  // Restart with the same character & difficulty (from the pause menu)
+  function restartGame() {
+    paused = false;
+    document.getElementById("pauseScreen").classList.add("hidden");
+    scores = { player: 0, computer: 0 };
+    pHits = 0; pBoosts = 0; pArmed = false;
+    cHits = 0; cBoosts = 0; cArmed = false;
+    confetti = [];
+    player.x = 240; player.vx = 0; player.vy = 0; player.onGround = true; player.facing = 1;
+    computer.x = 560; computer.vx = 0; computer.vy = 0; computer.onGround = true; computer.facing = -1;
+    screenState = "playing";
+    serveBalloon("player", true);
+  }
+
+  // Quit to the main menu (start screen)
+  function quitToMenu() {
+    paused = false;
+    document.getElementById("pauseScreen").classList.add("hidden");
+    document.getElementById("startScreen").classList.remove("hidden");
+    screenState = "start";
+    theme = THEMES[(Math.random() * THEMES.length) | 0];
+  }
+
+  function togglePause() {
+    if (screenState !== "playing") return;
+    paused = !paused;
+    document.getElementById("pauseScreen").classList.toggle("hidden", !paused);
+  }
+
+  function serveBalloon(toPlayer, first) {
+    activeTurn = toPlayer;
+    currentServer = toPlayer;
+    pArmed = false; cArmed = false; // stored boosts stay stored, but disarm between rallies
+    const side = toPlayer === "player" ? player.x : computer.x;
+    // hitCount drives deflation: the balloon flies a bit lower with each hit this rally
+    balloon = { x: side, y: 150, vx: 0, vy: 0, boosted: false, hitCount: 0 };
+    hitCooldown = 0;
+    aiTimer = DIFF[difficulty].react;
+    servePause = first ? 70 : 55;
+    const txt = first
+      ? (toPlayer === "player" ? "Your turn! Bop it up!" : "Computer starts!")
+      : (toPlayer === "player" ? "Your turn!" : "Computer's turn");
+    setBanner(txt, toPlayer === "player" ? "#3aa66f" : "#c97b3a");
+  }
+
+  function setBanner(text, color) { banner = { text: text, color: color || "#5a5470", timer: 90 }; }
+
+  // ---------------------------------------------------------------------------
+  // Update
+  // ---------------------------------------------------------------------------
+  function updateCharPhysics(ch, canMove, left, right, jump) {
+    if (canMove) {
+      if (left)  { ch.vx = -MOVE_SPEED; ch.facing = -1; }
+      else if (right) { ch.vx = MOVE_SPEED; ch.facing = 1; }
+      else ch.vx *= 0.7;
+      if (jump && ch.onGround) { ch.vy = JUMP_V; ch.onGround = false; }
+    } else {
+      ch.vx *= 0.7;
+    }
+    ch.x += ch.vx;
+    ch.x = Math.max(30, Math.min(W - 30, ch.x));
+    ch.vy += GRAV_CHAR;
+    ch.y += ch.vy;
+    if (ch.y >= GROUND_Y) { ch.y = GROUND_Y; ch.vy = 0; ch.onGround = true; }
+    // squash/stretch
+    const target = ch.onGround ? 1 : 1.12;
+    ch.squash += (target - ch.squash) * 0.3;
+  }
+
+  function headHitsBalloon(ch) {
+    const headX = ch.x + ch.facing * 2;
+    const headY = ch.y - 74 * ch.squash;
+    const dx = balloon.x - headX;
+    const dy = balloon.y - headY;
+    const dist = Math.hypot(dx, dy);
+    return dist < BALLOON_R + 22;
+  }
+
+  function doHit(ch, fromPlayer) {
+    // deflation: each hit this rally launches the balloon a little lower
+    const power = Math.max(0.4, 1 - balloon.hitCount * 0.05);
+    const armed = fromPlayer ? pArmed : cArmed;
+    const haveBoost = fromPlayer ? pBoosts > 0 : cBoosts > 0;
+    const usingBoost = armed && haveBoost;
+
+    if (usingBoost) {
+      // power hit: a faster shot — flies higher and comes down quicker, but still floats (defendable)
+      balloon.vy = -13.6 * power;
+      balloon.vx = ch.facing * 4.5 + ch.vx * 0.5;
+      balloon.vx = Math.max(-8, Math.min(8, balloon.vx));
+      balloon.boosted = true;
+      if (fromPlayer) { pBoosts--; pArmed = false; } else { cBoosts--; cArmed = false; }
+      hitCooldown = 22;
+      sfxBoostHit();
+    } else {
+      balloon.vy = -9.4 * power;
+      balloon.vx = ch.facing * 2.0 + ch.vx * 0.5 + (balloon.x - ch.x) * 0.04;
+      balloon.vx = Math.max(-6, Math.min(6, balloon.vx));
+      balloon.boosted = false; // any normal hit clears the rock-fall state
+      hitCooldown = 22;
+      sfxBoing();
+    }
+    balloon.hitCount++; // balloon loses a little air each hit
+
+    // earn a boost every few successful hits (cap at MAX_BOOSTS) — same for both sides
+    let earnedBoost = false;
+    if (fromPlayer) {
+      pHits++;
+      if (pHits % HITS_PER_BOOST === 0 && pBoosts < MAX_BOOSTS) { pBoosts++; earnedBoost = true; sfxBoostEarn(); }
+    } else {
+      cHits++;
+      if (cHits % HITS_PER_BOOST === 0 && cBoosts < MAX_BOOSTS) { cBoosts++; }
+    }
+
+    // strict turns: switch control to the other player
+    activeTurn = fromPlayer ? "computer" : "player";
+    aiTimer = DIFF[difficulty].react;
+    if (earnedBoost) {
+      setBanner("Boost earned! Press Enter to use it", "#7e76b0");
+    } else {
+      setBanner(fromPlayer ? "Computer's turn" : "Your turn!", fromPlayer ? "#c97b3a" : "#3aa66f");
+    }
+  }
+
+  function updateAI() {
+    const d = DIFF[difficulty];
+    const onTurn = activeTurn === "computer";
+    let left = false, right = false, jump = false;
+
+    if (onTurn && servePause <= 0) {
+      if (aiTimer > 0) { aiTimer--; }
+      else {
+        // chase the balloon's x (with a little wobble / imperfection)
+        const targetX = balloon.x + (Math.random() - 0.5) * (d.miss * 60);
+        if (computer.x < targetX - 8) right = true;
+        else if (computer.x > targetX + 8) left = true;
+
+        // jump when balloon is overhead and within reach, unless it "misses"
+        const overhead = Math.abs(balloon.x - computer.x) < d.jumpWindow;
+        const reachable = balloon.y > 150 && balloon.y < GROUND_Y - 30;
+        const willTry = Math.random() > d.miss;
+        if (overhead && reachable && computer.onGround && willTry) {
+          jump = true;
+          // decide whether to spend a boost on this hit
+          if (!cArmed && cBoosts > 0 && Math.random() < d.boostChance) cArmed = true;
+        }
+      }
+    }
+    // limit AI speed by difficulty
+    const saved = MOVE_SPEED;
+    if (left)  { computer.facing = -1; computer.vx = -d.speed; }
+    else if (right) { computer.facing = 1; computer.vx = d.speed; }
+    else computer.vx *= 0.7;
+    if (jump && computer.onGround) { computer.vy = JUMP_V; computer.onGround = false; }
+    computer.x += computer.vx;
+    computer.x = Math.max(30, Math.min(W - 30, computer.x));
+    computer.vy += GRAV_CHAR;
+    computer.y += computer.vy;
+    if (computer.y >= GROUND_Y) { computer.y = GROUND_Y; computer.vy = 0; computer.onGround = true; }
+    const target = computer.onGround ? 1 : 1.12;
+    computer.squash += (target - computer.squash) * 0.3;
+  }
+
+  function awardPoint(toPlayer) {
+    if (toPlayer) scores.player++; else scores.computer++;
+    if (scores.player >= WIN_SCORE || scores.computer >= WIN_SCORE) {
+      endGame(scores.player >= WIN_SCORE);
+      return;
+    }
+    sfxScore();
+    setBanner(toPlayer ? "You score! 🎈" : "Computer scores!", toPlayer ? "#3aa66f" : "#c97b3a");
+    // alternate who serves the next rally
+    const nextServer = currentServer === "player" ? "computer" : "player";
+    setTimeout(() => {
+      if (screenState === "playing") serveBalloon(nextServer, false);
+    }, 50);
+    // small pause handled by servePause inside serveBalloon
+  }
+
+  let pointLock = false;
+  function update() {
+    if (screenState !== "playing" || paused) return;
+
+    if (servePause > 0) servePause--;
+    if (hitCooldown > 0) hitCooldown--;
+
+    // player physics (only moves on their turn)
+    const myTurn = activeTurn === "player" && servePause <= 0;
+    updateCharPhysics(
+      player, myTurn,
+      keys["ArrowLeft"], keys["ArrowRight"],
+      keys["ArrowUp"] || keys["Space"]
+    );
+
+    // computer
+    updateAI();
+
+    // balloon physics
+    if (servePause <= 0) {
+      if (balloon.boosted) {
+        // boosted: same floaty physics, just faster down (higher terminal speed) — still catchable
+        balloon.vy += DIFF[difficulty].grav * 1.7;
+        balloon.vy *= 0.99;
+        const cap = DIFF[difficulty].maxFall * 2.0;
+        if (balloon.vy > cap) balloon.vy = cap;
+        balloon.vx *= 0.99;
+        balloon.x += balloon.vx;
+        balloon.y += balloon.vy;
+        balloon.vx += Math.sin(Date.now() / 600) * 0.006;
+      } else {
+        balloon.vy += DIFF[difficulty].grav;
+        balloon.vy *= 0.99;                                  // air resistance
+        if (balloon.vy > DIFF[difficulty].maxFall) balloon.vy = DIFF[difficulty].maxFall; // capped slow drift down
+        balloon.vx *= 0.99;
+        balloon.x += balloon.vx;
+        balloon.y += balloon.vy;
+        // gentle sway, like a real balloon
+        balloon.vx += Math.sin(Date.now() / 600) * 0.006;
+      }
+      // walls
+      if (balloon.x < BALLOON_R) { balloon.x = BALLOON_R; balloon.vx = Math.abs(balloon.vx) * 0.7; }
+      if (balloon.x > W - BALLOON_R) { balloon.x = W - BALLOON_R; balloon.vx = -Math.abs(balloon.vx) * 0.7; }
+      if (balloon.y < BALLOON_R + 6) { balloon.y = BALLOON_R + 6; balloon.vy = Math.abs(balloon.vy) * 0.5; }
+    }
+
+    // hit detection — only the active player can bop
+    if (hitCooldown <= 0 && servePause <= 0) {
+      const activeCh = activeTurn === "player" ? player : computer;
+      if (!activeCh.onGround && balloon.vy > -2 && headHitsBalloon(activeCh)) {
+        doHit(activeCh, activeTurn === "player");
+      }
+    }
+
+    // ground = the active player failed -> opponent scores
+    if (!pointLock && servePause <= 0 && balloon.y + BALLOON_R >= GROUND_Y) {
+      pointLock = true;
+      const playerFailed = activeTurn === "player";
+      awardPoint(!playerFailed); // opponent of active player scores
+      setTimeout(() => { pointLock = false; }, 120);
+    }
+
+    if (banner.timer > 0) banner.timer--;
+    updateConfetti();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
+  function drawScoreboard() {
+    // player tag
+    drawTag(16, 14, player.cfg, scores.player, activeTurn === "player");
+    drawTag(W - 16 - 150, 14, computer.cfg, scores.computer, activeTurn === "computer", true);
+    // difficulty
+    ctx.fillStyle = "rgba(90,84,112,0.55)";
+    ctx.font = "13px 'Comic Sans MS', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Difficulty: " + difficulty + "   •   First to " + WIN_SCORE, W / 2, 24);
+    ctx.textAlign = "left";
+    drawBoostHud();
+  }
+
+  function drawBolt(x, y, s, active) {
+    ctx.save();
+    ctx.translate(x, y); ctx.scale(s, s);
+    ctx.beginPath();
+    ctx.moveTo(1, -9); ctx.lineTo(-4, 1); ctx.lineTo(-1, 1);
+    ctx.lineTo(-2, 9); ctx.lineTo(5, -2); ctx.lineTo(1, -2); ctx.lineTo(3, -9); ctx.closePath();
+    if (active) { ctx.fillStyle = "#ffcb3d"; ctx.shadowColor = "rgba(255,203,61,0.8)"; ctx.shadowBlur = 8; }
+    else { ctx.fillStyle = "rgba(90,84,112,0.2)"; }
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBoostHud() {
+    drawBoostRow(16, 84, pBoosts, pArmed, false);   // player (left)
+    drawBoostRow(W - 16, 84, cBoosts, cArmed, true); // computer (right)
+  }
+  function drawBoostRow(anchorX, by, count, armed, right) {
+    ctx.save();
+    ctx.font = "bold 11px 'Comic Sans MS', sans-serif";
+    ctx.fillStyle = "rgba(90,84,112,0.7)";
+    ctx.textAlign = right ? "right" : "left";
+    ctx.fillText("BOOST", anchorX, by - 14);
+    for (let i = 0; i < MAX_BOOSTS; i++) {
+      const bx = right ? (anchorX - 14 - i * 20) : (anchorX + 14 + i * 20);
+      drawBolt(bx, by, 1, i < count);
+    }
+    if (armed) {
+      const pulse = 0.55 + 0.45 * Math.sin(Date.now() / 110);
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = "#7e76b0";
+      ctx.font = "bold 13px 'Comic Sans MS', sans-serif";
+      ctx.textAlign = right ? "right" : "left";
+      const tx = right ? (anchorX - 14 - MAX_BOOSTS * 20 - 4) : (anchorX + 14 + MAX_BOOSTS * 20 + 2);
+      ctx.fillText("READY!", tx, by + 4);
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+  function drawTag(x, y, cfg, score, active, right) {
+    ctx.save();
+    ctx.fillStyle = active ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.7)";
+    roundRect(ctx, x, y, 150, 44, 14); ctx.fill();
+    if (active) { ctx.strokeStyle = "#ffc46b"; ctx.lineWidth = 3; roundRect(ctx, x, y, 150, 44, 14); ctx.stroke(); }
+    // mini face
+    ctx.fillStyle = cfg.body;
+    ctx.beginPath(); ctx.arc(x + 24, y + 22, 15, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#3a3550";
+    ctx.beginPath(); ctx.arc(x + 20, y + 20, 2.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + 28, y + 20, 2.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "#5a5470";
+    ctx.font = "bold 13px 'Comic Sans MS', sans-serif";
+    ctx.fillText(cfg.name, x + 46, y + 19);
+    // score dots
+    for (let i = 0; i < WIN_SCORE; i++) {
+      ctx.beginPath(); ctx.arc(x + 52 + i * 16, y + 31, 5.5, 0, Math.PI * 2);
+      ctx.fillStyle = i < score ? "#ff9fb2" : "rgba(90,84,112,0.18)"; ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+    drawBackground(ctx, theme);
+
+    if (screenState === "playing" || screenState === "over") {
+      // draw characters (player left-ish, computer right-ish)
+      drawCharacter(ctx, computer.cfg, computer.x, computer.y, computer.facing, computer.squash);
+      drawCharacter(ctx, player.cfg, player.x, player.y, player.facing, player.squash);
+      drawBalloon(ctx, balloon);
+
+      // active-turn indicator
+      const ac = activeTurn === "player" ? player : computer;
+      ctx.fillStyle = activeTurn === "player" ? "#3aa66f" : "#c97b3a";
+      const ay = ac.y - 110 * ac.squash + Math.sin(Date.now() / 200) * 3;
+      ctx.beginPath(); ctx.moveTo(ac.x - 9, ay); ctx.lineTo(ac.x + 9, ay); ctx.lineTo(ac.x, ay + 12); ctx.closePath(); ctx.fill();
+
+      drawScoreboard();
+
+      // banner
+      if (banner.timer > 0 && screenState === "playing") {
+        ctx.globalAlpha = Math.min(1, banner.timer / 30);
+        ctx.fillStyle = "rgba(255,255,255,0.92)";
+        ctx.font = "bold 26px 'Comic Sans MS', sans-serif";
+        ctx.textAlign = "center";
+        const w = ctx.measureText(banner.text).width + 36;
+        roundRect(ctx, W / 2 - w / 2, 60, w, 44, 16); ctx.fill();
+        ctx.fillStyle = banner.color;
+        ctx.fillText(banner.text, W / 2, 90);
+        ctx.textAlign = "left";
+        ctx.globalAlpha = 1;
+      }
+
+      if (screenState === "over") drawConfetti();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Confetti for win screen
+  // ---------------------------------------------------------------------------
+  function spawnConfetti() {
+    const cols = ["#ff9fb2", "#ffd277", "#9ed0a0", "#9db8e8", "#c9b3e8"];
+    confetti = [];
+    for (let i = 0; i < 90; i++) {
+      confetti.push({ x: Math.random() * W, y: -Math.random() * H, vy: 1.5 + Math.random() * 3,
+        vx: (Math.random() - 0.5) * 2, s: 4 + Math.random() * 6, c: cols[(Math.random() * cols.length) | 0],
+        rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.3 });
+    }
+  }
+  function updateConfetti() {
+    if (screenState !== "over") return;
+    confetti.forEach(p => { p.y += p.vy; p.x += p.vx; p.rot += p.vr; if (p.y > H) { p.y = -10; p.x = Math.random() * W; } });
+  }
+  function drawConfetti() {
+    confetti.forEach(p => {
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * 1.6); ctx.restore();
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // End game
+  // ---------------------------------------------------------------------------
+  function endGame(playerWon) {
+    screenState = "over";
+    winner = playerWon ? player.cfg.name : computer.cfg.name;
+    spawnConfetti();
+    sfxWin();
+    document.getElementById("winLine").textContent = playerWon ? (player.cfg.name + " wins! 🎉") : (computer.cfg.name + " wins!");
+    document.getElementById("scoreLine").textContent = scores.player + " – " + scores.computer;
+    document.getElementById("overScreen").classList.remove("hidden");
+  }
+
+  // ---------------------------------------------------------------------------
+  // Main loop
+  // ---------------------------------------------------------------------------
+  function loop() { update(); render(); requestAnimationFrame(loop); }
+
+  // ---------------------------------------------------------------------------
+  // Input
+  // ---------------------------------------------------------------------------
+  function toggleBoostArm() {
+    if (screenState !== "playing" || paused) return;
+    if (pArmed) { pArmed = false; return; } // tap again to cancel
+    if (pBoosts > 0) pArmed = true;
+  }
+
+  window.addEventListener("keydown", function (e) {
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Space", "Enter"].includes(e.code)) e.preventDefault();
+    if (e.code === "KeyP" && !e.repeat) togglePause();
+    if (e.code === "Enter" && !e.repeat) toggleBoostArm();
+    keys[e.code] = true;
+  });
+  window.addEventListener("keyup", function (e) { keys[e.code] = false; });
+
+  // ---------------------------------------------------------------------------
+  // Start-screen UI
+  // ---------------------------------------------------------------------------
+  function buildCharPicker() {
+    const row = document.getElementById("charRow");
+    row.innerHTML = "";
+    CHARACTERS.forEach((cfg, i) => {
+      const card = document.createElement("div");
+      card.className = "char-pick" + (i === selectedChar ? " selected" : "");
+      const cv = document.createElement("canvas");
+      cv.width = 84; cv.height = 84;
+      const cc = cv.getContext("2d");
+      // draw face/character preview centered
+      drawCharacter(cc, cfg, 42, 80, 1, 1);
+      const nm = document.createElement("div");
+      nm.className = "char-name";
+      nm.textContent = cfg.name;
+      card.appendChild(cv); card.appendChild(nm);
+      card.addEventListener("click", function () {
+        selectedChar = i;
+        document.querySelectorAll(".char-pick").forEach((el, j) => el.classList.toggle("selected", j === i));
+      });
+      row.appendChild(card);
+    });
+  }
+
+  document.querySelectorAll(".diff-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      difficulty = btn.dataset.diff;
+      document.querySelectorAll(".diff-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+    });
+  });
+
+  document.getElementById("playBtn").addEventListener("click", startGame);
+  document.getElementById("againBtn").addEventListener("click", function () {
+    document.getElementById("overScreen").classList.add("hidden");
+    document.getElementById("startScreen").classList.remove("hidden");
+    screenState = "start";
+  });
+
+  // Pause-menu buttons
+  document.getElementById("resumeBtn").addEventListener("click", togglePause);
+  document.getElementById("restartBtn").addEventListener("click", restartGame);
+  document.getElementById("quitBtn").addEventListener("click", quitToMenu);
+
+  // ---------------------------------------------------------------------------
+  // Boot
+  // ---------------------------------------------------------------------------
+  buildCharPicker();
+  // idle start-screen backdrop
+  theme = THEMES[(Math.random() * THEMES.length) | 0];
+  loop();
+})();
+</script>
+</body>
+</html>
