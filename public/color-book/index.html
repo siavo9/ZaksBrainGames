@@ -159,6 +159,10 @@
   </div>
 </div>
 
+<!-- Coloring-page list. Loaded as a plain <script> (not fetch) so it works in
+     the offline iOS/iPad app, which runs from a file:// URL where fetch() of a
+     local file is blocked. -->
+<script src="pictures.js"></script>
 <script>
 (function () {
   "use strict";
@@ -197,7 +201,12 @@
   // ================= PICTURES =================
   // Coloring pages are image files served from /pictures.
   // Add new pages by dropping .svg or .png files into public/pictures.
-  var pictures = ["blank"];
+  // The list is seeded from pictures.js (loaded above via a <script> tag) so it
+  // is available even in the offline app where fetch() of a local file fails.
+  // The fetch() calls further below still refresh this list on the live server.
+  var pictures = ["blank"].concat(
+    Array.isArray(window.COLOR_BOOK_PICTURES) ? window.COLOR_BOOK_PICTURES : []
+  );
   var pictureIndex = 0;
   // History of pictures the child has viewed, so the Previous button can
   // step back through them. Starts on the "blank" page (index 0).
