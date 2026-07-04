@@ -129,6 +129,11 @@ app.get(['/echobeats', '/echobeats/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'echobeats', 'index.html'));
 });
 
+// Demolition Derby game page (folder-based: /demolitionderby/index.html)
+app.get(['/demolitionderby', '/demolitionderby/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'demolitionderby', 'index.html'));
+});
+
 // SEO helpers
 app.get('/robots.txt', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'robots.txt'));
