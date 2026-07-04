@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Cars 3 Thunder Hollow Demolition Derby</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -257,6 +257,68 @@ canvas { display: block; }
 }
 #pauseBtn:hover { background: rgba(0,0,0,0.8); border-color: #f7c948; color: #f7c948; transform: translateX(-50%) scale(1.08); }
 
+/* ============================================================
+   ON-SCREEN TOUCH CONTROLS (phones / tablets)
+   Hidden by default; the game reveals the right group(s) at the
+   start of a round and only on touch-capable devices.
+   ============================================================ */
+.touchControls {
+  position: fixed; bottom: 0; z-index: 70;
+  display: none;                 /* toggled to flex by JS on touch devices */
+  justify-content: space-between; align-items: flex-end;
+  padding: 0 18px 18px;
+  pointer-events: none;          /* only the buttons capture touches */
+  --btn: 62px;                   /* D-pad button size */
+  --act: 74px;                   /* action button size */
+}
+/* Single-player: span the whole width. */
+#touchP1 { left: 0; right: 0; }
+/* Two-player split screen: P1 lives in the right half, P2 in the left half. */
+#touchP1.two-player { left: 50%; right: 0; }
+#touchP2 { left: 0; right: 50%; }
+/* Split panes are half as wide, so shrink the buttons to fit both clusters. */
+.touchControls.two-player { --btn: 50px; --act: 60px; padding: 0 12px 14px; }
+
+/* D-pad: a plus laid out on a 3x3 grid. */
+.touchDpad {
+  display: grid; grid-template-columns: repeat(3, var(--btn));
+  grid-template-rows: repeat(3, var(--btn)); gap: 6px;
+}
+.touchDpad .tc-up    { grid-column: 2; grid-row: 1; }
+.touchDpad .tc-left  { grid-column: 1; grid-row: 2; }
+.touchDpad .tc-right { grid-column: 3; grid-row: 2; }
+.touchDpad .tc-down  { grid-column: 2; grid-row: 3; }
+
+/* Action cluster: JUMP + BOOST. */
+.touchActions { display: flex; gap: 14px; align-items: center; }
+
+/* Shared button look. */
+.tc-btn {
+  pointer-events: auto; -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent; touch-action: none;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid rgba(255,255,255,0.4);
+  background: rgba(0,0,0,0.42); color: #fff;
+  font-family: inherit; font-weight: 800; cursor: pointer;
+  transition: transform 0.05s, background 0.12s;
+}
+.touchDpad .tc-btn { width: var(--btn); height: var(--btn); border-radius: 14px; font-size: 1.5rem; }
+.touchActions .tc-btn {
+  width: var(--act); height: var(--act); border-radius: 50%;
+  flex-direction: column; line-height: 1; gap: 2px;
+}
+.touchActions .tc-icon { font-size: 1.4rem; }
+.touchActions .tc-label { font-size: 0.6rem; letter-spacing: 1px; }
+.tc-btn.pressed { background: rgba(247,201,72,0.85); color: #1a0a2e; border-color: #f7c948; transform: scale(0.92); }
+.tc-jump.pressed { background: rgba(46,204,113,0.9); border-color: #2ecc71; }
+.tc-boost.pressed { background: rgba(255,107,53,0.92); border-color: #ff6b35; }
+
+/* Tighter spacing on small phones. */
+@media (max-width: 480px) {
+  .touchControls { --btn: 52px; --act: 62px; padding: 0 10px 12px; }
+  .touchControls.two-player { --btn: 42px; --act: 50px; }
+}
+
 /* PAUSE MENU */
 #pauseMenu {
   position: fixed; inset: 0; z-index: 110;
@@ -418,6 +480,34 @@ canvas { display: block; }
 
 <!-- PAUSE BUTTON -->
 <button id="pauseBtn" title="Pause (P)">⏸</button>
+
+<!-- ON-SCREEN TOUCH CONTROLS -->
+<!-- Player 1 (full screen in solo play, right pane in split-screen). -->
+<div id="touchP1" class="touchControls">
+  <div class="touchDpad">
+    <button class="tc-btn tc-up"    data-key="ArrowUp">▲</button>
+    <button class="tc-btn tc-left"  data-key="ArrowLeft">◀</button>
+    <button class="tc-btn tc-right" data-key="ArrowRight">▶</button>
+    <button class="tc-btn tc-down"  data-key="ArrowDown">▼</button>
+  </div>
+  <div class="touchActions">
+    <button class="tc-btn tc-jump"  data-key="Space"><span class="tc-icon">⤒</span><span class="tc-label">JUMP</span></button>
+    <button class="tc-btn tc-boost" data-key="Enter"><span class="tc-icon">⚡</span><span class="tc-label">BOOST</span></button>
+  </div>
+</div>
+<!-- Player 2 (left pane in split-screen only). -->
+<div id="touchP2" class="touchControls">
+  <div class="touchDpad">
+    <button class="tc-btn tc-up"    data-key="KeyW">▲</button>
+    <button class="tc-btn tc-left"  data-key="KeyA">◀</button>
+    <button class="tc-btn tc-right" data-key="KeyD">▶</button>
+    <button class="tc-btn tc-down"  data-key="KeyS">▼</button>
+  </div>
+  <div class="touchActions">
+    <button class="tc-btn tc-jump"  data-key="KeyZ"><span class="tc-icon">⤒</span><span class="tc-label">JUMP</span></button>
+    <button class="tc-btn tc-boost" data-key="KeyX"><span class="tc-icon">⚡</span><span class="tc-label">BOOST</span></button>
+  </div>
+</div>
 
 <!-- PAUSE MENU -->
 <div id="pauseMenu">
@@ -1038,6 +1128,60 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => { keys[e.code] = false; });
 
+// --- ON-SCREEN TOUCH CONTROLS (phones / tablets) ---
+// Each button drives the exact same `keys[...]` entry the physical keyboard
+// would, so the game loop needs no changes: P1 uses the arrow keys / Space /
+// Enter, P2 uses W A S D / Z / X.
+const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+
+function setTouchKey(btn, code, on) {
+  keys[code] = on;
+  btn.classList.toggle('pressed', on);
+}
+
+document.querySelectorAll('.tc-btn').forEach(btn => {
+  const code = btn.dataset.key;
+  const press = e => {
+    e.preventDefault();
+    // Capture the pointer so we still get pointerup even if the finger slides
+    // off the button — otherwise a key could stick down.
+    if (e.pointerId != null && btn.setPointerCapture) {
+      try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+    setTouchKey(btn, code, true);
+  };
+  const release = e => {
+    if (e) e.preventDefault();
+    setTouchKey(btn, code, false);
+  };
+  btn.addEventListener('pointerdown', press);
+  btn.addEventListener('pointerup', release);
+  btn.addEventListener('pointercancel', release);
+  btn.addEventListener('contextmenu', e => e.preventDefault()); // no long-press menu
+});
+
+// Reveal the correct control group(s) for the round. Only on touch devices;
+// laptops keep using the keyboard.
+function showTouchControls() {
+  if (!isTouchDevice) return;
+  const p1 = document.getElementById('touchP1');
+  const p2 = document.getElementById('touchP2');
+  p1.style.display = 'flex';
+  p1.classList.toggle('two-player', twoPlayer);
+  p2.classList.toggle('two-player', twoPlayer);
+  p2.style.display = twoPlayer ? 'flex' : 'none';
+}
+
+// Hide the controls and clear any keys still held (a button released while the
+// UI was torn down must not stay pressed into the next round).
+function hideTouchControls() {
+  document.getElementById('touchP1').style.display = 'none';
+  document.getElementById('touchP2').style.display = 'none';
+  ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','Enter',
+   'KeyW','KeyS','KeyA','KeyD','KeyZ','KeyX'].forEach(k => { keys[k] = false; });
+  document.querySelectorAll('.tc-btn.pressed').forEach(b => b.classList.remove('pressed'));
+}
+
 // ============================================================
 // PAUSE
 // ============================================================
@@ -1086,6 +1230,7 @@ function goToHome() {
   document.getElementById('speedIndicator').style.display = 'none';
   document.getElementById('endScreen').style.display = 'none';
   document.getElementById('eliminationBanner').style.display = 'none';
+  hideTouchControls();
   // Rebuild the picker so the current selection is highlighted.
   buildColorPicker();
   document.getElementById('startScreen').style.display = 'block';
@@ -3377,6 +3522,9 @@ async function startGame() {
   pauseBtnEl.textContent = '⏸';
   pauseBtnEl.style.display = 'block';
 
+  // Reveal on-screen touch controls (one set per human player) on touch devices.
+  showTouchControls();
+
   const cdEl = document.getElementById('countdown');
   cdEl.style.display = 'flex';
   let count = 3;
@@ -3657,6 +3805,7 @@ function endGame(won, winnerIndex) {
   document.getElementById('eliminationBanner').style.display = 'none';
   document.getElementById('gameOverP1').style.display = 'none';
   document.getElementById('gameOverP2').style.display = 'none';
+  hideTouchControls();
   stopEngineSound();
   stopCrowdAmbient();
   stopBgMusic();
