@@ -1162,8 +1162,13 @@
       const cv = document.createElement("canvas");
       cv.width = 84; cv.height = 84;
       const cc = cv.getContext("2d");
-      // draw face/character preview centered
-      drawCharacter(cc, cfg, 42, 80, 1, 1);
+      // draw the full character (head + ears reach ~95px above the feet) scaled
+      // to fit inside the 84px preview box so nothing is clipped at the top
+      cc.save();
+      cc.translate(42, 80);
+      cc.scale(0.82, 0.82);
+      drawCharacter(cc, cfg, 0, 0, 1, 1);
+      cc.restore();
       const nm = document.createElement("div");
       nm.className = "char-name";
       nm.textContent = cfg.name;
