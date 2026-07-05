@@ -73,6 +73,17 @@
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   #paint { z-index: 1; touch-action: none; cursor: crosshair; }
   #outline { z-index: 2; pointer-events: none; }
+  /* The coloring page itself is shown as a real <img>. Canvas drawImage() of an
+     SVG is unreliable inside the iOS/iPad WKWebView (it can render nothing), so
+     an <img> element guarantees the picture appears on every device. */
+  #outlineImg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    z-index: 3;
+    pointer-events: none;
+    display: none;
+  }
 
   #toolbar {
     flex: 0 0 auto;
@@ -136,6 +147,7 @@
   <div id="stage">
     <canvas id="paint"></canvas>
     <canvas id="outline"></canvas>
+    <img id="outlineImg" alt="" draggable="false" />
   </div>
 
   <div id="toolbar">
@@ -166,6 +178,7 @@
   var stage = document.getElementById("stage");
   var paint = document.getElementById("paint");
   var outline = document.getElementById("outline");
+  var outlineImg = document.getElementById("outlineImg");
   var pctx = paint.getContext("2d", { willReadFrequently: true });
   var octx = outline.getContext("2d", { willReadFrequently: true });
 
@@ -197,7 +210,26 @@
   // ================= PICTURES =================
   // Coloring pages are image files served from /pictures.
   // Add new pages by dropping .svg or .png files into public/pictures.
-  var pictures = ["blank"];
+  //
+  // This list is embedded directly in the page so the picture picker works
+  // OFFLINE inside the iOS/iPad app. The app loads over the file:// protocol,
+  // where fetch()/XHR of a local manifest (pictures.json) is blocked by
+  // WKWebView's cross-origin rules — so we cannot rely on fetch alone. On the
+  // live website the fetch below still runs and can extend/refresh this list,
+  // but the embedded copy guarantees pictures always appear in the app.
+  var EMBEDDED_PICTURES = [
+    "Untitled-2-02.svg", "Untitled-2-04.svg", "Untitled-2-06.svg", "Untitled-2-08.svg", "Untitled-2-10.svg", "Untitled-2-11.svg",
+    "Untitled-2-15.svg", "Untitled-2-19.svg", "Untitled-2-34.svg", "Untitled-2-37.svg", "Untitled-2-39.svg", "Untitled-2-49.svg",
+    "Untitled-2-50.svg", "Untitled-2-53.svg", "Untitled-2-65.svg", "Untitled-2-68.svg", "Untitled-2-69.svg", "Untitled-2-70.svg",
+    "bfly.svg", "bike.svg", "boat.svg", "bridge.svg", "bunny.svg", "bus.svg",
+    "cabin.svg", "cakshop.svg", "car.svg", "car2.svg", "chipmunk.svg", "couch.svg",
+    "deer.svg", "dining.svg", "dump.svg", "flower.svg", "frog.svg", "garbage.svg",
+    "gardefnshop.svg", "hedgehog.svg", "helio.svg", "mt1.svg", "mt2.svg", "mt3.svg",
+    "mt4.svg", "mt5.svg", "plane.svg", "policecar.svg", "poy.svg", "road.svg",
+    "rocket.svg", "scooter.svg", "stuff.svg", "sub.svg", "sweater.svg", "town.svg",
+    "tracter.svg", "train.svg", "truck.svg", "umbrella.svg"
+  ];
+  var pictures = ["blank"].concat(EMBEDDED_PICTURES);
   var pictureIndex = 0;
   // History of pictures the child has viewed, so the Previous button can
   // step back through them. Starts on the "blank" page (index 0).
@@ -351,7 +383,23 @@
   }
   function drawPicture(name) {
     octx.clearRect(0, 0, cssW(), cssH());
-    if (!name || name === "blank") return;
+    if (!name || name === "blank") {
+      // Blank page: hide the outline image entirely.
+      outlineImg.style.display = "none";
+      outlineImg.removeAttribute("src");
+      return;
+    }
+    // Show the coloring page as a plain <img>. This is the reliable path on
+    // iOS/iPad: canvas drawImage() of an SVG can silently render nothing in
+    // WKWebView, which is why the picture never appeared in the app. The <img>
+    // (sized with object-fit: contain in CSS) always renders on every device.
+    outlineImg.style.display = "block";
+    outlineImg.src = "pictures/" + encodeURIComponent(name);
+
+    // Best effort: also rasterize the same picture onto the (hidden) outline
+    // canvas so the "Fill" tool can read the black lines as walls. If a device
+    // can't draw the SVG to a canvas, Fill simply becomes unbounded — but the
+    // picture is still visible via the <img> above.
     loadPicture(name, function (img) {
       // ignore a slow image if the user already moved to another picture
       if (!img || pictures[pictureIndex] !== name) return;
@@ -360,9 +408,10 @@
       var iw = img.naturalWidth || img.width || 1;
       var ih = img.naturalHeight || img.height || 1;
       if (!iw || !ih) { iw = ih = 1; }
-      var scale = Math.min(w / iw, h / ih) * 0.94;
+      // Match object-fit: contain so the wall map lines up with the <img>.
+      var scale = Math.min(w / iw, h / ih);
       var dw = iw * scale, dh = ih * scale;
-      octx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
+      try { octx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh); } catch (e) {}
     });
   }
 
@@ -434,7 +483,23 @@
     c.fillStyle = "#ffffff";
     c.fillRect(0, 0, out.width, out.height);
     c.drawImage(paint, 0, 0);
-    c.drawImage(outline, 0, 0);
+    // Draw the outline lines on top. Prefer the live <img> overlay (which
+    // always has the picture, including on iOS); fall back to the outline
+    // canvas. Wrapped in try/catch since drawing an SVG source can throw or
+    // no-op on some engines.
+    var drawn = false;
+    if (outlineImg && outlineImg.getAttribute("src")) {
+      var iw = outlineImg.naturalWidth || 0, ih = outlineImg.naturalHeight || 0;
+      if (iw && ih) {
+        var scale = Math.min(out.width / iw, out.height / ih);
+        var dw = iw * scale, dh = ih * scale;
+        try {
+          c.drawImage(outlineImg, (out.width - dw) / 2, (out.height - dh) / 2, dw, dh);
+          drawn = true;
+        } catch (e) {}
+      }
+    }
+    if (!drawn) { try { c.drawImage(outline, 0, 0); } catch (e) {} }
     return out;
   }
   function share() {
@@ -501,23 +566,29 @@
   updateToolButtons();
   resizeAll(false);
 
-  // Load the list of available coloring pictures.
-  // Works two ways: the Express server's /api/pictures endpoint (auto-lists the
-  // folder), or a static pictures.json manifest (for plain static hosting).
+  // Refresh the list of available coloring pictures when running on the live
+  // website. This is a progressive enhancement on top of EMBEDDED_PICTURES:
+  // the Express server's /api/pictures endpoint (auto-lists the folder) or a
+  // static pictures.json manifest can pick up pictures added after this page
+  // was built. Inside the offline iOS app these fetches are blocked by the
+  // file:// origin and simply fail — the embedded list already covers us, so
+  // we never clear the pictures on failure.
   function applyList(list) {
     if (Array.isArray(list) && list.length) {
       pictures = ["blank"].concat(list);
     }
   }
-  fetch("api/pictures")
-    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-    .then(applyList)
-    .catch(function () {
-      fetch("pictures.json")
-        .then(function (r) { return r.json(); })
-        .then(applyList)
-        .catch(function () {});
-    });
+  try {
+    fetch("api/pictures")
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+      .then(applyList)
+      .catch(function () {
+        fetch("pictures.json")
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+          .then(applyList)
+          .catch(function () {});
+      });
+  } catch (e) { /* fetch unavailable — embedded list is used */ }
 })();
 </script>
   <script defer src="../assets/zakrad/zak-celebrate.js"></script>
