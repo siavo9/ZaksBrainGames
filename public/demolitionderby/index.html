@@ -215,9 +215,10 @@ canvas { display: block; }
 
 /* SPEED INDICATOR */
 #speedIndicator {
-  position: fixed; bottom: 20px; left: 20px; z-index: 50;
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 50;
   color: #fff; font-size: 1.2rem; font-weight: 700;
   display: none; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  pointer-events: none;
 }
 
 /* END SCREEN */
@@ -328,6 +329,57 @@ canvas { display: block; }
   pointer-events: none;
 }
 
+/* ON-SCREEN TOUCH CONTROLS (shown on touch devices during play) */
+#touchControls {
+  position: fixed; inset: 0; z-index: 65;
+  display: none;              /* toggled on when a round is running */
+  pointer-events: none;      /* only the buttons themselves are tappable */
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+}
+#touchControls.active { display: block; }
+.touch-cluster {
+  position: fixed; bottom: 26px;
+  pointer-events: none;
+}
+#touchDpad { left: 26px; width: 190px; height: 190px; }
+#touchActions { right: 26px; display: flex; flex-direction: column; gap: 16px; align-items: center; }
+.touch-btn {
+  position: absolute;
+  display: flex; align-items: center; justify-content: center;
+  width: 62px; height: 62px; border-radius: 50%;
+  background: rgba(20,10,30,0.42);
+  border: 2px solid rgba(247,201,72,0.55);
+  color: #fff; font-size: 1.7rem; font-weight: 800;
+  pointer-events: auto; cursor: pointer;
+  touch-action: none; -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.45);
+  transition: background 0.08s, transform 0.08s;
+}
+.touch-btn:active, .touch-btn.pressed {
+  background: rgba(247,201,72,0.85); color: #1a0a2e; transform: scale(0.94);
+}
+/* D-pad plus layout inside the 190x190 box */
+#btnUp    { top: 0;   left: 64px; }
+#btnDown  { bottom: 0; left: 64px; }
+#btnLeft  { left: 0;   top: 64px; }
+#btnRight { right: 0;  top: 64px; }
+/* Action buttons are larger, pill-shaped and labelled */
+.touch-action-btn {
+  position: relative;
+  width: 92px; height: 66px; border-radius: 20px;
+  font-size: 0.95rem; letter-spacing: 1px; text-transform: uppercase;
+}
+#btnBoost { border-color: rgba(255,107,53,0.75); }
+#btnBoost:active, #btnBoost.pressed { background: rgba(255,107,53,0.9); }
+@media (max-width: 720px) {
+  .touch-btn { width: 56px; height: 56px; font-size: 1.5rem; }
+  #touchDpad { width: 172px; height: 172px; }
+  #btnUp, #btnDown { left: 58px; }
+  #btnLeft, #btnRight { top: 58px; }
+  .touch-action-btn { width: 84px; height: 60px; }
+}
+
 </style>
 </head>
 <body>
@@ -360,6 +412,8 @@ canvas { display: block; }
     <button id="startBtn">START</button>
 
     <div id="controlsInfo">
+      📱 <span>Touch:</span> On-screen buttons to Drive, Steer, Jump &amp; Boost
+      <br>
       <span>↑↓←→</span> Drive &amp; Steer &nbsp;|&nbsp;
       <span>SPACE</span> Jump &nbsp;|&nbsp;
       <span>ENTER</span> Boost (x3) &nbsp;|&nbsp;
@@ -416,6 +470,20 @@ canvas { display: block; }
   <div id="eliminationPlace"></div>
 </div>
 
+<!-- ON-SCREEN TOUCH CONTROLS (drive Player 1 on touch devices) -->
+<div id="touchControls" aria-hidden="true">
+  <div id="touchDpad" class="touch-cluster">
+    <button class="touch-btn" id="btnUp"    data-key="ArrowUp"    aria-label="Forward">▲</button>
+    <button class="touch-btn" id="btnDown"  data-key="ArrowDown"  aria-label="Reverse">▼</button>
+    <button class="touch-btn" id="btnLeft"  data-key="ArrowLeft"  aria-label="Left">◀</button>
+    <button class="touch-btn" id="btnRight" data-key="ArrowRight" aria-label="Right">▶</button>
+  </div>
+  <div id="touchActions" class="touch-cluster">
+    <button class="touch-btn touch-action-btn" id="btnBoost" data-key="Enter" aria-label="Boost">Boost</button>
+    <button class="touch-btn touch-action-btn" id="btnJump"  data-key="Space" aria-label="Jump">Jump</button>
+  </div>
+</div>
+
 <!-- PAUSE BUTTON -->
 <button id="pauseBtn" title="Pause (P)">⏸</button>
 
@@ -439,8 +507,9 @@ canvas { display: block; }
   <button id="restartBtn">PLAY AGAIN</button>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<!-- Self-hosted so the game runs fully offline in the bundled iPad app (no CDN). -->
+<script src="three.min.js"></script>
+<script src="GLTFLoader.js"></script>
 <script>
 // ============================================================
 // CARS 3 THUNDER HOLLOW DEMOLITION DERBY
@@ -1039,6 +1108,67 @@ window.addEventListener('keydown', e => {
 window.addEventListener('keyup', e => { keys[e.code] = false; });
 
 // ============================================================
+// ON-SCREEN TOUCH CONTROLS
+// ------------------------------------------------------------
+// iPads (and the bundled iPad app) have no keyboard or gamepad, so drive
+// Player 1 with on-screen buttons. Each button maps to the same `keys[...]`
+// entry the keyboard sets, so the physics loop needs no special-casing:
+//   ▲/▼/◀/▶ -> ArrowUp/Down/Left/Right   Jump -> Space   Boost -> Enter
+// ============================================================
+const IS_TOUCH = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+function bindHoldButton(el) {
+  if (!el) return;
+  const code = el.dataset.key;
+  const press = (e) => {
+    e.preventDefault();
+    keys[code] = true;
+    el.classList.add('pressed');
+    // Keep receiving the pointerup even if the finger slides off the button.
+    if (e.pointerId != null && el.setPointerCapture) {
+      try { el.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+  };
+  const release = (e) => {
+    if (e) e.preventDefault();
+    keys[code] = false;
+    el.classList.remove('pressed');
+  };
+  el.addEventListener('pointerdown', press);
+  el.addEventListener('pointerup', release);
+  el.addEventListener('pointercancel', release);
+  el.addEventListener('pointerleave', release);
+  // Guard against a button getting stuck "held" if focus/visibility is lost.
+  el.addEventListener('lostpointercapture', release);
+}
+
+document.querySelectorAll('#touchControls .touch-btn').forEach(bindHoldButton);
+
+// Release every on-screen key (used when the round pauses/ends so nothing sticks).
+function releaseTouchKeys() {
+  document.querySelectorAll('#touchControls .touch-btn').forEach(el => {
+    keys[el.dataset.key] = false;
+    el.classList.remove('pressed');
+  });
+}
+
+function setTouchControlsVisible(show) {
+  const tc = document.getElementById('touchControls');
+  if (!tc) return;
+  if (show && IS_TOUCH) {
+    tc.classList.add('active');
+  } else {
+    tc.classList.remove('active');
+    releaseTouchKeys();
+  }
+}
+
+// Safety: if the page is hidden (app backgrounded), drop any held buttons.
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) releaseTouchKeys();
+});
+
+// ============================================================
 // PAUSE
 // ============================================================
 function togglePause() { paused ? resumeGame() : pauseGame(); }
@@ -1046,6 +1176,7 @@ function togglePause() { paused ? resumeGame() : pauseGame(); }
 function pauseGame() {
   if (!gameRunning || paused) return;
   paused = true;
+  setTouchControlsVisible(false);
   document.getElementById('pauseMenu').style.display = 'flex';
   document.getElementById('pauseBtn').textContent = '▶';
   // Freeze audio so the frozen scene is silent.
@@ -1057,6 +1188,7 @@ function pauseGame() {
 function resumeGame() {
   if (!gameRunning || !paused) return;
   paused = false;
+  setTouchControlsVisible(true);
   document.getElementById('pauseMenu').style.display = 'none';
   document.getElementById('pauseBtn').textContent = '⏸';
   // Restart looping audio and pick the loop back up.
@@ -1071,6 +1203,7 @@ function resumeGame() {
 function goToHome() {
   gameRunning = false;
   paused = false;
+  setTouchControlsVisible(false);
   document.getElementById('pauseMenu').style.display = 'none';
   document.getElementById('pauseBtn').style.display = 'none';
   document.getElementById('pauseBtn').textContent = '⏸';
@@ -2488,6 +2621,8 @@ function showEliminationBanner() {
   document.getElementById('eliminationPlace').textContent =
     `You placed ${position}${suffix} out of ${totalCount}`;
   document.getElementById('eliminationBanner').style.display = 'block';
+  // Player is out and now just spectating, so hide their driving buttons.
+  setTouchControlsVisible(false);
 }
 
 // Pick a camera's subject: the given player's truck while alive, otherwise the
@@ -3357,6 +3492,8 @@ async function startGame() {
   document.getElementById('endScreen').style.display = 'none';
   document.getElementById('eliminationBanner').style.display = 'none';
   document.getElementById('hud').style.display = 'block';
+  // Reveal the on-screen driving buttons (touch devices only; a no-op on desktop).
+  setTouchControlsVisible(true);
   // In split-screen Player 1 occupies the right half, so right-align the P1 HUD.
   document.getElementById('hud').classList.toggle('two-player', twoPlayer);
   // The all-cars status list lives top-right; in split-screen the Player 1 HUD
@@ -3652,6 +3789,7 @@ function stopWinnerCelebration() {
 function endGame(won, winnerIndex) {
   gameRunning = false;
   paused = false;
+  setTouchControlsVisible(false);
   document.getElementById('pauseMenu').style.display = 'none';
   document.getElementById('pauseBtn').style.display = 'none';
   document.getElementById('eliminationBanner').style.display = 'none';

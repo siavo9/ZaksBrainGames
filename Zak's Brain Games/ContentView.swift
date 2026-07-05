@@ -39,6 +39,16 @@ struct WebView: UIViewRepresentable {
         config.allowsInlineMediaPlayback = true
         config.mediaTypesRequiringUserActionForPlayback = []
 
+        // The bundled site is served from file:// URLs. By default WKWebView
+        // blocks XMLHttpRequest/fetch between file:// URLs, which silently
+        // breaks games that load assets at runtime — e.g. Demo Derby fetches
+        // its 3D car models (.glb) via THREE.GLTFLoader, and without this every
+        // car falls back to a plain box because the models never load. These
+        // preference keys let a file:// document read sibling file:// assets so
+        // those loaders work offline.
+        config.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
+        config.setValue(true, forKey: "allowUniversalAccessFromFileURLs")
+
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
