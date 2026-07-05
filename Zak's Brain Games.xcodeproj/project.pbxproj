@@ -10,18 +10,18 @@
 		0C0F45FC3F15D905769FB650 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C6AA819D06C15BCD89C4C5A /* ContentView.swift */; };
 		0D49063BB7A380DC8F046D85 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AA97DB21B98047906A115CF4 /* Foundation.framework */; };
 		3C8B8DD1C611F51989494274 /* ZaksBrainGamesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA9881035B3DC64ED772F83C /* ZaksBrainGamesApp.swift */; };
-		D1A2C3B4E5F6071829304152 /* ZakRad.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B3C4D5E6F7081920314253 /* ZakRad.swift */; };
 		5E56154AF6E0D07E8F32167C /* public in Resources */ = {isa = PBXBuildFile; fileRef = A902D582FEE37A8CC1093A82 /* public */; };
+		D1A2C3B4E5F6071829304152 /* ZakRad.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2B3C4D5E6F7081920314253 /* ZakRad.swift */; };
 		EE9F96D73E5692AC1A336584 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2A4267776BC5D9458E35EAA7 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		2A4267776BC5D9458E35EAA7 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4C6AA819D06C15BCD89C4C5A /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		D2B3C4D5E6F7081920314253 /* ZakRad.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZakRad.swift; sourceTree = "<group>"; };
 		A902D582FEE37A8CC1093A82 /* public */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		AA97DB21B98047906A115CF4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		C6663F9BC73EF2FA25FB337D /* Zak's Brain Games.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Zak's Brain Games.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		D2B3C4D5E6F7081920314253 /* ZakRad.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZakRad.swift; sourceTree = "<group>"; };
 		FA9881035B3DC64ED772F83C /* ZaksBrainGamesApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ZaksBrainGamesApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -222,7 +222,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JXU364Z43P;
 				ENABLE_PREVIEWS = YES;
@@ -235,7 +235,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.zaksbraingames.Zak-s-Brain-Games";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -255,7 +255,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = "";
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = JXU364Z43P;
 				ENABLE_PREVIEWS = YES;
@@ -268,7 +268,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				MARKETING_VERSION = 2.0;
+				MARKETING_VERSION = 3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.zaksbraingames.Zak-s-Brain-Games";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
