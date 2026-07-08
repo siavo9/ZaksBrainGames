@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Cars 3 Thunder Hollow Demolition Derby</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -43,7 +43,7 @@ canvas { display: block; }
    Lives inside #startScreen so it only shows on the start screen and never
    obstructs gameplay. */
 #homeLink {
-  position: absolute; top: 16px; left: 16px; z-index: 10;
+  position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); left: 16px; z-index: 10;
   display: inline-flex; align-items: center; gap: 6px;
   color: #1a0a2e; font-weight: 600; text-decoration: none;
   padding: 10px 16px; border-radius: 24px; background: #fff;
@@ -136,7 +136,8 @@ canvas { display: block; }
 /* HUD */
 #hud {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-  padding: 15px 20px; display: none;
+  /* Pad past the iPhone status bar / notch so the health bar isn't hidden */
+  padding: calc(15px + env(safe-area-inset-top, 0px)) 20px 15px; display: none;
   pointer-events: none;
 }
 #hudLabel { display: none; color: #f7c948; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
@@ -160,12 +161,12 @@ canvas { display: block; }
   margin-top: 8px;
 }
 #truckStatus {
-  position: fixed; top: 15px; right: 20px; z-index: 50;
+  position: fixed; top: calc(15px + env(safe-area-inset-top, 0px)); right: 20px; z-index: 50;
   display: none; text-align: right;
 }
 /* In split-screen the Player 2 HUD occupies the top-right, so drop the car
    list below it. */
-#truckStatus.two-player { top: 120px; }
+#truckStatus.two-player { top: calc(120px + env(safe-area-inset-top, 0px)); }
 .truck-indicator {
   display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
   justify-content: flex-end;
@@ -194,7 +195,7 @@ canvas { display: block; }
 /* PLAYER 2 HUD (left half, two-player mode only) */
 #hud2 {
   position: fixed; top: 0; left: 0; z-index: 50;
-  padding: 15px 20px; display: none;
+  padding: calc(15px + env(safe-area-inset-top, 0px)) 20px 15px; display: none;
   pointer-events: none; text-align: left;
 }
 #hud2Label { color: #2fe0e0; font-size: 0.85rem; font-weight: 700; letter-spacing: 2px; margin-bottom: 6px; }
@@ -248,7 +249,7 @@ canvas { display: block; }
 
 /* PAUSE BUTTON (visible while playing) */
 #pauseBtn {
-  position: fixed; top: 15px; left: 50%; transform: translateX(-50%);
+  position: fixed; top: calc(15px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
   z-index: 60; display: none;
   width: 46px; height: 46px; border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.35);

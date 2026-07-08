@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Keepy Uppy — Zak's Brain Games</title>
 <meta name="description" content="Keepy Uppy is a bouncy balloon arcade game! Pick a pastel animal, grab boosts, and take turns with the computer to keep the balloon off the ground. First to 3 points wins. Ages 4+." />
 <meta name="theme-color" content="#ff9fb2" />
@@ -196,7 +196,8 @@
     background: rgba(255, 255, 255, 0.93);
     border-bottom: 4px solid #e08e2e;
     box-shadow: 0 4px 0 rgba(224, 142, 46, 0.18);
-    padding: 10px 16px;
+    /* Pad past the iPhone status bar / notch so the nav buttons stay tappable */
+    padding: calc(10px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) 10px calc(16px + env(safe-area-inset-left, 0px));
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -245,13 +246,66 @@
   .nav-ctrl:hover  { transform: translateY(2px); box-shadow: 0 2px 0 #b7a6e6; }
   .nav-ctrl:active { transform: translateY(4px); box-shadow: 0 0 0 #b7a6e6; }
 
-  /* Push the play area below the fixed nav so it never overlaps the canvas */
-  #app { padding-top: 72px; }
+  /* Push the play area below the fixed nav so it never overlaps the canvas
+     (add the safe-area inset so the notch/status bar doesn't cover it either) */
+  #app { padding-top: calc(72px + env(safe-area-inset-top, 0px)); }
   @media (max-width: 520px) {
     #top-nav .nav-title { font-size: 1.1em; }
     #top-nav .nav-btn, .nav-ctrl { padding: 8px 12px; }
     .nav-ctrl .lbl { display: none; } /* icon-only on small screens to save room */
-    #app { padding-top: 84px; }
+    #app { padding-top: calc(84px + env(safe-area-inset-top, 0px)); }
+  }
+
+  /* ---------- On-screen touch controls (phones / tablets) ---------- */
+  #touchControls {
+    position: fixed; inset: 0; z-index: 55;
+    display: none;             /* toggled on while playing on a touch device */
+    pointer-events: none;      /* only the buttons themselves are tappable */
+    -webkit-user-select: none; user-select: none;
+    -webkit-touch-callout: none;
+  }
+  #touchControls.active { display: block; }
+  .touch-cluster {
+    position: fixed;
+    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    pointer-events: none;
+  }
+  #touchDpad   { left: calc(16px + env(safe-area-inset-left, 0px));  width: 180px; height: 180px; }
+  #touchActions{ right: calc(16px + env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 14px; align-items: center; }
+  .touch-btn {
+    position: absolute;
+    display: flex; align-items: center; justify-content: center;
+    width: 58px; height: 58px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.86);
+    border: 3px solid #cdbff0;
+    color: #7e76b0; font-size: 1.5rem; font-weight: 800;
+    pointer-events: auto; cursor: pointer;
+    touch-action: none; -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 4px 0 #b7a6e6;
+    transition: transform 0.08s, box-shadow 0.08s, background 0.08s, color 0.08s;
+  }
+  .touch-btn:active, .touch-btn.pressed {
+    background: #ffd277; color: #7a4a00;
+    transform: translateY(3px); box-shadow: 0 1px 0 #b7a6e6;
+  }
+  #kuUp    { top: 0;    left: 61px; }
+  #kuDown  { bottom: 0; left: 61px; }
+  #kuLeft  { left: 0;   top: 61px; }
+  #kuRight { right: 0;  top: 61px; }
+  /* Boost is a labelled pill on the right */
+  #kuBoost {
+    position: relative;
+    flex-direction: column; gap: 1px;
+    width: 86px; height: 66px; border-radius: 20px;
+    font-size: 0.72rem; letter-spacing: 1px; text-transform: uppercase;
+    background: rgba(255, 210, 119, 0.92);
+    border-color: #ffc46b; color: #7a4a00;
+    box-shadow: 0 4px 0 #e08e2e;
+  }
+  #kuBoost .bolt { font-size: 1.5rem; line-height: 1; }
+  #kuBoost:active, #kuBoost.pressed {
+    background: #ffb24d; color: #7a4a00;
+    transform: translateY(3px); box-shadow: 0 1px 0 #e08e2e;
   }
 </style>
 </head>
@@ -333,6 +387,21 @@
   </div>
 </div>
 
+<!-- ========== ON-SCREEN TOUCH CONTROLS (phones / tablets) ========== -->
+<div id="touchControls" aria-hidden="true">
+  <div id="touchDpad" class="touch-cluster">
+    <button type="button" id="kuUp"    class="touch-btn" aria-label="Jump">▲</button>
+    <button type="button" id="kuLeft"  class="touch-btn" aria-label="Move left">◀</button>
+    <button type="button" id="kuRight" class="touch-btn" aria-label="Move right">▶</button>
+    <button type="button" id="kuDown"  class="touch-btn" aria-label="Down">▼</button>
+  </div>
+  <div id="touchActions" class="touch-cluster">
+    <button type="button" id="kuBoost" class="touch-btn" aria-label="Use boost">
+      <span class="bolt" aria-hidden="true">⚡</span>Boost
+    </button>
+  </div>
+</div>
+
 <script>
 (function () {
   "use strict";
@@ -396,6 +465,8 @@
   const HITS_PER_BOOST = 3;
 
   const keys = {};
+  // touch-capable device? (iPhone / iPad / Android) — used to show the on-screen pad
+  const isTouch = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
 
   // ---------------------------------------------------------------------------
   // Sound (Web Audio, generated in-code)
@@ -750,6 +821,9 @@
   // Show/hide the on-screen Pause + Menu buttons (visible only while playing)
   function setInGameControls(visible) {
     document.getElementById("gameControls").classList.toggle("hidden", !visible);
+    // On touch devices, show the D-pad + Boost controls only during play
+    const tc = document.getElementById("touchControls");
+    if (tc) tc.classList.toggle("active", !!visible && isTouch);
   }
 
   function serveBalloon(toPlayer, first) {
@@ -1138,6 +1212,35 @@
     keys[e.code] = true;
   });
   window.addEventListener("keyup", function (e) { keys[e.code] = false; });
+
+  // ---- On-screen touch controls (D-pad + Boost) ----
+  // A "hold" button keeps a key pressed while the finger is down (move / jump).
+  function bindHold(el, code) {
+    if (!el) return;
+    const press = function (e) { if (e) e.preventDefault(); initAudio(); keys[code] = true; el.classList.add("pressed"); };
+    const release = function (e) { if (e) e.preventDefault(); keys[code] = false; el.classList.remove("pressed"); };
+    el.addEventListener("touchstart", press, { passive: false });
+    el.addEventListener("touchend", release, { passive: false });
+    el.addEventListener("touchcancel", release, { passive: false });
+    el.addEventListener("mousedown", press);
+    el.addEventListener("mouseup", release);
+    el.addEventListener("mouseleave", release);
+  }
+  // A "tap" button fires once per press (arm / cancel boost).
+  function bindTap(el, fn) {
+    if (!el) return;
+    el.addEventListener("touchstart", function (e) { e.preventDefault(); initAudio(); fn(); el.classList.add("pressed"); }, { passive: false });
+    el.addEventListener("touchend", function (e) { e.preventDefault(); el.classList.remove("pressed"); }, { passive: false });
+    el.addEventListener("touchcancel", function () { el.classList.remove("pressed"); }, { passive: false });
+    el.addEventListener("mousedown", function (e) { e.preventDefault(); initAudio(); fn(); el.classList.add("pressed"); });
+    el.addEventListener("mouseup", function () { el.classList.remove("pressed"); });
+    el.addEventListener("mouseleave", function () { el.classList.remove("pressed"); });
+  }
+  bindHold(document.getElementById("kuLeft"),  "ArrowLeft");
+  bindHold(document.getElementById("kuRight"), "ArrowRight");
+  bindHold(document.getElementById("kuUp"),    "ArrowUp");    // jump
+  bindHold(document.getElementById("kuDown"),  "ArrowDown");
+  bindTap(document.getElementById("kuBoost"),  toggleBoostArm);
 
   // ---------------------------------------------------------------------------
   // Start-screen UI
