@@ -547,9 +547,12 @@ const CARS2_CHARACTERS = [
 const glbModelCache = {};
 const glbLoader = new THREE.GLTFLoader();
 
-function preloadAllGLBModels() {
-  return Promise.all(CARS2_CHARACTERS.map(c => {
-    return new Promise((resolve, reject) => {
+// Load only the models we actually need this round. On iPhone/iPad the field is
+// trimmed to 8 cars (see buildRoundRoster), so this loads 8 GLBs instead of all
+// 18 — a big cut in GPU memory and load time on the devices that were crashing.
+function preloadModels(chars) {
+  return Promise.all(chars.map(c => {
+    return new Promise((resolve) => {
       if (glbModelCache[c.glb]) { resolve(); return; }
       glbLoader.load(c.glb, (gltf) => {
         glbModelCache[c.glb] = gltf.scene;
@@ -561,6 +564,7 @@ function preloadAllGLBModels() {
     });
   }));
 }
+function preloadAllGLBModels() { return preloadModels(CARS2_CHARACTERS); }
 
 // --- RAMP MODEL ---
 // Template for the downloaded ramp GLB (public/ramp.glb). Loaded once, cloned
@@ -623,7 +627,7 @@ function deepCloneGLTF(source) {
 }
 
 function createGLBCar(charIndex, index) {
-  const char = CARS2_CHARACTERS[charIndex];
+  const char = activeChars[charIndex];
   const template = glbModelCache[char.glb];
   if (!template) {
     // Fallback to a simple box if model failed to load
@@ -713,9 +717,60 @@ const ENV_DAMAGE_FACTOR = 0.3;
 // --- GAME STATE ---
 let scene, camera, renderer;
 let camera2 = null;          // second camera, used for the split-screen right pane
-let playerIndex = 0;
-let player2Index = 1;        // which truck the second human controls (2-player mode)
+let playerIndex = 0;         // Player 1's pick on the home-screen (index into CARS2_CHARACTERS)
+let player2Index = 1;        // Player 2's pick on the home-screen (2-player mode)
 let twoPlayer = false;       // split-screen two-player mode toggled on the home screen
+
+// --- ROUND ROSTER ---
+// The home-screen picker always lists all 18 characters, but the derby itself
+// runs on a per-round roster: the full grid on desktop, or a random 8 (always
+// including the human pick(s)) on iPhone/iPad to keep GPU load low. Within a
+// round every truck/index/AI reference works off these, so trucks[i] uses
+// activeChars[i] and pIndex/p2Index are the humans' slots in that field.
+let activeChars = CARS2_CHARACTERS;  // characters actually racing this round
+let pIndex = 0;                      // Player 1's slot within activeChars / trucks
+let p2Index = 1;                     // Player 2's slot within activeChars / trucks
+
+// How many cars race on touch devices. The full cast is 18; a leaner field is
+// far kinder to iOS memory (fewer resident models + fewer meshes per frame).
+const TOUCH_FIELD_SIZE = 8;
+
+function buildRoundRoster() {
+  // Desktop/web: keep the classic full grid and the picker's indices as-is.
+  if (!IS_TOUCH) {
+    activeChars = CARS2_CHARACTERS;
+    pIndex = playerIndex;
+    p2Index = player2Index;
+    return;
+  }
+
+  // Touch: pick TOUCH_FIELD_SIZE distinct characters, always including the human
+  // pick(s), then a random selection of the rest.
+  const used = new Set([playerIndex]);
+  if (twoPlayer) used.add(player2Index);
+
+  const pool = CARS2_CHARACTERS.map((_, i) => i).filter(i => !used.has(i));
+  for (let i = pool.length - 1; i > 0; i--) {   // Fisher–Yates shuffle
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  const chosen = Array.from(used);
+  for (const ci of pool) {
+    if (chosen.length >= TOUCH_FIELD_SIZE) break;
+    chosen.push(ci);
+  }
+  // Shuffle the final grid so the humans aren't always parked in the first
+  // spawn slots (spawn position is derived from grid order).
+  for (let i = chosen.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [chosen[i], chosen[j]] = [chosen[j], chosen[i]];
+  }
+
+  activeChars = chosen.map(ci => CARS2_CHARACTERS[ci]);
+  pIndex = chosen.indexOf(playerIndex);
+  p2Index = twoPlayer ? chosen.indexOf(player2Index) : (pIndex === 0 ? 1 : 0);
+}
 let difficulty = 'easy';
 let trucks = [];
 let obstacles = [];
@@ -1489,7 +1544,9 @@ function buildThunderHollowScene() {
   }
 
   // --- CENTER LAUNCH RAMP ---
-  if (rampModelTemplate) {
+  // Ramps are omitted entirely on iPhone/iPad (no ramp model is loaded there),
+  // so this whole section is desktop-only.
+  if (!IS_TOUCH && rampModelTemplate) {
     // A single GLB ramp at the center, same as the edge ramps.
     const ry = 0 + RAMP_YAW_OFFSET;
     const fx = Math.sin(ry);
@@ -1509,7 +1566,7 @@ function buildThunderHollowScene() {
       topY: sz.y,
       fx, fz, ry, directional: true,
     });
-  } else {
+  } else if (!IS_TOUCH) {
     // --- Procedural bridge fallback (used only if ramp.glb is absent) ---
     const crossGroup = new THREE.Group();
     const crossMat = new THREE.MeshStandardMaterial({ color: 0x6b4e1f, roughness: 0.8 });
@@ -1802,8 +1859,9 @@ function buildThunderHollowScene() {
   // Extra ramps at edges. Each ramp's up-slope (jump) direction points along
   // its local +Z, rotated by `ry`. Drive up that way to launch; hit it from
   // the opposite (high) end and it acts like a wall (see checkRamp).
+  // Skipped entirely on iPhone/iPad — no ramps in the touch build.
   const edgeR = 62; // out near the arena wall, well clear of the spawn ring (r=35)
-  const rampPositions = [
+  const rampPositions = IS_TOUCH ? [] : [
     { x: edgeR, z: 0, ry: 0 },
     { x: -edgeR, z: 0, ry: Math.PI },
     { x: 0, z: edgeR, ry: Math.PI / 2 },
@@ -2605,7 +2663,7 @@ function isOnHazard(x, z, margin = 2.5) {
 function placeTrucks() {
   trucks = [];
   eliminationOrder = [];
-  const count = CARS2_CHARACTERS.length;
+  const count = activeChars.length;
 
   for (let i = 0; i < count; i++) {
     const baseAngle = (i / count) * Math.PI * 2;
@@ -2626,7 +2684,7 @@ function placeTrucks() {
       if (guard % 6 === 0 && dist > 12) dist -= 3;
     }
 
-    const charIndex = i % CARS2_CHARACTERS.length;
+    const charIndex = i % activeChars.length;
     const raw = createGLBCar(charIndex, i);
     const t = {
       ...raw,
@@ -2684,7 +2742,7 @@ function setupCamera() {
 // alive will finish ahead of them, so place = total - (their elimination slot).
 function showEliminationBanner() {
   const totalCount = trucks.length;
-  const position = totalCount - eliminationOrder.indexOf(playerIndex);
+  const position = totalCount - eliminationOrder.indexOf(pIndex);
   const suffix = position === 1 ? 'st' : position === 2 ? 'nd' : position === 3 ? 'rd' : 'th';
   document.getElementById('eliminationPlace').textContent =
     `You placed ${position}${suffix} out of ${totalCount}`;
@@ -2705,8 +2763,8 @@ function pickTargetFor(idx) {
   return leader || player;
 }
 
-function getCameraTarget() { return pickTargetFor(playerIndex); }
-function getCameraTarget2() { return pickTargetFor(player2Index); }
+function getCameraTarget() { return pickTargetFor(pIndex); }
+function getCameraTarget2() { return pickTargetFor(p2Index); }
 
 // Smoothly chase `target` with `cam`. `yawOffset`/`pitchOffset` orbit the view
 // (driven by the gamepad right stick for Player 1; zero for Player 2).
@@ -2983,8 +3041,8 @@ function checkRamp(t) {
 // AI
 // ============================================================
 function updateAI(t, dt) {
-  if (!t.alive || t.index === playerIndex) return;
-  if (twoPlayer && t.index === player2Index) return;
+  if (!t.alive || t.index === pIndex) return;
+  if (twoPlayer && t.index === p2Index) return;
 
   // Stuck recovery: if a car has been crawling for a moment — pinned against a
   // wall, jammed on another car, or hung up on an obstacle — spin it around to
@@ -3031,7 +3089,7 @@ function updateAI(t, dt) {
           weakest.mesh.position.x - t.mesh.position.x,
           weakest.mesh.position.z - t.mesh.position.z
         );
-        const playerTruck = trucks[playerIndex];
+        const playerTruck = trucks[pIndex];
         if (playerTruck.alive) {
           const dToPlayer = Math.hypot(playerTruck.mesh.position.x - t.mesh.position.x, playerTruck.mesh.position.z - t.mesh.position.z);
           if (dToPlayer < 15 && Math.abs(playerTruck.speed) > 0.3) {
@@ -3184,7 +3242,7 @@ function spawnConfetti() {
       color: [0xff6b35, 0xf7c948, 0x3498db, 0x2ecc71, 0xe74c3c, 0xff69b4][i % 6]
     });
     const p = new THREE.Mesh(geo, mat);
-    const player = trucks[playerIndex];
+    const player = trucks[pIndex];
     p.position.set(
       player.mesh.position.x + (Math.random() - 0.5) * 10,
       player.mesh.position.y + 5 + Math.random() * 10,
@@ -3220,7 +3278,7 @@ function updateConfetti() {
 let hudFrame = 0;
 let lastStatusHtml = '';
 function updateHUD() {
-  const player = trucks[playerIndex];
+  const player = trucks[pIndex];
   if (!player) return;
 
   const pct = Math.max(0, player.health / MAX_HEALTH * 100);
@@ -3239,7 +3297,7 @@ function updateHUD() {
 
   // Player 2 health + boost (two-player mode).
   if (twoPlayer) {
-    const player2 = trucks[player2Index];
+    const player2 = trucks[p2Index];
     if (player2) {
       const pct2 = Math.max(0, player2.health / MAX_HEALTH * 100);
       const bar2 = document.getElementById('healthBar2Inner');
@@ -3260,8 +3318,8 @@ function updateHUD() {
   let html = '';
   trucks.forEach((t, i) => {
     const hp = Math.max(0, t.health / MAX_HEALTH * 100);
-    const isPlayer = i === playerIndex;
-    const isPlayer2 = twoPlayer && i === player2Index;
+    const isPlayer = i === pIndex;
+    const isPlayer2 = twoPlayer && i === p2Index;
     const label = isPlayer ? (twoPlayer ? '► P1' : '► YOU') : (isPlayer2 ? '► P2' : '');
     const opacity = t.alive ? 1 : 0.3;
     const name = t.charName || '';
@@ -3289,7 +3347,7 @@ function gameLoop(time) {
   const dt = Math.min((time - lastTime) / 16.67, 3);
   lastTime = time;
 
-  const player = trucks[playerIndex];
+  const player = trucks[pIndex];
 
   // PLAYER INPUT
   if (player.alive) {
@@ -3345,7 +3403,7 @@ function gameLoop(time) {
   // PLAYER 2 INPUT (two-player split screen). Left-hand keyboard:
   // W/S drive, A/D steer, Z jump, X boost.
   if (twoPlayer) {
-    const player2 = trucks[player2Index];
+    const player2 = trucks[p2Index];
     if (player2 && player2.alive) {
       let throttle2 = 0;
       if (keys['KeyW']) throttle2 = 1;
@@ -3394,7 +3452,7 @@ function gameLoop(time) {
   trucks.forEach((t, i) => {
     if (!t.alive) return;
 
-    const isHuman = i === playerIndex || (twoPlayer && i === player2Index);
+    const isHuman = i === pIndex || (twoPlayer && i === p2Index);
     if (!isHuman) updateAI(t, dt * 0.016);
 
     if (t.boosting) {
@@ -3422,7 +3480,7 @@ function gameLoop(time) {
         t.mesh.position.y = GROUND_Y;
         t.vy = 0;
         t.onGround = true;
-        if (i === playerIndex) playSound('land');
+        if (i === pIndex) playSound('land');
       }
     }
 
@@ -3455,12 +3513,12 @@ function gameLoop(time) {
       if (twoPlayer) {
         // Split-screen: flag "Game Over" on the half of whichever human just
         // got knocked out; the other player keeps going.
-        if (t.index === playerIndex) {
+        if (t.index === pIndex) {
           document.getElementById('gameOverP1').style.display = 'block';
-        } else if (t.index === player2Index) {
+        } else if (t.index === p2Index) {
           document.getElementById('gameOverP2').style.display = 'block';
         }
-      } else if (t.index === playerIndex) {
+      } else if (t.index === pIndex) {
         showEliminationBanner();
       }
 
@@ -3503,8 +3561,8 @@ function gameLoop(time) {
     const winnerIndex = aliveTrucks.length === 1
       ? aliveTrucks[0].index
       : eliminationOrder[eliminationOrder.length - 1];
-    const humanWon = winnerIndex === playerIndex ||
-      (twoPlayer && winnerIndex === player2Index);
+    const humanWon = winnerIndex === pIndex ||
+      (twoPlayer && winnerIndex === p2Index);
     endGame(humanWon, winnerIndex);
   }
 
@@ -3537,20 +3595,27 @@ async function startGame() {
     document.body.appendChild(renderer.domElement);
   }
 
-  // Preload GLB models
-  const startBtn = document.getElementById('startBtn');
-  startBtn.textContent = 'LOADING MODELS...';
-  startBtn.style.pointerEvents = 'none';
-  await preloadAllGLBModels();
-  await loadRampModel();
-  startBtn.textContent = 'START';
-  startBtn.style.pointerEvents = '';
-
   // Keep the two humans on different cars in two-player mode.
   if (twoPlayer && player2Index === playerIndex) {
     player2Index = (playerIndex + 1) % CARS2_CHARACTERS.length;
   }
   boosts2Left = 3;
+
+  // Decide the field for this round: full grid on desktop, a random 8 (always
+  // including the human pick(s)) on iPhone/iPad. Do this before loading so we
+  // only fetch the models that will actually race.
+  buildRoundRoster();
+
+  // Preload GLB models — just the ones racing this round.
+  const startBtn = document.getElementById('startBtn');
+  startBtn.textContent = 'LOADING MODELS...';
+  startBtn.style.pointerEvents = 'none';
+  await preloadModels(activeChars);
+  // The ramp is a heavy 25 MB model and is dropped entirely on touch devices to
+  // save memory; the arena simply has no ramps there.
+  if (!IS_TOUCH) await loadRampModel();
+  startBtn.textContent = 'START';
+  startBtn.style.pointerEvents = '';
 
   setupCamera();
   buildThunderHollowScene();
@@ -3730,7 +3795,7 @@ function initCelebrationStage() {
 
 // Build a centered, ground-resting clone of a character's GLB for display.
 function buildCelebrationModel(charIndex, targetSize) {
-  const char = CARS2_CHARACTERS[charIndex];
+  const char = activeChars[charIndex];
   const template = glbModelCache[char.glb];
   const group = new THREE.Group();
 
@@ -3868,7 +3933,7 @@ function endGame(won, winnerIndex) {
 
   const totalCount = trucks.length;
   const vehicleWord = 'car';
-  const playerCarName = CARS2_CHARACTERS[playerIndex].name;
+  const playerCarName = activeChars[pIndex].name;
 
   // Final standings: winner first, then the cars in reverse elimination order
   // (the last car knocked out placed 2nd, and so on).
@@ -3883,11 +3948,11 @@ function endGame(won, winnerIndex) {
   if (won) {
     playSound('victory');
     spawnConfetti();
-    const winnerName = CARS2_CHARACTERS[winnerIndex].name;
+    const winnerName = activeChars[winnerIndex].name;
     let title = '🏆 YOU WIN! 🏆';
     let message = `Congratulations! Your ${playerCarName} is the last ${vehicleWord} standing!`;
     if (twoPlayer) {
-      const whichPlayer = winnerIndex === playerIndex ? 'PLAYER 1' : 'PLAYER 2';
+      const whichPlayer = winnerIndex === pIndex ? 'PLAYER 1' : 'PLAYER 2';
       title = `🏆 ${whichPlayer} WINS! 🏆`;
       message = `${whichPlayer}'s ${winnerName} is the last ${vehicleWord} standing!`;
     }
@@ -3904,14 +3969,14 @@ function endGame(won, winnerIndex) {
     }
     requestAnimationFrame(victoryLoop);
   } else {
-    const winnerName = CARS2_CHARACTERS[winnerIndex].name;
+    const winnerName = activeChars[winnerIndex].name;
     document.getElementById('endTitle').textContent = 'GAME OVER';
     document.getElementById('endTitle').style.color = '#e74c3c';
     if (twoPlayer) {
       document.getElementById('endMessage').textContent =
         `${winnerName} won the derby! Both players were knocked out.`;
     } else {
-      const position = totalCount - eliminationOrder.indexOf(playerIndex);
+      const position = totalCount - eliminationOrder.indexOf(pIndex);
       const suffix = position === 1 ? 'st' : position === 2 ? 'nd' : position === 3 ? 'rd' : 'th';
       document.getElementById('endMessage').textContent =
         `${winnerName} won the derby! You finished ${position}${suffix} out of ${totalCount}.`;
