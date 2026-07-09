@@ -987,14 +987,15 @@ function stopCrowdAmbient() {
 }
 
 // --- BACKGROUND MUSIC ---
-// Create and preload the track immediately on page load so the (large) mp3 is
-// already buffered by the time a round begins — otherwise the first play() has
-// to wait on the download and the music starts noticeably late.
+// The soundtrack is a ~10 MB mp3. Fully buffering it on page load
+// (preload='auto') held all of it in memory before a round even started, which
+// on memory-constrained iPhones/iPads added to the pressure that made the GPU
+// context drop and the screen go black. Use 'metadata' so the browser streams
+// the track on demand when the round begins instead of hoarding it up front.
 let bgMusic = new Audio('music.mp3');
 bgMusic.loop = true;
 bgMusic.volume = 0.4;
-bgMusic.preload = 'auto';
-bgMusic.load();
+bgMusic.preload = 'metadata';
 function startBgMusic() {
   if (!bgMusic) {
     bgMusic = new Audio('music.mp3');
@@ -1117,6 +1118,72 @@ window.addEventListener('keyup', e => { keys[e.code] = false; });
 //   ▲/▼/◀/▶ -> ArrowUp/Down/Left/Right   Jump -> Space   Boost -> Enter
 // ============================================================
 const IS_TOUCH = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+// iPhones/iPads are far more aggressive about reclaiming WebGL/GPU memory than
+// desktop browsers. A fullscreen Retina framebuffer at devicePixelRatio 2 with
+// MSAA is enormous, and this derby already keeps 18 detailed car models
+// resident — together that pushes WKWebView over its per-tab GPU budget, the
+// context is lost, and the screen goes black. On touch devices we build a
+// leaner renderer to stay under that budget.
+
+// Cap the render resolution. On touch a device pixel ratio of 1.5 looks
+// nearly identical to 2 for a cartoon scene but roughly halves the framebuffer
+// memory and fill cost — the single biggest lever against the black-screen crash.
+const MAX_DPR = IS_TOUCH ? 1.5 : 2;
+
+// Build a WebGLRenderer tuned for the current device and wire up context-loss
+// recovery. On iOS a lost context otherwise leaves a permanently black canvas
+// ("it worked once, now it won't"); here we catch it and offer a one-tap reload.
+function createGameRenderer(opts) {
+  const r = new THREE.WebGLRenderer(Object.assign({
+    // MSAA antialiasing doubles framebuffer memory; skip it on touch devices.
+    antialias: !IS_TOUCH,
+    powerPreference: 'high-performance',
+    // Don't refuse to start on a "slow" GPU — better a soft renderer than nothing.
+    failIfMajorPerformanceCaveat: false
+  }, opts || {}));
+  r.setPixelRatio(Math.min(window.devicePixelRatio || 1, MAX_DPR));
+  return r;
+}
+
+// Show a friendly overlay when the GPU context is lost so the player isn't
+// staring at a dead black screen with no way forward.
+function showContextLostOverlay() {
+  if (document.getElementById('contextLostOverlay')) return;
+  const o = document.createElement('div');
+  o.id = 'contextLostOverlay';
+  o.style.cssText =
+    'position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;' +
+    'align-items:center;justify-content:center;text-align:center;padding:24px;' +
+    'background:linear-gradient(135deg,#1a0a2e,#0f3460);color:#fff;' +
+    "font-family:'Segoe UI',Arial,sans-serif;";
+  o.innerHTML =
+    '<div style="font-size:2rem;font-weight:900;margin-bottom:12px;">🔧 Oops — the derby ran out of gas</div>' +
+    '<div style="font-size:1.05rem;color:#ddd;max-width:420px;line-height:1.5;margin-bottom:24px;">' +
+    'The graphics needed a quick reset. Tap below to jump back in.</div>' +
+    '<button id="contextLostReload" style="padding:16px 48px;font-size:1.2rem;font-weight:800;' +
+    'border:none;border-radius:50px;cursor:pointer;background:linear-gradient(135deg,#ff6b35,#e74c3c);' +
+    'color:#fff;letter-spacing:1px;text-transform:uppercase;">Reload</button>';
+  document.body.appendChild(o);
+  document.getElementById('contextLostReload').onclick = () => location.reload();
+}
+
+// Attach WebGL context-loss/restore handlers to a renderer's canvas.
+function attachContextLossHandling(r) {
+  const canvas = r.domElement;
+  canvas.addEventListener('webglcontextlost', (e) => {
+    // Calling preventDefault lets the browser attempt to restore the context.
+    e.preventDefault();
+    gameRunning = false;
+    stopEngineSound();
+    stopCrowdAmbient();
+    stopBgMusic();
+    showContextLostOverlay();
+  }, false);
+  // If iOS does restore the context, the cleanest way to rebuild every GPU
+  // resource (geometries, textures, framebuffers) is a fresh page load.
+  canvas.addEventListener('webglcontextrestored', () => { location.reload(); }, false);
+}
 
 function bindHoldButton(el) {
   if (!el) return;
@@ -3464,9 +3531,9 @@ async function startGame() {
   lastStatusHtml = '';
 
   if (!renderer) {
-    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = createGameRenderer();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    attachContextLossHandling(renderer);
     document.body.appendChild(renderer.domElement);
   }
 
@@ -3597,8 +3664,7 @@ function initCelebrationStage() {
   const stage = document.getElementById('winnerStage');
   const size = celebStageSize();
 
-  celebRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  celebRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  celebRenderer = createGameRenderer({ alpha: true });
   celebRenderer.setSize(size.w, size.h);
   stage.appendChild(celebRenderer.domElement);
 
